@@ -298,7 +298,7 @@
   var RUN_MAX_MIN = 45;
   function runState() {
     var r = D.run, task = r && r.task_id, rn = D.prefs && D.prefs.run_now;
-    var started = rn && rn.at ? new Date(rn.at).getTime() : 0, last = r && r.at ? new Date(r.at).getTime() : 0;
+    var started = rn && rn.at && !rn.failed ? new Date(rn.at).getTime() : 0, last = r && r.at ? new Date(r.at).getTime() : 0;
     var running = runBusy || (started > last && Date.now() - started < RUN_MAX_MIN * 60000);
     return { ok: !!(mcp && task && canWrite && db && !tour.on), task: task, running: running, started: started, deepCap: (r && r.deep_cap) || 1 };
   }
@@ -306,13 +306,16 @@
     var st = runState(); if (!st.ok || st.running) return;
     var upd = kind === "update";
     runBusy = true; render();
+    // The click is saved first: the run reads it to know which kind of run to do.
+    var doc = { at: new Date().toISOString(), kind: upd ? "update" : "quick" };
+    try { await db.doc("prefs/run_now").set(doc); }
+    catch (e) { runBusy = false; render(); toast("Not started: " + errText(e)); return; }
     try {
       await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: upd ? "MODE = update" : "MODE = quick" });
-      var at = new Date().toISOString(), doc = { at: at, kind: upd ? "update" : "quick" };
       R.prefs = Object.assign({}, R.prefs, { run_now: doc });
-      try { await db.doc("prefs/run_now").set(doc); } catch (e) {}
       toast(upd ? "Updating. It takes about 10 minutes; this page reloads with the new version when it's done." : "Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
+      try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
       var code = e && e.code;
       toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
         : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."

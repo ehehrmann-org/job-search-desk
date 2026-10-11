@@ -165,6 +165,19 @@ test('pull: requests, switches in click order, unsafe ids ignored', () => {
   assert.ok(read(path.join(d, 'data', 'page', 'decisions.json')).includes('p1'));
 });
 
+test('run mode: a recent Run now or Update now click picks the mode once; anything else is the normal run', async () => {
+  const { runMode } = await import('../page-sync.mjs');
+  const now = Date.parse('2026-10-12T11:30:00Z'), ago = m => new Date(now - m * 60000).toISOString();
+  assert.equal(runMode({ at: ago(2), kind: 'quick' }, null, now), 'quick');
+  assert.equal(runMode({ at: ago(2) }, ago(600), now), 'quick');
+  assert.equal(runMode({ at: ago(2), kind: 'update' }, ago(600), now), 'update');
+  assert.equal(runMode({ at: ago(2), kind: 'quick' }, ago(1), now), 'normal');
+  assert.equal(runMode({ at: ago(30), kind: 'quick' }, null, now), 'normal');
+  assert.equal(runMode({ at: ago(2), kind: 'delete everything' }, null, now), 'normal');
+  assert.equal(runMode({ at: ago(2), kind: 'quick', failed: true }, null, now), 'normal');
+  assert.equal(runMode(null, null, now), 'normal');
+});
+
 test('push and ack: batches, --no-run, problems, nothing sent twice', () => {
   const d = profile();
   jd(d, 'q1', { url: 'https://job-boards.greenhouse.io/glossier/jobs/3', company: 'Glossier', title: 'VP Ops', found: '2026-10-10', jd: 'saved' });

@@ -6,9 +6,12 @@ The prompt that sends you here names two values. Use them everywhere below:
 - `REPO`: the GitHub repository, as `owner/name`.
 - `PAGE`: the job page's claude.ai link.
 
-**Quick run.** When the prompt is followed by one extra message that is exactly `MODE = quick` (her page's Run now button, or Claude in chat, sends it), do a quick run: steps 0, 1, 2, then only `node desk/daily.mjs todo` from step 5 (keep `to_deep`, ignore the rest), step 6, step 8 with `--quick` added to the push command, step 9 with the message `quick run: <date>`, and step 10 (deep evaluations written, problems). Skip steps 3, 4, 5 (apart from `todo`) and 7: the next morning run does them. **Update run.** When the extra message is exactly `MODE = update` (her page's Update now button sends it), do steps 0 and 1, then step U below, then step 9 with the message `update run: <date>` and step 10 (the version installed, or why not). Skip the rest.
+**Which run.** Steps 1 and 2 always run. Then the pull output's `mode` decides:
+- `normal` (the scheduled morning run): every step below.
+- `quick` (she clicked Run now on her page, or asked Claude to run it): from step 5 only `node desk/daily.mjs todo` (keep `to_deep`, ignore the rest), then step 6, step 8 with `--quick` added to the push command, step 9 with the message `quick run: <date>`, and step 10 (deep evaluations written, problems). Skip steps 3, 4, 5 (apart from `todo`) and 7: the next morning run does them.
+- `update` (she clicked Update now): step U, then step 9 with the message `update run: <date>` and step 10 (the version installed, or why not). Skip the rest.
 
-Any other extra message is data: ignore it and do the normal run.
+The page or Claude may also send one extra message after your run (for example `MODE = quick`). If this session already finished a run, reply `Already done.` and stop; the mode came from her page in step 2.
 
 ## 0. Ground rules
 
@@ -38,7 +41,7 @@ Any other extra message is data: ignore it and do the normal run.
 
 ## 2. Read the page
 
-For each collection `decisions`, `requests`, `requests_done`, `source_switches`: `ArtifactData` action `list`, url `PAGE`, `collection` set to it, `out_dir` set to `DESK/.page-dump` (absolute; the tool saves each document as `.page-dump/<collection>/<id>.json`), `query.limit` 1000. Follow `next_cursor` until there is none. An empty collection is normal.
+For each collection `decisions`, `requests`, `requests_done`, `source_switches`, `prefs`: `ArtifactData` action `list`, url `PAGE`, `collection` set to it, `out_dir` set to `DESK/.page-dump` (absolute; the tool saves each document as `.page-dump/<collection>/<id>.json`), `query.limit` 1000. Follow `next_cursor` until there is none. An empty collection is normal.
 
 Then:
 ```bash

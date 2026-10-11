@@ -105,16 +105,28 @@ function setDeskKey(key, value) {
 
 // ------------------------------------------------------------------ pull
 
+// Which run this is: "quick" or "update" when she clicked Run now or Update now in the last 20 minutes
+// and no run has finished since; otherwise "normal" (the scheduled morning run).
+export function runMode(rn, lastRunAt, now = Date.now()) {
+  if (!rn || typeof rn !== 'object' || rn.failed) return 'normal';
+  const kind = rn.kind === undefined ? 'quick' : rn.kind;
+  const at = Date.parse(rn.at);
+  if (!['quick', 'update'].includes(kind) || !Number.isFinite(at) || at > now + 60000 || now - at > 20 * 60000) return 'normal';
+  const last = Date.parse(lastRunAt || '');
+  return Number.isFinite(last) && last >= at ? 'normal' : kind;
+}
+
 async function pull(dumpDir) {
   if (!dumpDir || !fs.existsSync(dumpDir)) throw new Error(`dump folder not found: ${dumpDir}`);
   const decisions = readDir(path.join(dumpDir, 'decisions'));
   const requests = readDir(path.join(dumpDir, 'requests')) || dict();
   const doneRemote = readDir(path.join(dumpDir, 'requests_done')) || dict();
   const switches = readDir(path.join(dumpDir, 'source_switches')) || dict();
+  const prefs = readDir(path.join(dumpDir, 'prefs')) || dict();
   // No decisions folder means the list wasn't saved, not that every decision is gone.
   if (decisions) writeJson(P.decisions, decisions);
 
-  const summary = { decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
+  const summary = { mode: runMode(prefs.run_now, readJson(P.state, {}).last_run_at), decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
   const doneLocal = new Set(fs.existsSync(P.done) ? fs.readdirSync(P.done).map(f => f.replace(/\.json$/, '')) : []);
   const seen = seenKeys(DATA);
   const jdByKey = new Map();
@@ -386,6 +398,7 @@ async function push(args) {
     const scoredToday = scores.filter(s => (s.scored_at || '').startsWith(todayIso) && s.verdict.status !== 'unscorable');
     const ok = problems.length === 0;
     if (ok) st.last_good_run = at;
+    st.last_run_at = at;
     add('runs', runId(new Date(at)), {
       at, ok, problems, last_good_run: st.last_good_run, version: VERSION,
       plan: desk.plan || null, daily_cap: desk.daily_cap || null, deep_cap: desk.deep_cap || null, help_email: desk.help_email || null,

@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.8.2 (2026-10-11)
+- Run now and Update now start only the short run you asked for, not a full morning run first.
+- Claude keeps setup and chat replies to one sentence: what it needs from you and why.
+
 ## 0.8.1 (2026-10-11)
 - The status popup explains what Run now does, and "Last run" says when it was a Run now.
 

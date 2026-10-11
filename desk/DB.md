@@ -28,7 +28,7 @@ Task writes are creates only, so the task never needs a document version (Artifa
 | `requests/<request id>` | `kind`, `at`, and per kind: `add_job {text, applied}` · `add_source {text, dream, gap?}` · `dismiss_gap {gap}` · `block_company {company, reason, website?}` (website: `company` is a site address like jobright.ai; blocks every posting hosted there) · `unblock_company {company}` · `set_board {source, company, url}` · `switch_group {group: "search", on}` · `apply_suggestion` and `decline_suggestion {week, sid}` |
 | `source_switches/<source id>` | `on, at` (`gmail`, or `co-<company slug>`) |
 | `prefs/tour` | `done, at`: she finished or skipped the first-visit tour. Absent: the page starts the tour on her first visit. |
-| `prefs/run_now` | `at, kind (quick, update)`: she clicked Run now or Update now. The buttons show "Running" until a newer `runs` document arrives (45 minutes at most). |
+| `prefs/run_now` | `at, kind (quick, update), failed?`: she clicked Run now or Update now. Saved before the run starts; the run reads it in step 2 to pick its mode (within 20 minutes, and only once). The buttons show "Running" until a newer `runs` document arrives (45 minutes at most). |
 
 Request ids, posting ids and source ids are letters, digits, `_`, `-` (and `~` in rescores), at most 64. The task ignores documents with any other id.
 
