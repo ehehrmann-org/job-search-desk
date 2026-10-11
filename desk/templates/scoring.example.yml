@@ -1,0 +1,92 @@
+# How jobs get scored. Setup step 5 writes your copy to config/scoring.yml;
+# "change my scoring" in Claude edits it later. Check it with:
+#   node desk/score.mjs --check
+#
+# Deal-breakers knock a posting out before it is scored.
+# Dimensions are rated 0 to 5. Must have counts 3x, Important 2x, Nice to have 1x.
+# The overall score is the weighted average; postings at or above the threshold
+# reach To review. Dream companies skip the threshold but not the deal-breakers.
+
+threshold: 4.0
+
+dealbreakers:
+  comp_floor:                 # your minimum base salary; delete the block to turn off
+    base: 150000
+    variable_share: 0.75      # share of a "base plus bonus" range assumed to be base
+  company_size: null          # e.g. { min: 50, max: null } for "no startups under 50"
+  location:
+    remote_ok: true
+    max_office_days: 3
+    areas_ok:
+      - Manhattan and Brooklyn
+    areas_no:
+      - anywhere you would have to relocate
+  excluded_industries: []     # e.g. ["tobacco", "gambling"]
+  excluded_companies: []      # your current employer is added at setup
+  other: []                   # plain-language no's Claude checks, e.g. "requires weekend shifts"
+
+candidacy:
+  gate_career_track: true     # a required career you never had knocks the posting out
+  skill_penalty: 0.15         # each required tool or certification you lack
+  skill_cap: 0.30
+
+dimensions:
+  - id: role_fit
+    name: Role fit
+    bucket: must
+    question: Is this the work you said you want more of, in your best job?
+    anchors:
+      "5": The core of the job is the work you described in your best job.
+      "3": Some of it, mixed with work you said you want less of.
+      "1": Mostly the work you described in your worst job.
+
+  - id: level
+    name: Level and scope
+    bucket: important
+    question: Is the title, team size and reporting line at or above where you are now?
+    anchors:
+      "5": A step up, or the same level with a bigger team or budget.
+      "3": Lateral move.
+      "1": A step down in title, team or reporting line.
+
+  - id: team
+    name: Team and craft
+    bucket: important
+    question: Does the team make work you would be proud to show?
+    anchors:
+      "5": A creative team known for the kind of work you want to lead.
+      "3": Solid team, unremarkable work.
+      "1": Creative is an afterthought in this company.
+
+  - id: company
+    name: Company type
+    bucket: important
+    question: Is this the kind of company you said you want (agency, in-house at a brand, platform)?
+    anchors:
+      "5": Exactly the kind you named first.
+      "3": A kind you said was fine.
+      "1": A kind you said you would rather avoid.
+
+  - id: pay
+    name: Pay
+    bucket: nice
+    fact: base_top
+    unknown: 3
+    bands:
+      - { min: 200000, score: 5 }
+      - { min: 175000, score: 4 }
+      - { min: 150000, score: 3 }
+      - { score: 1 }
+
+  - id: location
+    name: Location
+    bucket: nice
+    fact: office_days
+    unknown: 3
+    bands:
+      - { max: 0, score: 5 }
+      - { max: 2, score: 4 }
+      - { max: 3, score: 3 }
+      - { score: 1 }
+
+history: []

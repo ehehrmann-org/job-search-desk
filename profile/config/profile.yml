@@ -1,0 +1,35 @@
+# Your profile. Setup step 4 fills this in from your resume and answers.
+candidate:
+  full_name: ""
+  email: ""
+  phone: ""
+  location: ""
+  linkedin: ""
+  portfolio_url: ""
+
+target_roles:
+  primary: []          # the job titles you want, e.g. "Director of Creative Operations"
+  archetypes: []       # role families: { name, level, fit: primary | secondary | adjacent }
+
+narrative:
+  headline: ""
+  best_job: ""         # step 4's open question: the best job you've had and why
+  worst_job: ""        # and the worst one
+  superpowers: []
+
+compensation:
+  currency: "USD"
+  minimum: ""          # walk-away base pay
+  exciting: ""         # the number that makes you say yes fast
+  location_flexibility: ""
+
+location:
+  country: "United States"
+  city: ""
+  timezone: ""
+  needs_sponsorship: false
+
+language:
+  output: en
+
+not_sure: []           # step 4 answers marked "not sure"; step 11 settles them

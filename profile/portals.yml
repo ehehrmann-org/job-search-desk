@@ -1,0 +1,20 @@
+# Where the daily scan looks. Setup steps 4, 6 and 7 fill this in; the Scan sources tab
+# turns entries on and off.
+location_filter:
+  always_allow: []
+  allow: []
+  block_hard: []
+title_filter:
+  positive: []
+  negative:
+    - Intern
+    - Internship
+    - Junior
+    - Entry Level
+    - Coordinator
+    - Assistant
+    - Software Engineer
+    - Data Engineer
+    - Technician
+    - Shift
+tracked_companies: []

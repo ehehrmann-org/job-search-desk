@@ -1,0 +1,184 @@
+# Ready-made source pack: independent creative, brand, design and marketing agencies (US).
+# Every entry has a job board the daily scan can read. Setup step 7 offers it; the user picks.
+# Built 2026-10-11 from the test bed's researched list; company names and public job board links only.
+tracked_companies:
+  - name: OLIVER Agency (global board)
+    careers_url: https://job-boards.greenhouse.io/oliver
+    enabled: true
+    pack: agencies
+  - name: OLIVER Agency (North America board)
+    careers_url: https://job-boards.greenhouse.io/oliverusa
+    enabled: true
+    pack: agencies
+  - name: Hawke Media
+    careers_url: https://jobs.lever.co/hawkemedia
+    enabled: true
+    pack: agencies
+  - name: Tinuiti
+    careers_url: https://tinuiti.wd12.myworkdayjobs.com/en-US/Tinuiti
+    enabled: true
+    pack: agencies
+  - name: Power Digital
+    careers_url: https://job-boards.greenhouse.io/powerdigitalmarketing
+    enabled: true
+    pack: agencies
+  - name: Wpromote
+    careers_url: https://jobs.lever.co/wpromote
+    enabled: true
+    pack: agencies
+  - name: Directive
+    careers_url: https://jobs.ashbyhq.com/directive
+    enabled: true
+    pack: agencies
+  - name: Instrument
+    careers_url: https://jobs.lever.co/instrument
+    enabled: true
+    pack: agencies
+  - name: Column Five
+    careers_url: https://columnfive.applytojob.com/
+    enabled: true
+    pack: agencies
+  - name: Praytell
+    careers_url: https://apply.workable.com/praytell
+    enabled: true
+    pack: agencies
+  - name: Superside
+    careers_url: https://jobs.lever.co/superside
+    enabled: true
+    pack: agencies
+  - name: Penji
+    careers_url: https://apply.workable.com/penji
+    enabled: true
+    pack: agencies
+  - name: Madwell
+    careers_url: https://apply.workable.com/madwell
+    enabled: true
+    pack: agencies
+  - name: Athletics
+    careers_url: https://job-boards.greenhouse.io/athletics
+    enabled: true
+    pack: agencies
+  - name: TDA Boulder
+    careers_url: https://jobs.lever.co/tdaboulder
+    enabled: true
+    pack: agencies
+  - name: Connelly Partners
+    careers_url: https://connellypartners.bamboohr.com
+    enabled: true
+    pack: agencies
+  - name: North Strategic
+    careers_url: https://apply.workable.com/north
+    enabled: true
+    pack: agencies
+  - name: Viget
+    careers_url: https://jobs.lever.co/viget
+    enabled: true
+    pack: agencies
+  - name: Fantasy
+    careers_url: https://jobs.lever.co/fantasy
+    enabled: true
+    pack: agencies
+  - name: Jellyvision
+    careers_url: https://job-boards.greenhouse.io/jellyvision
+    enabled: true
+    pack: agencies
+  - name: Clique Studios
+    careers_url: https://apply.workable.com/clique
+    enabled: true
+    pack: agencies
+  - name: VSA Partners
+    careers_url: https://job-boards.greenhouse.io/vsapartners
+    enabled: true
+    pack: agencies
+  - name: 50,000feet
+    careers_url: https://apply.workable.com/50000feet
+    enabled: true
+    pack: agencies
+  - name: iCrossing
+    careers_url: https://apply.workable.com/icrossing
+    enabled: true
+    pack: agencies
+  - name: 20Twenty Design
+    careers_url: https://apply.workable.com/20twentydesign
+    enabled: true
+    pack: agencies
+  - name: Able
+    careers_url: https://job-boards.greenhouse.io/able
+    enabled: true
+    pack: agencies
+  - name: Zeno Group
+    careers_url: https://djeholdings.wd5.myworkdayjobs.com/en-US/ZenoCareers
+    enabled: true
+    pack: agencies
+  - name: Kettle
+    careers_url: https://job-boards.greenhouse.io/kettle
+    enabled: true
+    pack: agencies
+  - name: Product Ventures
+    careers_url: https://jobs.lever.co/productventures
+    enabled: true
+    pack: agencies
+  - name: Upstatement
+    careers_url: https://job-boards.greenhouse.io/upstatement
+    enabled: true
+    pack: agencies
+  - name: Concentric Design
+    careers_url: https://job-boards.greenhouse.io/concentric
+    enabled: true
+    pack: agencies
+  - name: Mother
+    careers_url: https://jobs.lever.co/mothernewyork
+    enabled: true
+    pack: agencies
+  - name: Barkley
+    careers_url: https://job-boards.greenhouse.io/barkleyokrp
+    enabled: true
+    pack: agencies
+  - name: AvroKO
+    careers_url: https://recruiting.recruitee.com
+    enabled: true
+    pack: agencies
+  - name: Rapt Studio
+    careers_url: https://jobs.lever.co/RaptStudio
+    enabled: true
+    pack: agencies
+  - name: Wolff Olins
+    careers_url: https://apply.workable.com/wolff-olins/
+    enabled: true
+    pack: agencies
+  - name: Landor
+    careers_url: https://job-boards.greenhouse.io/landor
+    enabled: true
+    pack: agencies
+  - name: Jones Knowles Ritchie (JKR)
+    careers_url: https://apply.workable.com/jones-knowles-ritchie/
+    enabled: true
+    pack: agencies
+  - name: IDEO
+    careers_url: https://job-boards.greenhouse.io/ideo
+    enabled: true
+    pack: agencies
+  - name: The Bureau
+    careers_url: https://jobs.lever.co/seerinteractive
+    enabled: true
+    pack: agencies
+  - name: Human Agency
+    careers_url: https://job-boards.greenhouse.io/humanagency
+    enabled: true
+    pack: agencies
+  - name: Digible
+    careers_url: https://job-boards.greenhouse.io/digible
+    enabled: true
+    pack: agencies
+  - name: Developmentnow
+    careers_url: https://developmentnow.breezy.hr
+    enabled: true
+    pack: agencies
+  - name: GLIDE
+    careers_url: https://job-boards.greenhouse.io/glide
+    enabled: true
+    pack: agencies
+  - name: Plankdesign
+    careers_url: https://plank.bamboohr.com
+    enabled: true
+    pack: agencies
