@@ -7,7 +7,7 @@
  *   node desk/setup.mjs done <step> ["note"]   run the step's check; mark it done only if it passes
  *   node desk/setup.mjs check [step]           run one step's check (or all done steps) without changing state
  *   node desk/setup.mjs init                   create an empty profile folder from the templates
- *   node desk/setup.mjs sample                 pick 8 scored postings for step 11 (3 high, 3 middle, 2 low)
+ *   node desk/setup.mjs sample                 pick 8 scored postings for step 12 (3 high, 3 middle, 2 low)
  *   node desk/setup.mjs board <url>            which job board the daily scan would read for this link, if any
  *
  * State lives in profile/.setup-state.json so it travels with the private copy.
@@ -29,12 +29,12 @@ export const STEPS = [
   { n: 4, title: 'Your profile', min: 25, session: 1 },
   { n: 5, title: 'How jobs get scored', min: 15, session: 1 },
   { n: 6, title: 'Dream companies', min: 10, session: 1 },
-  { n: 7, title: 'Job sources', min: 10, session: 2 },
-  { n: 8, title: 'Gmail and job alerts', min: 15, session: 2 },
-  { n: 9, title: 'Your achievements', min: 20, session: 2 },
-  { n: 10, title: 'Your resumes', min: 15, session: 2 },
-  { n: 11, title: 'Test the scoring', min: 10, session: 2 },
-  { n: 12, title: 'Go live', min: 5, session: 2 },
+  { n: 7, title: 'Job sources', min: 10, session: 1 },
+  { n: 8, title: 'Go live', min: 15, session: 1 },
+  { n: 9, title: 'Gmail and job alerts', min: 15, session: 2 },
+  { n: 10, title: 'Your achievements', min: 20, session: 2 },
+  { n: 11, title: 'Your resumes', min: 15, session: 2 },
+  { n: 12, title: 'Test the scoring', min: 10, session: 2 },
 ];
 
 const readState = () => { try { const s = JSON.parse(fs.readFileSync(STATE, 'utf8')); return s && typeof s.steps === 'object' ? s : { steps: {} }; } catch { return { steps: {} }; } };
@@ -62,7 +62,7 @@ const CHECKS = {
     if (!p?.candidate?.full_name) out.push('profile.yml has no name');
     if (!p?.target_roles?.primary?.length) out.push('profile.yml has no target roles');
     if (!p?.location?.city) out.push('profile.yml has no location');
-    if (!p?.location?.timezone) out.push('profile.yml has no time zone (location.timezone, e.g. America/Chicago); step 12 needs it for the daily run');
+    if (!p?.location?.timezone) out.push('profile.yml has no time zone (location.timezone, e.g. America/Chicago); step 8 needs it for the daily run');
     const portals = readYaml(f('portals.yml'), {});
     if (!portals?.title_filter?.positive?.length) out.push('portals.yml has no job titles to look for');
     if (!(portals?.location_filter?.allow || []).length) out.push('portals.yml has no locations to allow (location_filter.allow)');
@@ -92,14 +92,14 @@ const CHECKS = {
     const portals = readYaml(f('portals.yml'), {});
     return (portals.tracked_companies || []).filter(c => c?.enabled !== false).length ? [] : ['no job sources are turned on'];
   },
-  8: () => {
+  9: () => {
     const d = readYaml(f('config', 'desk.yml'), {});
     const out = [];
     if (d.gmail_alerts !== false && !d.gmail_checked) out.push('the Gmail connection was not confirmed (gmail_checked)');
     if (d.gmail_alerts !== false && !(d.alert_searches || []).length) out.push('no job alert searches are recorded (alert_searches)');
     return out;
   },
-  9: () => {
+  10: () => {
     const cv = exists(f('cv.md')) ? fs.readFileSync(f('cv.md'), 'utf8') : '';
     const bullets = (cv.match(/^\s*[-*] .+/gm) || []).length;
     const bank = exists(f('interview-prep', 'story-bank.md')) ? fs.readFileSync(f('interview-prep', 'story-bank.md'), 'utf8') : '';
@@ -109,7 +109,7 @@ const CHECKS = {
     if (stories < 3) out.push(`interview-prep/story-bank.md has ${stories} stories (one "## " heading each); write at least 3, one per theme`);
     return out;
   },
-  10: () => {
+  11: () => {
     const idx = readYaml(f('resumes', 'index.yml'), {});
     const list = (idx.resumes || []).filter(r => r?.kind !== 'master');
     const out = [];
@@ -118,29 +118,29 @@ const CHECKS = {
       if (!r.id || !r.name) out.push('a resume entry is missing its id or name');
       if (!r.pdf || !exists(f('resumes', r.pdf))) out.push(`${r.name || r.id}: PDF missing`);
       if (!r.text_file || !exists(f('resumes', r.text_file))) out.push(`${r.name || r.id}: plain-text version missing`);
+      if (!r.asset_id) out.push(`${r.name || r.id}: PDF not uploaded to the job page yet (asset_id)`);
     }
     return out;
   },
-  11: () => {
+  12: () => {
     const cases = (readYaml(f('config', 'scoring-cases.yml'), []) || []).filter(c => c?.input && typeof c.input === 'object');
     const counted = cases.filter(c => c.decision === 'apply' || c.decision === 'skip');
-    if (cases.length < 5) return [`${cases.length} test postings recorded; step 11 needs at least 5 (8 when the scan found enough)`];
+    if (cases.length < 5) return [`${cases.length} test postings recorded; step 12 needs at least 5 (8 when the scan found enough)`];
     let cfg; try { cfg = loadScoringConfig(f('config', 'scoring.yml')); } catch (e) { return [e.message]; }
     if (counted.length < 4) return [`only ${counted.length} of the test postings got a Would apply or Wouldn't; at least 4 are needed to measure agreement`];
     const dreams = loadDreamCompanies(f('portals.yml'));
     const agree = counted.filter(c => { const r = scorePosting(c.input, cfg, { dream: isDream(c.input.company, dreams) }); return c.decision === 'apply' ? r.status === 'qualified' : r.status !== 'qualified'; }).length;
-    const changes = (cfg.history || []).filter(h => /step 11/i.test(String(h))).length;
+    const changes = (cfg.history || []).filter(h => /step 1[12]/i.test(String(h))).length;
     const target = Math.ceil(counted.length * 0.75);
-    return agree >= target || changes >= 3 ? [] : [`${agree} of ${counted.length} agree (${target} needed), and fewer than 3 changes were tried (record each accepted change in scoring.yml history with "step 11")`];
+    return agree >= target || changes >= 3 ? [] : [`${agree} of ${counted.length} agree (${target} needed), and fewer than 3 changes were tried (record each accepted change in scoring.yml history with "step 12")`];
   },
-  12: () => {
+  8: () => {
     const d = readYaml(f('config', 'desk.yml'), {});
     const out = [];
     if (!d.page_url) out.push('the job page link is not recorded (page_url)');
     if (!d.task_id) out.push('the daily task is not recorded (task_id)');
     if (!d.page_consent) out.push('the tour on the job page was not finished with the permission allowed (page_consent)');
-    const idx = readYaml(f('resumes', 'index.yml'), {});
-    for (const r of (idx.resumes || []).filter(r => r?.kind !== 'master')) if (!r.asset_id) out.push(`${r.name || r.id}: PDF not uploaded to the job page yet (asset_id)`);
+    if (d.gmail_alerts !== false && !d.gmail_checked) out.push('gmail_alerts must stay false until step 9 connects Gmail, or the morning run reports a Gmail problem');
     return out;
   },
 };
@@ -211,13 +211,16 @@ function init() {
   console.log(`profile folder ready at ${path.relative(ROOT, DATA) || '.'}`);
 }
 
-/** Step 11: 8 scored postings, about 3 high, 3 middle, 2 low, spread across title families. */
+/** Step 12: 8 scored postings, about 3 high, 3 middle, 2 low, spread across title families. */
 function sample() {
   const dir = f('data', 'scores');
   const recs = exists(dir) ? fs.readdirSync(dir).filter(x => x.endsWith('.json')).map(x => { try { return JSON.parse(fs.readFileSync(path.join(dir, x), 'utf8')); } catch { return null; } }) : [];
-  const scored = recs.filter(r => typeof r?.verdict?.score === 'number' && fs.existsSync(f('data', 'extractions', `${r.verdict.id}.json`)));
+  // Jobs she already decided on her page teach the scoring on their own; the sample is the rest.
+  let decided = {};
+  try { decided = JSON.parse(fs.readFileSync(f('data', 'page', 'decisions.json'), 'utf8')) || {}; } catch { decided = {}; }
+  const scored = recs.filter(r => typeof r?.verdict?.score === 'number' && !Object.hasOwn(decided, r.verdict.id) && fs.existsSync(f('data', 'extractions', `${r.verdict.id}.json`)));
   if (scored.length < 8) {
-    console.log(JSON.stringify({ short: true, scored: scored.length, picked: scored.map(r => ({ id: r.verdict.id, jd_file: `jds/${r.verdict.id}.md` })), note: 'fewer than 8 scored postings without a deal-breaker: score more first (daily.mjs todo --cap 20), or add live postings found by web search (see SETUP step 11)' }, null, 2));
+    console.log(JSON.stringify({ short: true, scored: scored.length, picked: scored.map(r => ({ id: r.verdict.id, jd_file: `jds/${r.verdict.id}.md` })), note: 'fewer than 8 scored postings without a deal-breaker: score more first (daily.mjs todo --cap 20), or add live postings found by web search (see SETUP step 12)' }, null, 2));
     return;
   }
   const family = r => String(r.title || r.verdict.title || '').toLowerCase().replace(/\b(senior|sr|lead|head|director|vp|vice president|manager|of|the|and|associate|principal)\b/g, '').replace(/[^a-z ]/g, ' ').trim().split(/\s+/).slice(0, 2).join(' ');

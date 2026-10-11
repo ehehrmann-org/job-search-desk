@@ -5,7 +5,7 @@
  *   node desk/test-scoring.mjs
  *
  * Reads $CAREER_OPS_DATA_DIR/config/scoring-cases.yml. Each case is an
- * extraction plus the user's real decision. Setup step 11 (Test the scoring)
+ * extraction plus the user's real decision. Setup step 12 (Test the scoring)
  * writes these; later skips and applications can be added the same way.
  *
  *   - name: Snif, Chief of Staff
@@ -31,7 +31,7 @@ import { DATA } from './lib/env.mjs';
 
 const cfg = loadScoringConfig(path.join(DATA, 'config', 'scoring.yml'));
 const casesFile = path.join(DATA, 'config', 'scoring-cases.yml');
-if (!fs.existsSync(casesFile)) { console.log('No scoring-cases.yml yet. Setup step 11 creates it.'); process.exit(0); }
+if (!fs.existsSync(casesFile)) { console.log('No scoring-cases.yml yet. Setup step 12 creates it.'); process.exit(0); }
 const cases = (yaml.load(fs.readFileSync(casesFile, 'utf8')) || []).filter(c => c && c.input && typeof c.input === 'object');
 const dreams = loadDreamCompanies(path.join(DATA, 'portals.yml'));
 

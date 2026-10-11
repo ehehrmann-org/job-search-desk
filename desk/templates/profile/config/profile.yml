@@ -32,4 +32,4 @@ location:
 language:
   output: en
 
-not_sure: []           # step 4 answers marked "not sure"; step 11 settles them
+not_sure: []           # step 4 answers marked "not sure"; step 12 settles them

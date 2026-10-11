@@ -8,6 +8,6 @@ A daily job search that runs in the cloud. Every morning it scans the job boards
 
 ## Getting started
 
-Use the start message you were sent. It walks you through making your private copy of this template ("Use this template", Private) and connecting Claude to it; then you type "start setup" and Claude guides you through the rest in two sessions of about 70 minutes each.
+Use the start message you were sent. It walks you through making your private copy of this template ("Use this template", Private) and connecting Claude to it; then you type "start setup" and Claude guides you through the rest: the first session (about 95 minutes, or about 75 on the short path) ends with your job page live, and a second one of about an hour adds job alert emails, your achievements, your resumes and a check of the scoring.
 
 Questions or problems: e.hehrmann@gmail.com.

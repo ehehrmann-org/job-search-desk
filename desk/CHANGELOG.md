@@ -2,6 +2,11 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.6.0 (2026-10-11)
+- Setup goes live at the end of the first session: your job page and the daily run start right after you pick your job sources. The second session adds job alert emails, your achievements, your resumes and a check of the scoring on your real jobs.
+- A shorter first session (about 75 minutes) when time is tight.
+- No up-to-date resume? Setup builds your master resume from your LinkedIn profile and a few questions per role.
+
 ## 0.5.1 (2026-10-11)
 - Small icons on buttons and labels; the suggested resume shows as a document icon with its name.
 - Interviewing, Rejected and Withdrew sit on one line; the "Closes as No response" countdown moved under the job's details.

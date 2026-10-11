@@ -4,10 +4,10 @@ daily_cap: 10          # postings scored per day (step 3 sets it from the plan)
 deep_cap: 1            # deep evaluations per day (step 3 sets it from the plan)
 help_email: ""         # shown on the job page next to "Copy message for Erik"
 current_employer: ""   # step 4; "none" when not employed. Never shown jobs from it.
-gmail_alerts: true     # step 8
-gmail_checked: false   # step 8: set true once a job alert email was found
+gmail_alerts: false    # step 9 turns it on once Gmail is connected
+gmail_checked: false   # step 9: set true once a job alert email was found
 gmail_query: ""        # optional; the daily task has a default
-alert_searches: []     # step 8: the saved searches she set up, { site, search, frequency }
-page_url: ""           # step 12
-task_id: ""            # step 12
-page_consent: false    # step 12: true after her first click on the job page
+alert_searches: []     # step 9: the saved searches she set up, { site, search, frequency }
+page_url: ""           # step 8
+task_id: ""            # step 8
+page_consent: false    # step 8: true after she finished the tour and allowed saving
