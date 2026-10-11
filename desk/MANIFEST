@@ -209,6 +209,7 @@ desk/page/style.css
 desk/resume.mjs
 desk/score.mjs
 desk/setup.mjs
+desk/suggest.mjs
 desk/templates/profile/config/desk.yml
 desk/templates/profile/config/profile.yml
 desk/templates/profile/data/pipeline.md
@@ -219,6 +220,7 @@ desk/templates/scoring.example.yml
 desk/test-scoring.mjs
 desk/test/page-docs.test.mjs
 desk/test/scoring.test.mjs
+desk/test/suggest.test.mjs
 desk/update.mjs
 detect-reposts.mjs
 discard-analytics.mjs

@@ -254,6 +254,31 @@ button.quiettoggle { width: 100%; text-align: left; background: var(--surface-2)
 button.quiettoggle .t { font-weight: 500; }
 button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .addform.inrow { border: 0; border-top: 1px dashed var(--line); border-radius: 0; }
+
+/* Weekly scoring suggestions */
+.panel.suggest { border-color: var(--accent); }
+.sugg { display: grid; gap: 4px; padding: 10px 12px; border-radius: 6px; background: var(--accent-soft); }
+.sugg .pw { font-weight: 600; }
+.sugg .s2 { font-size: 13px; color: var(--fg); }
+.sugg .s2.muted { color: var(--fg-2); }
+/* Stats: closed jobs */
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.stage.small { grid-template-columns: 140px minmax(0, 1fr) 36px; }
+@media (max-width: 760px) { .grid3 { grid-template-columns: minmax(0, 1fr); } }
+
+/* Scan sources: sub-tabs and a fixed toolbar */
+.segtabs { display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 10px; overflow-x: auto; scrollbar-width: none; }
+.segtabs::-webkit-scrollbar { display: none; }
+.seg { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; border-radius: 8px; padding: 8px 14px; font-family: var(--f-label); font-weight: 600; font-size: 14px; color: var(--fg-2); white-space: nowrap; min-height: 38px; }
+.seg:hover { color: var(--fg); }
+.seg[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.segn { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.srctools { display: flex; gap: 8px; align-items: center; }
+.srctools .srcsearch { flex: 1 1 auto; min-width: 0; }
+.srctools .b { flex: none; min-height: 38px; }
+.sechead .banner { margin: 0; flex: 1 1 auto; }
+@media (max-width: 600px) { .segtabs { flex-wrap: wrap; } .seg { flex: 1 1 40%; } }
 </style>
 
 <div class="app">
@@ -275,7 +300,7 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
     <div class="bar-top">
       <div class="steps" id="steps" role="group" aria-label="Pipeline stage"></div>
     </div>
-    <div class="filters" id="subfilters"></div>
+    <div id="suggest-host"></div>
     <div class="list" id="list"></div>
   </section>
   <section class="view" id="view-resumes" role="tabpanel" hidden></section>
@@ -302,6 +327,15 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
         <div id="funnel-you" style="display:grid;gap:6px"></div>
       </div>
     </div>
+    <div class="panel">
+      <h2>Closed jobs</h2>
+      <p class="sub" id="closed-sub"></p>
+      <div class="grid3">
+        <div><h3 class="mini">How they closed</h3><div id="closed-how" style="display:grid;gap:6px"></div></div>
+        <div><h3 class="mini">Why you skipped</h3><div id="closed-why" style="display:grid;gap:6px"></div></div>
+        <div><h3 class="mini">Where applications ended</h3><div id="closed-where" style="display:grid;gap:6px"></div></div>
+      </div>
+    </div>
     <div class="foot">
       <span id="foot-acc"></span>
       <span>An application counts as decided after 21 days, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
@@ -325,15 +359,14 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
   ];
   var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Recruiter screen", hm: "Hiring manager", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response" };
   var BUCKET = { must: "Must have", important: "Important", nice: "Nice to have" };
-  var CLOSED_FILTERS = [["all", "All"], ["skipped", "Skipped"], ["rejected", "Rejected"], ["noresp", "No response"], ["withdrew", "Withdrew"]];
   var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority"];
 
   // ---------- Data (filled by the database) ----------
-  var D = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, run: null, sources: null };
+  var D = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, run: null, sources: null, suggestions: null };
   var db = null, downloads = null, canWrite = true, loaded = false;
 
   // ---------- View state (per viewer, this browser only) ----------
-  var state = { tab: "triage", stage: "review", closedFilter: "all" };
+  var state = { tab: "triage", stage: "review" };
   try { var t0 = localStorage.getItem("jsd-tab"); if (t0) state.tab = t0; } catch (e) {}
   var h = (location.hash || "").slice(1); if (["triage", "resumes", "sources", "stats"].indexOf(h) > -1) state.tab = h;
   var open = {}, addOpen = false, helpOpen = false, lastVerdict = "";
@@ -403,9 +436,16 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
   function items() {
     var out = [];
     var blocked = blockedCompanies();
+    var latest = {};
+    Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (!latest[r.posting_id] || r.at > latest[r.posting_id].at) latest[r.posting_id] = r; });
     Object.keys(D.postings).forEach(function (id) {
       var p = D.postings[id];
       if (blocked[normCo(p.company)] && !D.decisions[id]) return;
+      var r = latest[id];
+      if (r) {
+        p = Object.assign({}, p, { score: r.score, status_hint: r.status_hint, threshold: r.threshold, ratings: r.ratings, checks: r.checks, rescored: r.at });
+        if (r.status_hint !== "qualified" && !p.dream && !p.added_by_user && !D.decisions[id]) return;
+      }
       out.push(p);
     });
     Object.keys(D.requests).forEach(function (rid) {
@@ -525,14 +565,11 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
       steps.appendChild(el("button", { class: "step", "aria-pressed": String(state.stage === s.k), onclick: function () { state.stage = s.k; open = {}; render(); } },
         [el("span", { class: "sl", text: s.label }), el("span", { class: "sn", text: String(c[s.k]) })]));
     });
-    var sub = document.getElementById("subfilters"); sub.textContent = ""; sub.hidden = state.stage !== "closed";
-    if (state.stage === "closed") CLOSED_FILTERS.forEach(function (f) {
-      sub.appendChild(el("button", { class: "fbtn", "aria-pressed": String(state.closedFilter === f[0]), onclick: function () { state.closedFilter = f[0]; render(); } }, [f[1]]));
-    });
+    renderSuggestions();
     var list = document.getElementById("list"); list.textContent = "";
     var shown = all.filter(function (p) {
       var s = eff(p.id).status; if (stageOf(s) !== state.stage) return false;
-      return state.stage !== "closed" || state.closedFilter === "all" || state.closedFilter === s;
+      return true;
     });
     if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (b.score || 0) - (a.score || 0); });
     else shown.sort(function (a, b) { var x = (D.decisions[a.id] || {}).at || "", y = (D.decisions[b.id] || {}).at || ""; return x < y ? 1 : -1; });
@@ -543,6 +580,32 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
       if (addOpen) list.appendChild(addJobForm());
       else list.appendChild(el("button", { class: "empty addcard", onclick: function () { addOpen = true; render(); setTimeout(function () { var t = document.getElementById("aj-text"); if (t) t.focus(); }, 30); } }, ["+ Add a job you found yourself"]));
     }
+  }
+
+  function renderSuggestions() {
+    var host = document.getElementById("suggest-host"); host.textContent = "";
+    var sg = D.suggestions;
+    if (!sg || !sg.items || state.stage !== "review") return;
+    var handled = {};
+    Object.keys(D.requests).forEach(function (rid) { var r = D.requests[rid]; if ((r.kind === "apply_suggestion" || r.kind === "decline_suggestion") && r.week === sg.week) handled[r.sid] = r.kind; });
+    var open = sg.items.filter(function (x) { return !handled[x.id]; });
+    if (!open.length) return;
+    var box = el("div", { class: "panel suggest" }, [
+      el("h2", { text: open.length === 1 ? "A scoring suggestion from this week" : open.length + " scoring suggestions from this week" }),
+      el("p", { class: "sub", text: "Based on what you skipped and what you went for. Approved changes apply in the next run, and your open jobs are rescored then." })
+    ]);
+    open.forEach(function (x) {
+      box.appendChild(el("div", { class: "sugg" }, [
+        el("div", { class: "pw", text: x.title }),
+        el("div", { class: "s2", text: x.why }),
+        el("div", { class: "s2 muted", text: "What changes: " + x.change }),
+        el("div", { class: "btns", style: "justify-content:flex-start" }, [
+          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, ["Approve"]),
+          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, ["Not now"])
+        ])
+      ]));
+    });
+    host.appendChild(box);
   }
 
   function addJobForm() {
@@ -782,9 +845,8 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
     ["boards", "Job boards", "Companies whose job boards the free daily scan reads. No Claude usage."],
     ["search", "Can't be read yet", "No job board the scan can read was found for these, so they are not checked. Paste a company's job board link to fix it, or turn them off."]
   ];
-  var srcOpen = { dream: true }, quietOpen = {}, srcQuery = "", boardEdit = null;
-  try { var so = JSON.parse(localStorage.getItem("jsd-src-open") || "null"); if (so) srcOpen = so; } catch (e) {}
-  function saveSrcOpen() { try { localStorage.setItem("jsd-src-open", JSON.stringify(srcOpen)); } catch (e) {} }
+  var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false;
+  try { srcTab = localStorage.getItem("jsd-src-tab"); } catch (e) {}
   function pendingReq(kind, test) {
     var snapAt = D.sources ? D.sources.at : "";
     var hit = null;
@@ -814,83 +876,86 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
         el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "dismiss_gap", gap: g.id }, "Dismissed"); } }, ["Dismiss"])
       ]));
     });
-    if (!snap) { v.appendChild(el("div", { class: "empty", text: loaded ? "Your sources appear here after the first morning run." : "Loading…" })); addSourceForm(v); return; }
-
-    // Summary: one card per group
-    var tiles = el("div", { class: "tiles srctiles" });
-    GROUPS_SRC.forEach(function (g) {
+    if (!snap) { v.appendChild(el("div", { class: "empty", text: loaded ? "Your sources appear here after the first morning run." : "Loading…" })); return; }
+    var blk = blockedCompanies(), bkeys = Object.keys(blk);
+    var views = GROUPS_SRC.filter(function (g) { return g[0] === "dream" || rows.some(function (s) { return s.group === g[0]; }); }).map(function (g) {
       var rs = rows.filter(function (s) { return s.group === g[0]; });
-      if (!rs.length && g[0] !== "dream") return;
-      var on = rs.filter(srcOn).length, found = 0, qual = 0;
-      rs.forEach(function (s) { if (srcOn(s)) { found += s.found || 0; qual += s.qual || 0; } });
-      var note = g[0] === "search" ? (on ? on + " on, not checked" : "All off") : g[0] === "mail" ? (on ? found + " found · " + qual + " qualified" : "Off") : found + " found · " + qual + " qualified";
-      tiles.appendChild(el("button", { class: "tile srctile" + (srcOpen[g[0]] ? " open" : "") + (g[0] === "search" ? " thin" : ""), "aria-expanded": String(!!srcOpen[g[0]]), onclick: function () { srcOpen[g[0]] = !srcOpen[g[0]]; saveSrcOpen(); render(); } }, [
-        el("div", { class: "k", text: g[1] }),
-        el("div", { class: "v", text: g[0] === "mail" ? (on ? "On" : "Off") : String(rs.length) }),
-        el("div", { class: "n", text: note })
-      ]));
+      return { k: g[0], label: g[1], desc: g[2], rows: rs, count: g[0] === "mail" ? (rs.some(srcOn) ? "On" : "Off") : String(rs.length) };
     });
-    v.appendChild(tiles);
-    v.appendChild(el("p", { class: "banner", text: "Numbers are from the last 30 days: postings found, how many reached your bar, and how many you applied to. Tap a card to open its list." }));
+    views.push({ k: "blocked", label: "Blocked", desc: "Jobs from these never reach scoring. Reposting services are blocked for everyone: they copy other companies' postings and hide who is hiring.", rows: [], count: String(bkeys.length) });
+    if (!views.some(function (x) { return x.k === srcTab; })) srcTab = views.some(function (x) { return x.k === "dream" && x.rows.length; }) ? "dream" : views.some(function (x) { return x.k === "boards"; }) ? "boards" : views[0].k;
 
+    // Sub-tabs: one view at a time
+    var bar = el("div", { class: "segtabs", role: "tablist", "aria-label": "Source groups" });
+    views.forEach(function (x) {
+      bar.appendChild(el("button", { class: "seg", role: "tab", "aria-selected": String(srcTab === x.k), onclick: function () { srcTab = x.k; srcQuery = ""; try { localStorage.setItem("jsd-src-tab", srcTab); } catch (e) {} render(); } },
+        [x.label, el("span", { class: "segn", text: x.count })]));
+    });
+    v.appendChild(bar);
+
+    // Fixed toolbar: find on the left, add on the right, same place on every view
+    var tools = el("div", { class: "srctools" });
     var search = el("input", { type: "search", class: "srcsearch", placeholder: "Find a company", "aria-label": "Find a company", value: srcQuery });
     search.addEventListener("input", function () { srcQuery = search.value; renderSources(); var n = document.querySelector(".srcsearch"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } });
-    if (rows.length > 12) v.appendChild(search);
+    tools.appendChild(search);
+    tools.appendChild(el("button", { class: "b" + (addSrcOpen ? " on" : " primary"), "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () { addSrcOpen = !addSrcOpen; render(); if (addSrcOpen) setTimeout(function () { var i = document.getElementById("src-input"); if (i) i.focus(); }, 30); } }, [addSrcOpen ? "Close" : "Add a source"]));
+    v.appendChild(tools);
+    if (addSrcOpen || lastVerdict) addSourceForm(v);
+
     var q = srcQuery.trim().toLowerCase();
-
-    GROUPS_SRC.forEach(function (g) {
-      var rs = rows.filter(function (s) { return s.group === g[0] && (!q || s.name.toLowerCase().indexOf(q) > -1); });
-      var adds = g[0] === "dream" ? Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_source" && !D.done[rid] && (!q || String(r.text).toLowerCase().indexOf(q) > -1); }) : [];
-      var isOpen = q ? rs.length + adds.length > 0 : srcOpen[g[0]];
-      if (!isOpen || (!rs.length && !adds.length)) return;
-      var head = el("div", { class: "sechead" }, [el("h3", { class: "sec", text: g[1] + " · " + rs.length })]);
-      if (g[0] === "search" && rs.length && !q) {
-        var anyOn = rs.some(srcOn);
-        head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
-      }
-      v.appendChild(head);
-      v.appendChild(el("p", { class: "banner", text: g[2] }));
-      rs.sort(function (a, b) { return (b.qual || 0) - (a.qual || 0) || (b.found || 0) - (a.found || 0) || a.name.localeCompare(b.name); });
-      var quietRule = g[0] === "dream" || g[0] === "boards";
-      var split = quietRule && !q;
-      var active = split ? rs.filter(function (s) { return s.found > 0; }) : rs;
-      var quiet = split ? rs.filter(function (s) { return !(s.found > 0); }) : [];
-      var l = el("div", { class: "ledger" });
-      adds.forEach(function (rid) { var r = D.requests[rid]; l.appendChild(el("div", { class: "lrow" }, [el("div", null, [el("div", { class: "t", text: r.text })]), el("div", { class: "m low", text: "Waiting for the next run to set it up" }), el("div")])); });
-      active.forEach(function (s) { l.appendChild(srcRow(s)); });
-      if (quiet.length) {
-        var qo = !!quietOpen[g[0]];
-        l.appendChild(el("button", { class: "lrow quiettoggle", "aria-expanded": String(qo), onclick: function () { quietOpen[g[0]] = !qo; render(); } }, [
-          el("span", { class: "t", text: (qo ? "▾ " : "▸ ") + "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days" })
-        ]));
-        if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
-      }
-      if (l.childNodes.length) v.appendChild(l);
-    });
-
-    var blk = blockedCompanies(), bkeys = Object.keys(blk);
-    if (bkeys.length) {
-      var mine = bkeys.filter(function (k) { return !blk[k].system; }), sys = bkeys.filter(function (k) { return blk[k].system; });
-      var bo = !!srcOpen._blocked;
-      v.appendChild(el("button", { class: "sec seclink", "aria-expanded": String(bo), onclick: function () { srcOpen._blocked = !bo; saveSrcOpen(); render(); } }, [(bo ? "▾ " : "▸ ") + "Blocked companies · " + bkeys.length]));
-      if (bo) {
-        v.appendChild(el("p", { class: "banner", text: "Jobs from these never reach scoring. Reposting services are blocked for everyone: they copy other companies' postings and hide who is hiring." }));
-        var bl = el("div", { class: "ledger" });
-        mine.concat(sys).forEach(function (k) {
-          var b = blk[k];
-          bl.appendChild(el("div", { class: "lrow" }, [
-            el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked") })]),
-            el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
-            b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, ["Unblock"])])
-          ]));
-        });
-        v.appendChild(bl);
-      }
+    var view = views.filter(function (x) { return x.k === srcTab; })[0];
+    if (q) {
+      var elsewhere = views.filter(function (x) { return x.k !== srcTab && x.rows.some(function (s) { return s.name.toLowerCase().indexOf(q) > -1; }); });
+      if (elsewhere.length) v.appendChild(el("p", { class: "banner", text: "Also matches in: " + elsewhere.map(function (x) { return x.label; }).join(", ") + "." }));
     }
-    addSourceForm(v);
+
+    if (view.k === "blocked") {
+      v.appendChild(el("p", { class: "banner", text: view.desc }));
+      var keys = bkeys.filter(function (k) { return !q || blk[k].company.toLowerCase().indexOf(q) > -1; });
+      var mine = keys.filter(function (k) { return !blk[k].system; }), sys = keys.filter(function (k) { return blk[k].system; });
+      var bl = el("div", { class: "ledger" });
+      mine.concat(sys).forEach(function (k) {
+        var b = blk[k];
+        bl.appendChild(el("div", { class: "lrow" }, [
+          el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked") })]),
+          el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
+          b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, ["Unblock"])])
+        ]));
+      });
+      if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No blocked company matches." : "Nothing blocked. Skip a job with “Never show jobs from this company” to add one." })]));
+      v.appendChild(bl);
+      return;
+    }
+
+    var found = 0, qual = 0;
+    view.rows.forEach(function (s) { if (srcOn(s)) { found += s.found || 0; qual += s.qual || 0; } });
+    var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" ? "" : " Last 30 days: " + found + " found, " + qual + " reached your bar.") })]);
+    if (view.k === "search" && view.rows.length) {
+      var anyOn = view.rows.some(srcOn);
+      head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
+    }
+    v.appendChild(head);
+
+    var rs = view.rows.filter(function (s) { return !q || s.name.toLowerCase().indexOf(q) > -1; });
+    rs.sort(function (a, b) { return (b.qual || 0) - (a.qual || 0) || (b.found || 0) - (a.found || 0) || a.name.localeCompare(b.name); });
+    var adds = view.k === "dream" ? Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_source" && !D.done[rid] && (!q || String(r.text).toLowerCase().indexOf(q) > -1); }) : [];
+    var split = (view.k === "dream" || view.k === "boards") && !q;
+    var active = split ? rs.filter(function (s) { return s.found > 0; }) : rs;
+    var quiet = split ? rs.filter(function (s) { return !(s.found > 0); }) : [];
+    var l = el("div", { class: "ledger" });
+    adds.forEach(function (rid) { var r = D.requests[rid]; l.appendChild(el("div", { class: "lrow" }, [el("div", null, [el("div", { class: "t", text: r.text })]), el("div", { class: "m low", text: "Waiting for the next run to set it up" }), el("div")])); });
+    active.forEach(function (s) { l.appendChild(srcRow(s)); });
+    if (quiet.length) {
+      var qo = !!quietOpen[view.k];
+      l.appendChild(el("button", { class: "lrow quiettoggle", "aria-expanded": String(qo), onclick: function () { quietOpen[view.k] = !qo; render(); } }, [
+        el("span", { class: "t", text: (qo ? "▾ " : "▸ ") + "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days" })
+      ]));
+      if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
+    }
+    if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." : view.k === "dream" ? "No dream companies yet. Use “Add a source” and type a company name." : "Nothing here yet." })]));
+    v.appendChild(l);
   }
   function addSourceForm(v) {
-    v.appendChild(el("h3", { class: "sec", text: "Add a source" }));
     var input = el("input", { id: "src-input", type: "text", placeholder: "Company name, careers page link, or job board link", "aria-label": "Company name or link" });
     var out = el("div", { id: "src-out" });
     if (lastVerdict) out.appendChild(el("div", { class: "verdict", text: lastVerdict }));
@@ -902,7 +967,7 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
       var rid = await saveRequest({ kind: "add_source", text: q, dream: !isLink }, null);
       if (!rid) return;
       lastVerdict = "Added " + q + ". " + (isLink ? "The next run opens the link and works out how to check it daily." : "The next run searches for its careers page. If it can't find one, it's checked weekly by web search instead.");
-      render();
+      addSrcOpen = true; render();
     } }, [
       el("label", { for: "src-input", text: "Type a company name to add it as a dream company, or paste a careers page or job board link to skip the lookup." }),
       el("div", { class: "fields" }, [input, el("button", { class: "b primary", type: "submit", disabled: !canWrite }, ["Add"])]),
@@ -1015,6 +1080,39 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
     ], "var(--bar)", "of open");
     document.getElementById("funnel-you-sub").textContent = "Of " + q.qualified + " qualified postings: " + q.applied + " applied, " + q.skipped + " skipped by you, " + Math.max(0, q.qualified - q.applied - q.skipped) + " not decided yet.";
     funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Recruiter screen", n: you.screen }, { k: "Hiring manager", n: you.hm }, { k: "Offer", n: you.offer }], "var(--bar-2)", "of applied");
+    renderClosed();
+  }
+  function bars(host, rows, color, emptyText) {
+    host.textContent = "";
+    var total = rows.reduce(function (a, r) { return a + r.n; }, 0);
+    if (!total) { host.appendChild(el("p", { class: "s", text: emptyText })); return; }
+    var max = Math.max.apply(null, rows.map(function (r) { return r.n; }));
+    rows.filter(function (r) { return r.n > 0; }).sort(function (a, b) { return b.n - a.n; }).forEach(function (r) {
+      var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + (r.color || color) + ";width:" + Math.max(r.n / max * 100, 2) + "%" })]);
+      hover(track, r.k + ": " + r.n + " (" + pct(r.n, total) + "%)");
+      host.appendChild(el("div", { class: "stage small" }, [el("span", { class: "lbl", text: r.k }), track, el("span", { class: "num", text: String(r.n) })]));
+    });
+  }
+  function renderClosed() {
+    var how = { skipped: 0, rejected: 0, noresp: 0, withdrew: 0 }, why = {}, where = { applied: 0, screen: 0, hm: 0, offer: 0 };
+    Object.keys(D.decisions).forEach(function (id) {
+      var e = eff(id), s = e.status;
+      if (!(s in how)) return;
+      how[s]++;
+      if (s === "skipped") (e.d.reasons && e.d.reasons.length ? e.d.reasons : ["No reason given"]).forEach(function (r) { why[r] = (why[r] || 0) + 1; });
+      else if (e.lost_at && e.lost_at in where) where[e.lost_at]++;
+    });
+    var total = how.skipped + how.rejected + how.noresp + how.withdrew;
+    document.getElementById("closed-sub").textContent = total ? total + (total === 1 ? " job" : " jobs") + " closed so far. No response means nothing came back within 21 days of applying, or 14 days after an interview." : "Nothing closed yet.";
+    bars(document.getElementById("closed-how"), [
+      { k: "Skipped by you", n: how.skipped, color: "var(--s-pending)" }, { k: "Rejected", n: how.rejected, color: "var(--s-rejected)" },
+      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "Withdrew", n: how.withdrew, color: "var(--s-withdrew)" }
+    ], "var(--bar)", "None yet.");
+    bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--bar)", "No skips yet.");
+    bars(document.getElementById("closed-where"), [
+      { k: "After applying", n: where.applied }, { k: "After recruiter screen", n: where.screen },
+      { k: "After hiring manager", n: where.hm }, { k: "At the offer", n: where.offer }
+    ], "var(--bar-2)", "No applications closed yet.");
   }
   function funnel(host, stages, color, shareLabel) {
     host.textContent = "";
@@ -1056,6 +1154,8 @@ button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-
     db.collection("decisions").onSnapshot(function (s) { collect("decisions", "decisions", s); ready(); }, onErr("decisions"));
     db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.run = s.empty ? null : s.docs[0].data(); ready(); render(); }, onErr("runs"));
     db.collection("deep").onSnapshot(function (s) { collect("deep", "deep", s); }, onErr("deep evaluations"));
+    db.collection("rescores").onSnapshot(function (s) { collect("rescores", "rescores", s); }, onErr("scores"));
+    db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { D.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions"));
     db.collection("requests").onSnapshot(function (s) { collect("requests", "requests", s); }, onErr("requests"));
     db.collection("requests_done").onSnapshot(function (s) { collect("requests_done", "done", s); }, onErr("requests"));
     db.collection("resumes").onSnapshot(function (s) { collect("resumes", "resumes", s); }, onErr("resumes"));

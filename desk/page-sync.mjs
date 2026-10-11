@@ -29,6 +29,7 @@ import { loadScoringConfig } from './lib/scoring.mjs';
 import { readFrontMatter } from './lib/frontmatter.mjs';
 import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist } from './lib/blocklist.mjs';
 import { loadProviders, resolveProvider } from '../providers/_registry.mjs';
+import { applySuggestion, decline as declineSuggestion } from './suggest.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const DATA = path.resolve(ROOT, process.env.CAREER_OPS_DATA_DIR || '.');
@@ -136,6 +137,17 @@ async function pull(dumpDir) {
       fs.writeFileSync(P.portals, yaml.dump(portals, { lineWidth: 160, noRefs: true }));
       done(rid, `${n} companies turned ${r.on ? 'on' : 'off'}`);
       summary.switches_applied.push({ id: 'group:search', on: !!r.on, count: n });
+    } else if ((r.kind === 'apply_suggestion' || r.kind === 'decline_suggestion') && r.week && r.sid) {
+      if (r.kind === 'decline_suggestion') { declineSuggestion(r.week, r.sid); done(rid, 'Not now'); continue; }
+      try {
+        const res = applySuggestion(r.week, r.sid);
+        const moved = (res.rescored || []).length;
+        done(rid, res.applied ? `Done: ${res.title}.${moved ? ` ${moved} open job${moved === 1 ? '' : 's'} rescored.` : ''}` : res.note);
+        summary.suggestions_applied = [...(summary.suggestions_applied || []), { title: res.title, rescored: moved }];
+      } catch (e) {
+        done(rid, `Couldn't apply this one: ${e.message}`);
+        summary.suggestions_failed = [...(summary.suggestions_failed || []), e.message];
+      }
     } else if (r.kind === 'dismiss_gap') {
       const gaps = readJson(P.gaps, []);
       writeJson(P.gaps, gaps.filter(g => g.id !== r.gap));
@@ -203,6 +215,22 @@ async function push(args) {
     const jd = jdMeta(id);
     if (!belongsOnPage(rec, jd)) continue;
     add('postings', id, postingDoc(rec, jd));
+  }
+  // Rescored postings that are already on the page: a new create-only document each time
+  st.rescores ||= {};
+  for (const rec of scores) {
+    const id = rec.verdict?.id;
+    if (!id || !rec.rescored_at || !donePostings.has(id) || st.rescores[id] === rec.rescored_at) continue;
+    const v = rec.verdict;
+    add('rescores', `${id}~${rec.rescored_at.replace(/[^0-9]/g, '').slice(0, 14)}`, { posting_id: id, at: rec.rescored_at, score: v.score, status_hint: v.status, threshold: v.threshold, dealbreakers: v.dealbreakers, ratings: v.ratings.map(r => ({ id: r.id, name: r.name, bucket: r.bucket, score: r.score, why: r.why })), checks: v.checks });
+  }
+  // Weekly suggestions
+  const doneSug = pushed('suggestions');
+  const sugDir = path.join(DATA, 'data', 'suggestions');
+  if (fs.existsSync(sugDir)) for (const f of fs.readdirSync(sugDir).filter(f => /^\d{4}-W\d\d\.json$/.test(f))) {
+    const wk = f.slice(0, -5); if (doneSug.has(wk)) continue;
+    const d = readJson(path.join(sugDir, f), null);
+    if (d?.items?.length) add('suggestions', wk, { week: wk, at: d.at, items: d.items.map(x => ({ id: x.id, title: x.title, why: x.why, change: x.change })) });
   }
   // Deep evaluations
   const doneDeep = pushed('deep');
@@ -318,7 +346,8 @@ function ack(file) {
   const st = state();
   st.pushed ||= {};
   for (const w of b.writes) {
-    if (['postings', 'deep', 'requests_done', 'resumes'].includes(w.collection)) {
+    if (w.collection === 'rescores') { const body = readJson(w.file_path, {}); (st.rescores ||= {})[body.posting_id] = body.at; }
+    if (['postings', 'deep', 'requests_done', 'resumes', 'suggestions'].includes(w.collection)) {
       const set = new Set(st.pushed[w.collection] || []); set.add(w.doc_id); st.pushed[w.collection] = [...set];
     }
   }

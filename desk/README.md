@@ -20,6 +20,7 @@ Job Search Desk additions on top of upstream career-ops. Upstream files stay unt
 | `CLAUDE-DESK.md` | What the user can say in Claude (start setup, help, change my scoring, tailoring, update career tool) |
 | `update.mjs`, `CHANGELOG.md` | "update career tool": brings a friend's copy up to the template, never touching profile/ |
 | `export-template.mjs` | Developer only (never shipped): builds the friend template and stops on any personal data |
+| `suggest.mjs` | Sunday scoring suggestions from skips and picks; applies approved ones and rescores open jobs (no model calls) |
 | `lists/`, `packs/` | Built-in block list of reposting services; ready-made source packs for setup step 7 |
 
 All commands read the profile from `$CAREER_OPS_DATA_DIR` (always `profile`).

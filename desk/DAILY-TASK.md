@@ -85,6 +85,10 @@ For each item in `to_deep`, start a subagent (`Agent` tool, `model: "opus"`), on
 
 For each entry in `dream_web_search`, run one WebSearch with its query plus the user's main role words. Collect open postings at that company into `.work/web.json` (same shape as alerts, `source: "Web search"`) and run `node desk/daily.mjs alerts .work/web.json`.
 
+## 7b. Weekly scoring suggestions (Sundays)
+
+`node desk/suggest.mjs week`. It looks at the last four weeks of skips (with their reasons) and of jobs marked Interested or Applied, and writes up to 3 suggestions for the page. No model calls. Approvals and "not now" clicks arrive through step 2's pull, which applies approved changes to scoring.yml and rescores open jobs on its own; mention any `suggestions_applied` or `suggestions_failed` from the pull output in the final message.
+
 ## 8. Update the page
 
 ```bash
