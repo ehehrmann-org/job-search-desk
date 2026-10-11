@@ -264,3 +264,18 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .recent { display: grid; gap: 4px; font-size: 13px; color: var(--fg-2); }
 .recent b { color: var(--fg); font-weight: 600; }
 .showmore { justify-self: center; }
+
+/* First-visit tour: a spotlight on one part of the page and a card that explains it */
+.tour-spot { position: fixed; z-index: 30; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(10, 14, 20, .45); outline: 2px solid var(--accent); pointer-events: none; transition: top .2s ease, left .2s ease, width .2s ease, height .2s ease; }
+.tour-card { position: fixed; z-index: 31; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.28); display: grid; gap: 8px; }
+.tour-card h2 { margin: 0; font-family: var(--f-label); font-weight: 600; font-size: 17px; }
+.tour-card p { margin: 0; font-size: 13.5px; color: var(--fg-2); }
+.tour-card .btns { align-items: center; }
+.tour-card .link { margin-right: auto; }
+.tour-count { font-family: var(--f-label); font-weight: 600; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.tour-card.center { top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 9999px rgba(10, 14, 20, .45), 0 12px 32px rgba(0,0,0,.28); }
+.tour-card.sheet { left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: auto; }
+.tourbanner { background: var(--accent-soft); color: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .tour-spot { transition: none; } }
+/* Keep every column inside the viewport: a grid's auto column would grow to fit the widest row (the stage chevrons) */
+.app, .view { grid-template-columns: minmax(0, 1fr); }

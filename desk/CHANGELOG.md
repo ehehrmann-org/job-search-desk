@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.4.0 (2026-10-11)
+- A two-minute tour the first time you open your job page, on sample jobs you can click without changing anything. The sample jobs disappear when it ends. Take it again any time from the status button.
+- The job page fits phone screens without sideways scrolling.
+
 ## 0.3.0 (2026-10-11)
 - Your job page keeps what you're typing or picking when new data arrives, and undoes a click that didn't save instead of showing it as saved.
 - "They replied" on a job with no response moves it back to where it went quiet with a fresh date; Reopen no longer sends applications straight back to Closed.

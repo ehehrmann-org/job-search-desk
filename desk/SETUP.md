@@ -154,12 +154,12 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 11 se
 1. **Her job page.** `node desk/page/build.mjs`, then publish `desk/page/dist/job-search-desk.html` with the Artifact tool: icon `briefcase`, capabilities `{"db": {}, "user": {}, "downloads": true, "assets": {}}`. Save its link to `desk.yml` `page_url`.
 2. **Resumes on the page.** Upload each resume PDF as an asset of the page (Artifact publish with the page url, `asset: true`, `file_paths`). Save each asset id to its `index.yml` entry as `asset_id`.
 3. **First fill.** `node desk/page-sync.mjs push`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`.
-4. **First click.** Ask her to open the page, go to Scan sources, and switch any source off and on again. That first click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `source_switches`. Set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
+4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to open the status button, click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
 5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Create a scheduled task named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its id to `desk.yml` `task_id`.
 6. **Task settings (she does this).** Walk her to the task's settings: remove every connection except Gmail (none at all if she skipped Gmail), and check that automatic approval is on. Wait until she confirms both.
 7. Save, then `node desk/setup.mjs done 12`.
 8. **Close.** Tell her, briefly:
-   - The first results arrive tomorrow around 6:45 AM on her job page.
+   - The first results arrive tomorrow around 6:45 AM on her job page. The tour is always one click away from the status button.
    - The first two weeks will score rough. Every Skip with a reason and every Applied teaches it; Sunday suggestions propose changes she approves.
    - "Change my scoring", "add a dream company" and "help" work anytime in Claude.
    - If something breaks, a line at the top of her job page says what to do, with a message for Erik.

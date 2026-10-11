@@ -81,7 +81,10 @@
   var STAMPED = ["interested", "applied", "screen", "hm", "offer"];
 
   // ---------- Data (filled by the database) ----------
-  var D = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, run: null, sources: null, suggestions: null };
+  // R is her real data; D is what the page shows: R, or the sample data while the tour runs.
+  var R = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, prefs: {}, run: null, sources: null, suggestions: null };
+  var D = R;
+  var tour = { on: false, step: 0, prevTab: null, offered: false };
   var db = null, downloads = null, canWrite = true, loaded = false;
 
   // ---------- View state (per viewer, this browser only) ----------
@@ -217,11 +220,14 @@
     return out;
   }
 
-  // ---------- Writes ----------
+  // ---------- Writes (during the tour they change only the sample data) ----------
   var writing = {};
+  function writable() { return tour.on || (!!db && canWrite); }
+  function persist(docPath, doc) { return tour.on ? Promise.resolve() : db.doc(docPath).set(doc); }
+  function saved(msg) { if (msg) toast(tour.on ? msg + " (sample job, nothing saved)" : msg); }
   async function saveDecision(id, patch, msg, opts) {
     opts = opts || {};
-    if (!db || !canWrite) { toast("Not connected. Your click wasn't saved."); return false; }
+    if (!writable()) { toast("Not connected. Your click wasn't saved."); return false; }
     if (writing[id]) { toast("Still saving the last change. Try again in a second."); return false; }
     var before = D.decisions[id];
     var cur = JSON.parse(JSON.stringify(before || { status: "new", dates: {}, reasons: [] }));
@@ -236,7 +242,7 @@
     }
     writing[id] = true; delete drawer[id];
     D.decisions[id] = next; render();
-    try { await db.doc("decisions/" + id).set(next); if (msg) toast(msg); return true; }
+    try { await persist("decisions/" + id, next); saved(msg); return true; }
     catch (e) {
       if (before) D.decisions[id] = before; else delete D.decisions[id];
       render(); toast("Not saved: " + errText(e)); return false;
@@ -244,11 +250,11 @@
     finally { writing[id] = false; }
   }
   async function saveRequest(body, msg) {
-    if (!db || !canWrite) { toast("Not connected. Nothing was saved."); return null; }
+    if (!writable()) { toast("Not connected. Nothing was saved."); return null; }
     var id = newId();
     var doc = Object.assign({ at: new Date().toISOString() }, body);
     D.requests[id] = doc; render();
-    try { await db.doc("requests/" + id).set(doc); if (msg) toast(msg); return id; }
+    try { await persist("requests/" + id, doc); saved(msg); return id; }
     catch (e) { delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
   }
 
@@ -291,6 +297,7 @@
     hb.setAttribute("data-state", !loaded ? "loading" : probs.length ? "problem" : "ok");
     document.getElementById("status-text").textContent = !loaded ? "Checking" : probs.length ? (probs.length === 1 ? "1 problem" : probs.length + " problems") + ": see details" : "All working";
     var hh = document.getElementById("help-host"); hh.textContent = "";
+    if (tour.on) hh.appendChild(el("div", { class: "note tourbanner" }, [el("span", { text: "Tour: these are sample jobs. They disappear when the tour ends, and your own jobs come back." })]));
     if (!helpOpen) return;
     var msg = helpMessage();
     var email = (r && r.help_email) || "";
@@ -313,7 +320,8 @@
     kids.push(el("pre", { class: "msg", text: msg }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
       el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
-      el("button", { class: "b", onclick: function () { helpOpen = false; focusNext = "help-btn"; render(); } }, ["Close"])
+      el("button", { class: "b", onclick: function () { helpOpen = false; focusNext = "help-btn"; render(); } }, ["Close"]),
+      el("button", { class: "link", onclick: function () { helpOpen = false; startTour(); } }, ["Take the tour again"])
     ]));
     hh.appendChild(el("div", { class: "panel help" + (probs.length ? " bad" : "") }, kids));
   }
@@ -414,7 +422,7 @@
 
   function card(p) {
     var e = eff(p.id), s = e.status, dec = e.d, deep = D.deep[p.id];
-    var row = el("article", { class: "row", "aria-label": p.title + " at " + p.company });
+    var row = el("article", { class: "row", "data-id": p.id, "aria-label": p.title + " at " + p.company });
     var sc = num(p.score), thr = num(p.threshold);
     if (p.pending || sc === null) row.appendChild(el("div", { class: "score na" }, ["–"]));
     else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
@@ -787,11 +795,11 @@
     else { var low = (s.found || 0) >= 20 && !s.qual; y = el("div", { class: "m" + (low ? " low" : ""), text: (s.found || 0) + " found · " + (s.qual || 0) + " qualified · " + (s.app || 0) + " applied" + (low ? " · nothing reached your bar in 30 days, consider turning it off" : "") }); }
     var ctrl = el("div", { class: "ctrl" }, [el("button", { class: "sw", role: "switch", "data-k": "sw-" + s.id, disabled: !canWrite || !!swBusy[s.id], "aria-checked": String(on), "aria-label": s.name,
       onclick: async function () {
-        if (!db || swBusy[s.id]) return;
+        if (!writable() || swBusy[s.id]) return;
         var before = D.switches[s.id];
         var doc = { on: !on, at: new Date().toISOString() };
         swBusy[s.id] = true; D.switches[s.id] = doc; render();
-        try { await db.doc("source_switches/" + s.id).set(doc); toast(s.name + (on ? " turned off. The next run skips it." : " turned on. The next run includes it.")); }
+        try { await persist("source_switches/" + s.id, doc); saved(s.name + (on ? " turned off. The next run skips it." : " turned on. The next run includes it.")); }
         catch (e) { if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
         finally { swBusy[s.id] = false; render(); }
       } })]);
@@ -969,6 +977,7 @@
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
     showTab();
+    if (tour.on) placeTour();
     if (k) {
       var n = null;
       Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
@@ -980,15 +989,172 @@
   }
   render();
 
+  // ---------- Tour: sample data and a step-by-step walkthrough ----------
+  // The sample jobs exist only in this page while the tour runs; nothing is written to her
+  // database except prefs/tour when she finishes or skips (her first click, which also
+  // brings up the one-time permission question).
+  function makeDemo() {
+    function day(n) { var d = new Date(Date.now() - n * DAY); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+    function iso(n) { return new Date(Date.now() - n * DAY).toISOString(); }
+    var dims = [["role_fit", "Role fit", "must"], ["level", "Level and scope", "important"], ["team", "Team and craft", "important"], ["company", "Company type", "important"], ["pay", "Pay", "nice"], ["location", "Location", "nice"]];
+    var whys = {
+      role_fit: ["Runs creative production end to end, the work you named in your best job.", "Mostly people management, some of the hands-on production you like."],
+      level: ["A step up: owns the studio budget and reports to the CMO.", "Same level, bigger team."],
+      team: ["In-house team known for its campaign work.", "Solid team, work you'd show selectively."],
+      company: ["Consumer brand with an in-house studio, the kind you named first.", "Agency, a kind you said was fine."],
+      pay: ["$210,000 posted", "$175,000 posted"],
+      location: ["2 office days a week", "Remote"]
+    };
+    function ratings(hi) { return dims.map(function (d, i) { var sc = hi ? [5, 4.5, 4, 5, 4, 4][i] : [4, 3.5, 3, 3, 3, 5][i]; return { id: d[0], name: d[1], bucket: d[2], score: sc, why: whys[d[0]][hi ? 0 : 1] }; }); }
+    function post(id, company, title, score, extra) {
+      return Object.assign({ id: id, company: company, title: title, url: "", location: "Remote", pay: "$185K–210K", source: "Greenhouse", found: day(0), dream: false, score: score, threshold: 4, status_hint: "qualified", ratings: ratings(score >= 4.4), checks: [], jd: "saved", added_by_user: false }, extra || {});
+    }
+    var postings = {
+      s1: post("s1", "Northfold Studio", "Director of Creative Operations", 4.6, { location: "Chicago, IL (hybrid)", checks: ["Company size unknown. Check LinkedIn before trusting this score."] }),
+      s2: post("s2", "Halcyon & Reed", "Head of Studio Operations", 4.2, { dream: true, found: day(1), source: "Lever", pay: "Pay not listed" }),
+      s3: post("s3", "Brightwater Goods", "Senior Manager, Creative Production", 4.1, { found: day(1), pay: "$150K–175K", source: "LinkedIn alert" }),
+      s4: post("s4", "Lumen Collective", "Creative Operations Lead", 4.4, { found: day(3) }),
+      s5: post("s5", "Parcel & Pine", "Director, Creative Production", 4.5, { found: day(9), source: "Ashby" }),
+      s6: post("s6", "Oakline Health", "VP, Creative Operations", 4.3, { found: day(16), source: "Workday", pay: "$220K–260K" }),
+      s7: post("s7", "Fieldnote Media", "Production Director", 4.0, { found: day(6), pay: "$120K–135K" }),
+      s8: post("s8", "Tallgrass & Co", "Director of Creative Services", 4.2, { found: day(30) })
+    };
+    var decisions = {
+      s4: { status: "interested", prev: "new", dates: { interested: day(1) }, reasons: [], at: iso(1) },
+      s5: { status: "applied", prev: "interested", sent: "d-ops", dates: { interested: day(7), applied: day(5) }, reasons: [], at: iso(5) },
+      s6: { status: "screen", prev: "applied", sent: "d-prod", dates: { applied: day(12), screen: day(3) }, reasons: [], at: iso(3) },
+      s7: { status: "skipped", prev: "new", reasons: ["Pay too low"], dates: { closed: day(5) }, at: iso(5) },
+      s8: { status: "rejected", prev: "applied", lost_at: "applied", sent: "d-ops", dates: { applied: day(26), closed: day(10) }, reasons: [], at: iso(10) }
+    };
+    var deep = { s4: { at: iso(1), model: "Opus", recommendation: "Apply. The role matches your studio and vendor work closely; the main risk is a small team with no producer under you.", resume: { id: "d-ops", fits: true, note: "Creative operations leadership already leads with workflow and vendor management, which the posting asks for first." }, tailor_why: "", sections: [["Why it fits", "They want someone to build intake, resourcing and production workflows for a growing in-house team."], ["Gaps to address", "They list a project management tool you haven't used. Say how fast you picked up the last one."], ["Questions to ask", "Who owns the budget? How many campaigns a quarter?"]] } };
+    var resumes = {
+      master: { id: "master", name: "Master resume", kind: "master", updated: day(2), text: "Sample" },
+      "d-ops": { id: "d-ops", name: "Creative operations leadership", kind: "default", updated: day(2), text: "Sample" },
+      "d-prod": { id: "d-prod", name: "Creative production", kind: "default", updated: day(2), text: "Sample" }
+    };
+    function row(id, group, name, desc, how, found, qual, app, extra) { return Object.assign({ id: id, group: group, name: name, desc: desc, how: how, on: true, cost: false, found: found, qual: qual, app: app }, extra || {}); }
+    var sources = { at: iso(0), gaps: [], blocked: [{ company: "Swooped", reason: "Reposting service", system: true }], rows: [
+      row("gmail", "mail", "Gmail job alerts", "LinkedIn, Indeed and other alert emails", "Read every run", 0, 0, 0),
+      row("co-halcyon-reed", "dream", "Halcyon & Reed", "Lever", "Checked daily", 3, 2, 0),
+      row("co-marigold", "dream", "Marigold Home", "No job board found", "Checked weekly by web search", 1, 0, 0, { cost: true }),
+      row("co-northfold-studio", "boards", "Northfold Studio", "Greenhouse", "Checked daily", 6, 2, 0),
+      row("co-parcel-pine", "boards", "Parcel & Pine", "Ashby", "Checked daily", 4, 1, 1),
+      row("co-oakline-health", "boards", "Oakline Health", "Workday", "Checked daily", 22, 0, 1),
+      row("co-quietbrook", "boards", "Quietbrook", "Greenhouse", "Checked daily", 0, 0, 0),
+      row("co-studio-vale", "search", "Studio Vale", "No job board found", "Not checked: needs a careers or job board link", 0, 0, 0)
+    ] };
+    var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 } };
+    var suggestions = { week: "sample", items: [{ id: "pay-floor", title: "Set your minimum pay to $140K", why: "You skipped 3 jobs for pay; the best-paid of them topped out at $135K.", change: "Jobs whose posted range tops out under $140K are skipped before scoring." }] };
+    return { postings: postings, decisions: decisions, deep: deep, requests: {}, done: {}, resumes: resumes, switches: {}, rescores: {}, prefs: {}, run: run, sources: sources, suggestions: suggestions };
+  }
+
+  var TOUR = [
+    { title: "Welcome to your job page", text: "A two-minute tour on sample jobs, so you can click around without changing anything. The sample jobs disappear at the end, and your own jobs show from then on. Every morning around 6:45 new ones arrive here." },
+    { target: "#help-btn", title: "Is everything working?", text: "This button says “All working” when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
+    { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "To review holds new jobs that reached your bar. Then Interested, Applied, Interviewing, and Closed for jobs you skipped, lost or withdrew from." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "One job", text: "The number is its score from 0 to 5, built from what you told setup you care about. Click the title to open the posting. A star marks a dream company: those always show, even below your bar." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"]', open: "why", title: "Why this score", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If a line looks wrong, skip the job with a reason, or tell Claude “change my scoring”." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "Interested: Claude writes a deeper evaluation by the next morning and picks the best resume. Applied: pick the resume you sent. Skip: pick a reason; your reasons teach the scoring. Try one: nothing is saved during the tour." },
+    { tab: "triage", stage: "review", target: "#suggest-host .panel", title: "Sunday suggestions", text: "Once a week, the desk looks at what you skipped and what you went for, and suggests up to 3 changes to the scoring. Nothing changes until you approve." },
+    { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (LinkedIn does). It gets scored like the rest, and if your sources missed it, Scan sources tells you." },
+    { tab: "triage", stage: "applied", target: ".list .row", title: "After you apply", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own. “They replied” brings it back." },
+    { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
+    { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with “Add a source”." },
+    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The rest follows your applications from applied to offer, and why jobs closed." },
+    { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
+  ];
+
+  var tourEls = null;
+  function startTour() {
+    if (tour.on) return;
+    tour.on = true; tour.step = 0; tour.prevTab = state.tab;
+    D = makeDemo(); drawer = {}; helpOpen = false; addOpen = false;
+    tourEls = {
+      spot: el("div", { class: "tour-spot", "aria-hidden": "true" }),
+      card: el("div", { class: "tour-card", role: "dialog", "aria-modal": "false", "aria-labelledby": "tour-title" })
+    };
+    document.body.appendChild(tourEls.spot); document.body.appendChild(tourEls.card);
+    window.addEventListener("resize", placeTour); window.addEventListener("scroll", placeTour, true);
+    document.addEventListener("keydown", tourKeys);
+    tourGo(0);
+  }
+  function tourKeys(e) {
+    if (!tour.on) return;
+    if (e.key === "Escape") { e.preventDefault(); endTour(); }
+    var inField = /^(input|textarea|select)$/i.test((e.target && e.target.tagName) || "");
+    if (!inField && e.key === "ArrowRight") { e.preventDefault(); tourGo(tour.step + 1); }
+    if (!inField && e.key === "ArrowLeft") { e.preventDefault(); tourGo(tour.step - 1); }
+  }
+  function tourGo(n) {
+    if (n < 0) return;
+    if (n >= TOUR.length) { endTour(); return; }
+    tour.step = n;
+    var st = TOUR[n];
+    if (st.tab) state.tab = st.tab;
+    if (st.stage) state.stage = st.stage;
+    drawer = {};
+    if (st.open) drawer.s1 = st.open;
+    var last = n === TOUR.length - 1;
+    var c = tourEls.card; c.textContent = "";
+    c.appendChild(el("div", { class: "tour-count", text: "Step " + (n + 1) + " of " + TOUR.length }));
+    c.appendChild(el("h2", { id: "tour-title", text: st.title }));
+    c.appendChild(el("p", { text: st.text }));
+    c.appendChild(el("div", { class: "btns" }, [
+      last ? null : el("button", { class: "link", "data-k": "tour-skip", onclick: function () { endTour(); } }, ["Skip the tour"]),
+      n > 0 ? el("button", { class: "b", "data-k": "tour-back", onclick: function () { tourGo(tour.step - 1); } }, ["Back"]) : null,
+      el("button", { class: "b primary", "data-k": "tour-next", onclick: function () { tourGo(tour.step + 1); } }, [last ? "Finish" : n === 0 ? "Start" : "Next"])
+    ]));
+    focusNext = "tour-next";
+    render();
+    setTimeout(function () { var t = st.target && document.querySelector(st.target); if (t && t.scrollIntoView) t.scrollIntoView({ block: "center", behavior: "auto" }); placeTour(); }, 60);
+  }
+  function placeTour() {
+    if (!tour.on || !tourEls) return;
+    var st = TOUR[tour.step], t = st.target ? document.querySelector(st.target) : null;
+    var spot = tourEls.spot, card = tourEls.card, mobile = window.innerWidth < 600;
+    if (!t) { spot.hidden = true; card.className = "tour-card center"; card.style.top = card.style.left = ""; return; }
+    var r = t.getBoundingClientRect(), padPx = 6;
+    spot.hidden = false;
+    spot.style.top = (r.top - padPx) + "px"; spot.style.left = (r.left - padPx) + "px";
+    spot.style.width = (r.width + padPx * 2) + "px"; spot.style.height = (r.height + padPx * 2) + "px";
+    if (mobile) { card.className = "tour-card sheet"; card.style.top = card.style.left = ""; return; }
+    card.className = "tour-card";
+    var ch = card.offsetHeight, cw = card.offsetWidth;
+    var below = r.bottom + 14, above = r.top - ch - 14;
+    var top = below + ch < window.innerHeight - 8 ? below : above > 8 ? above : Math.max(8, window.innerHeight - ch - 8);
+    card.style.top = top + "px";
+    card.style.left = Math.max(8, Math.min(window.innerWidth - cw - 8, r.left)) + "px";
+  }
+  async function endTour() {
+    if (!tour.on) return;
+    tour.on = false; D = R; drawer = {};
+    state.tab = tour.prevTab || "triage"; state.stage = "review";
+    window.removeEventListener("resize", placeTour); window.removeEventListener("scroll", placeTour, true);
+    document.removeEventListener("keydown", tourKeys);
+    if (tourEls) { tourEls.spot.remove(); tourEls.card.remove(); tourEls = null; }
+    focusNext = "help-btn"; render();
+    try { localStorage.setItem("jsd-tour-done", "1"); } catch (e) {}
+    if (db && canWrite && !(R.prefs && R.prefs.tour)) {
+      try { await db.doc("prefs/tour").set({ done: true, at: new Date().toISOString() }); toast("Tour finished. Your own jobs show from now on."); }
+      catch (e) { toast("Tour finished. Your click wasn't saved: " + errText(e)); }
+    } else toast("Tour finished.");
+  }
+  function offerTour() {
+    if (tour.offered || tour.on || !db) return;
+    tour.offered = true;
+    var seen = false; try { seen = localStorage.getItem("jsd-tour-done") === "1"; } catch (e) {}
+    if (!(R.prefs && R.prefs.tour) && !seen) startTour();
+  }
+
   // ---------- Connect ----------
-  function collect(target, snap) { var m = {}; snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); D[target] = m; render(); }
+  function collect(target, snap) { var m = {}; snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); R[target] = m; render(); }
   (async function () {
     try { db = await claude.use("db"); } catch (e) { db = null; }
     if (!db) { loaded = true; canWrite = false; render(); toast("This view can't reach your tracker. Open the page in Claude while signed in."); return; }
     try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; }
     try { var u = await claude.use("user"); var cw = u && u.can ? u.can("data.write") : null; if (cw === false) canWrite = false; } catch (e) {}
-    var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1 };
-    function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); } }
+    var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1, prefs: 1 };
+    function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); offerTour(); } }
     function onErr(name, what) { return function () { ready(name); toast("Lost the live connection to " + what + ". Reload the page."); }; }
     function watch(name, target, label) { db.collection(name).onSnapshot(function (s) { collect(target, s); ready(name); }, onErr(name, label)); }
     watch("postings", "postings", "postings");
@@ -999,9 +1165,10 @@
     watch("rescores", "rescores", "scores");
     watch("resumes", "resumes", "resumes");
     watch("source_switches", "switches", "sources");
-    db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.run = s.empty ? null : s.docs[0].data(); ready("runs"); render(); }, onErr("runs", "the run status"));
-    db.collection("sources").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.sources = s.empty ? null : s.docs[0].data(); ready("sources"); render(); }, onErr("sources", "sources"));
-    db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { D.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions", "suggestions"));
+    watch("prefs", "prefs", "your settings");
+    db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { R.run = s.empty ? null : s.docs[0].data(); ready("runs"); render(); }, onErr("runs", "the run status"));
+    db.collection("sources").orderBy("at", "desc").limit(1).onSnapshot(function (s) { R.sources = s.empty ? null : s.docs[0].data(); ready("sources"); render(); }, onErr("sources", "sources"));
+    db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { R.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions", "suggestions"));
   })();
 })();
 </script>

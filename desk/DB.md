@@ -2,7 +2,7 @@
 
 The Job Search Desk page is one Claude artifact with four tabs (Triage, Resumes, Scan sources, Stats). Its database is the tracker. Two writers share it and never write the same document:
 
-- **Page** (the user's clicks): `decisions`, `requests`, `source_switches`. Claude in an interactive session may also create a `requests` document (a job she pasted in chat), exactly as the page would.
+- **Page** (the user's clicks): `decisions`, `requests`, `source_switches`, `prefs`. Claude in an interactive session may also create a `requests` document (a job she pasted in chat), exactly as the page would.
 - **Daily task** (cloud Claude, through `desk/page-sync.mjs` and the ArtifactData tool): everything else.
 
 Task writes are creates only, so the task never needs a document version (ArtifactData refuses an unpinned write to an existing document). A changed score is a new `rescores` document, never an edit of `postings`. A resume is created once; changing one is an interactive step that reads the version first.
@@ -27,10 +27,13 @@ Task writes are creates only, so the task never needs a document version (Artifa
 | `decisions/<posting id>` | `status (new, interested, applied, screen, hm, offer, skipped, rejected, withdrew), prev, reasons[], sent (resume id or "other"), outside, dates{interested, applied, screen, hm, offer, closed}, lost_at, at` |
 | `requests/<request id>` | `kind`, `at`, and per kind: `add_job {text, applied}` · `add_source {text, dream, gap?}` · `dismiss_gap {gap}` · `block_company {company, reason}` · `unblock_company {company}` · `set_board {source, company, url}` · `switch_group {group: "search", on}` · `apply_suggestion` and `decline_suggestion {week, sid}` |
 | `source_switches/<source id>` | `on, at` (`gmail`, or `co-<company slug>`) |
+| `prefs/tour` | `done, at`: she finished or skipped the first-visit tour. Absent: the page starts the tour on her first visit. |
 
 Request ids, posting ids and source ids are letters, digits, `_`, `-` (and `~` in rescores), at most 64. The task ignores documents with any other id.
 
 ## Derived on the page, never stored
+
+- **Tour sample data:** the first-visit tour shows built-in sample jobs, resumes, sources and stats in place of her data. Nothing from it is ever written; clicks during the tour change only the sample. Finishing or skipping writes `prefs/tour`, which is also her first write (the one-time permission question).
 
 - **No response:** an application with no later stage 21 days after its applied date, or 14 days after the last interview stage, shows as Closed / No response, ended at that stage. A later click moves it back.
 - **Switches:** a group switch and a single source switch apply in click order, newest wins; the task does the same.

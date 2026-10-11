@@ -138,7 +138,7 @@ const CHECKS = {
     const out = [];
     if (!d.page_url) out.push('the job page link is not recorded (page_url)');
     if (!d.task_id) out.push('the daily task is not recorded (task_id)');
-    if (!d.page_consent) out.push('the first click on the job page was not confirmed (page_consent)');
+    if (!d.page_consent) out.push('the tour on the job page was not finished with the permission allowed (page_consent)');
     const idx = readYaml(f('resumes', 'index.yml'), {});
     for (const r of (idx.resumes || []).filter(r => r?.kind !== 'master')) if (!r.asset_id) out.push(`${r.name || r.id}: PDF not uploaded to the job page yet (asset_id)`);
     return out;
