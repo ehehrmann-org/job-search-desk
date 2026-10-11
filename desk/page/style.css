@@ -325,3 +325,6 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .top #run-host:empty { display: none; }
 .b.runnow { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
 .note.runnote { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.panel.update { border-color: var(--accent); gap: 8px; }
+.panel.update .uphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.upnotes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg-2); display: grid; gap: 3px; }

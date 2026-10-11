@@ -13,7 +13,7 @@
  *   node desk/page-sync.mjs done <request id> "<result>" [--posting <id>]
  *       Records that a request was handled; pushed as requests_done/<id>.
  *
- *   node desk/page-sync.mjs push [--problem "what|fix|detail"]... [--problems-file <file>] [--no-run] [--quick]
+ *   node desk/page-sync.mjs push [--problem "what|fix|detail"]... [--problems-file <file>] [--no-run] [--quick] [--update-file <update.mjs check output>]
  *       Writes batch files to data/page/outbox/: new postings, rescores, suggestions,
  *       deep evaluations, handled requests, resumes, the source list (when changed) and
  *       the run document (left out with --no-run, for pushes outside the daily run).
@@ -389,6 +389,7 @@ async function push(args) {
     add('runs', runId(new Date(at)), {
       at, ok, problems, last_good_run: st.last_good_run, version: VERSION,
       plan: desk.plan || null, daily_cap: desk.daily_cap || null, deep_cap: desk.deep_cap || null, help_email: desk.help_email || null,
+      update: updateInfo(args.updateFile),
       task_id: typeof desk.task_id === 'string' && /^trig_[A-Za-z0-9]+$/.test(desk.task_id) ? desk.task_id : null, quick: !!args.quick,
       scoring,
       funnel: {
@@ -479,6 +480,19 @@ function ack(file) {
 
 // ------------------------------------------------------------------ main
 
+// A newer template version, from `update.mjs check` output saved by the daily run; null when none or unreadable.
+function updateInfo(file) {
+  if (!file) return null;
+  const c = readJson(file, null);
+  if (!c || typeof c.latest !== 'string' || typeof c.current !== 'string' || !/^\d+\.\d+\.\d+$/.test(c.latest)) return null;
+  const v = x => x.split('.').map(Number);
+  const [a, b] = [v(c.latest), v(c.current)];
+  const newer = a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+  if (newer <= 0) return null;
+  const notes = (Array.isArray(c.changelog) ? c.changelog : []).flatMap(x => String(x.text || '').split('\n')).map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 8).map(l => text(l, 300));
+  return { to: c.latest, notes, needs_erik: Array.isArray(c.needs_erik) && c.needs_erik.length > 0 };
+}
+
 if (isMain(import.meta.url)) {
   const [cmd, ...rest] = process.argv.slice(2);
   const flag = name => { const out = []; rest.forEach((a, i) => { if (a === name && rest[i + 1] != null) out.push(rest[i + 1]); }); return out; };
@@ -486,7 +500,7 @@ if (isMain(import.meta.url)) {
     pull: () => pull(rest[0]),
     push: () => {
       const fromFile = flag('--problems-file').flatMap(f => fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').map(l => l.trim()).filter(Boolean) : []);
-      return push({ problems: [...flag('--problem'), ...fromFile], noRun: rest.includes('--no-run'), quick: rest.includes('--quick') });
+      return push({ problems: [...flag('--problem'), ...fromFile], noRun: rest.includes('--no-run'), quick: rest.includes('--quick'), updateFile: flag('--update-file')[0] || null });
     },
     ack: () => ack(rest[0]),
     done: () => {
@@ -496,6 +510,6 @@ if (isMain(import.meta.url)) {
       console.log(`recorded ${rest[0]}`);
     },
   }[cmd];
-  if (!main) { console.error('usage: page-sync.mjs pull <dump dir> | push [--problem "what|fix|detail"] [--problems-file f] [--no-run] [--quick] | ack <batch file> | done <request id> "<result>" [--posting <id>]'); process.exit(2); }
+  if (!main) { console.error('usage: page-sync.mjs pull <dump dir> | push [--problem "what|fix|detail"] [--problems-file f] [--no-run] [--quick] [--update-file <update.mjs check output>] | ack <batch file> | done <request id> "<result>" [--posting <id>]'); process.exit(2); }
   Promise.resolve().then(main).catch(e => { console.error(`page-sync: ${e.message}`); process.exit(1); });
 }

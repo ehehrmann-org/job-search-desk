@@ -188,7 +188,12 @@ test('push and ack: batches, --no-run, problems, nothing sent twice', () => {
   fs.writeFileSync(path.join(d, 'config', 'desk.yml'), read(path.join(d, 'config', 'desk.yml')).replace('trig_01AbC', 'bad id'));
   out = json(d, 'page-sync.mjs', 'push');
   run = JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path));
-  assert.deepEqual([run.task_id, run.quick], [null, false]);
+  assert.deepEqual([run.task_id, run.quick, run.update], [null, false, null]);
+  // A newer template version from `update.mjs check` shows on the page; the same or an older one doesn't
+  const chk = (latest, current) => { write(path.join(d, 'upd.json'), { current, latest, changelog: [{ version: latest, text: '- Run now button.\n- Faster pages.' }], needs_erik: [] }); out = json(d, 'page-sync.mjs', 'push', '--update-file', path.join(d, 'upd.json')); return JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path)).update; };
+  assert.deepEqual(chk('0.8.0', '0.7.0'), { to: '0.8.0', notes: ['Run now button.', 'Faster pages.'], needs_erik: false });
+  assert.equal(chk('0.7.0', '0.7.0'), null);
+  assert.equal(chk('0.6.9', '0.7.0'), null);
 });
 
 test('relink: the employer link takes over the posting id; login-only added links are unscorable', () => {

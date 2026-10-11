@@ -11,3 +11,4 @@ alert_searches: []     # step 9: the saved searches she set up, { site, search, 
 page_url: ""           # step 8
 task_id: ""            # step 8
 page_consent: false    # step 8: true after she finished the tour and allowed saving
+page_title: ""           # optional: the job page's name in the browser tab (default "Job Search Desk")

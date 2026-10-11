@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.8.0 (2026-10-11)
+- Your job page tells you when a new version of the career tool exists, with what's new, and an Update now button installs it in about 10 minutes. Your jobs, decisions, resumes and settings stay as they are.
+- Your job page can keep a name of your choosing in the browser tab across updates.
+
 ## 0.7.0 (2026-10-11)
 - A Run now button on your job page: it reads your clicks, writes the deep evaluations for jobs you marked Interested and updates the page in about 10 minutes, so you can go from review to applying in one sitting. The job scan still runs each morning. Typing "run my desk now" in Claude does the same.
 - Jobs with a deal-breaker show a dash instead of 0.0, and their score breakdown names the deal-breaker.

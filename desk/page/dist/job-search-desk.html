@@ -330,6 +330,9 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .top #run-host:empty { display: none; }
 .b.runnow { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
 .note.runnote { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.panel.update { border-color: var(--accent); gap: 8px; }
+.panel.update .uphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.upnotes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg-2); display: grid; gap: 3px; }
 </style>
 
 <script>
@@ -640,15 +643,16 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var running = runBusy || (started > last && Date.now() - started < RUN_MAX_MIN * 60000);
     return { ok: !!(mcp && task && canWrite && db && !tour.on), task: task, running: running, started: started, deepCap: (r && r.deep_cap) || 1 };
   }
-  async function runNow() {
+  async function runNow(kind) {
     var st = runState(); if (!st.ok || st.running) return;
+    var upd = kind === "update";
     runBusy = true; render();
     try {
-      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
-      var at = new Date().toISOString();
-      R.prefs = Object.assign({}, R.prefs, { run_now: { at: at } });
-      try { await db.doc("prefs/run_now").set({ at: at }); } catch (e) {}
-      toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
+      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: upd ? "MODE = update" : "MODE = quick" });
+      var at = new Date().toISOString(), doc = { at: at, kind: upd ? "update" : "quick" };
+      R.prefs = Object.assign({}, R.prefs, { run_now: doc });
+      try { await db.doc("prefs/run_now").set(doc); } catch (e) {}
+      toast(upd ? "Updating. It takes about 10 minutes; this page reloads with the new version when it's done." : "Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
       var code = e && e.code;
       toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
@@ -656,10 +660,28 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
         : "Not started: " + ((e && e.message) || "the run couldn't be reached") + ". Type “run my desk now” in Claude instead.");
     } finally { runBusy = false; render(); }
   }
-  function runButton(label) {
+  function runButton(label, kind) {
     var st = runState(); if (!st.ok) return null;
-    return el("button", { class: "b runnow", "data-k": "runnow-" + label.length, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: runNow },
-      [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+    var upd = kind === "update";
+    return el("button", { class: "b runnow" + (upd ? " primary" : ""), "data-k": (upd ? "update-" : "runnow-") + label.length, disabled: st.running,
+      title: upd ? "Installs the new version in your private copy, checks it, and refreshes this page. Your jobs and settings stay as they are." : "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.",
+      onclick: function () { runNow(kind); } },
+      [ic(st.running ? "hourglass-medium" : upd ? "download-simple" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+  }
+  // A newer version of the career tool, as the last run found it
+  function updateBanner() {
+    var r = D.run, u = r && r.update;
+    if (!u || !u.to || tour.on) return null;
+    var box = el("div", { class: "panel update" }, [
+      el("div", { class: "uphead" }, [
+        el("h2", { text: "Update available: version " + u.to + (r.version ? " (you have " + r.version + ")" : "") }),
+        runButton("Update now", "update")
+      ]),
+      el("p", { class: "sub", text: "Your jobs, decisions, resumes and settings stay as they are. " + (runState().ok ? "Takes about 10 minutes." : "Type \u201cupdate career tool\u201d in Claude to install it.") })
+    ]);
+    if ((u.notes || []).length) box.appendChild(el("ul", { class: "upnotes" }, u.notes.map(function (n) { return el("li", { text: n }); })));
+    if (u.needs_erik) box.appendChild(el("p", { class: "sub", text: "One part (the daily scan's own settings) needs Erik; the update tells you how." }));
+    return box;
   }
 
   function renderHeader() {
@@ -675,6 +697,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     hb.setAttribute("data-state", !loaded ? "loading" : probs.length ? "problem" : "ok");
     document.getElementById("status-text").textContent = !loaded ? "Checking" : probs.length ? (probs.length === 1 ? "1 problem" : probs.length + " problems") + ": see details" : "All working";
     var hh = document.getElementById("help-host"); hh.textContent = "";
+    var ub = updateBanner(); if (ub) hh.appendChild(ub);
     if (tour.on) hh.appendChild(el("div", { class: "note tourbanner" }, [el("span", { text: "Tour: these are sample jobs. They disappear when the tour ends, and your own jobs come back." })]));
     if (!helpOpen) return;
     var msg = helpMessage();
