@@ -271,19 +271,19 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .showmore { justify-self: center; }
 
 /* First-visit tour: a spotlight on one part of the page and a card that explains it */
-.tour-spot { position: fixed; z-index: 30; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(10, 14, 20, .45); outline: 2px solid var(--accent); pointer-events: none; transition: top .2s ease, left .2s ease, width .2s ease, height .2s ease; }
-.tour-card { position: fixed; z-index: 31; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.28); display: grid; gap: 8px; }
+.tour-spot { position: fixed; z-index: 30; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(10, 14, 20, .45); outline: 2px solid var(--accent); pointer-events: none; }
+.tour-card { position: fixed; z-index: 31; box-sizing: border-box; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.28); display: grid; gap: 8px; }
 .tour-card h2 { margin: 0; font-family: var(--f-label); font-weight: 600; font-size: 17px; }
 .tour-card p { margin: 0; font-size: 13.5px; color: var(--fg-2); }
 .tour-card .btns { align-items: center; }
 .tour-card .link { margin-right: auto; }
 .tour-count { font-family: var(--f-label); font-weight: 600; font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .tour-card.center { top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 9999px rgba(10, 14, 20, .45), 0 12px 32px rgba(0,0,0,.28); }
-.tour-card.sheet { left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: auto; }
+.tour-card.wide { width: calc(100vw - 32px); }
 .tourbanner { background: var(--accent-soft); color: var(--fg); }
-@media (prefers-reduced-motion: reduce) { .tour-spot { transition: none; } }
 /* Keep every column inside the viewport: a grid's auto column would grow to fit the widest row (the stage chevrons) */
 .app, .view { grid-template-columns: minmax(0, 1fr); }
+@media (max-height: 700px) { .tour-card { padding: 10px 12px; gap: 6px; } .tour-card h2 { font-size: 15.5px; } .tour-card p { font-size: 13px; } }
 </style>
 
 <div class="app">
@@ -1265,7 +1265,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
     showTab();
-    if (tour.on) placeTour();
+    if (tour.on) placeTour(false);
     if (k) {
       var n = null;
       Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
@@ -1341,18 +1341,19 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     { target: "#help-btn", title: "Is everything working?", text: "This button says “All working” when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "To review holds new jobs that reached your bar. Then Interested, Applied, Interviewing, and Closed for jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "One job", text: "The number is its score from 0 to 5, built from what you told setup you care about. Click the title to open the posting. A star marks a dream company: those always show, even below your bar." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"]', open: "why", title: "Why this score", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If a line looks wrong, skip the job with a reason, or tell Claude “change my scoring”." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .dims', open: "why", title: "Why this score", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If a line looks wrong, skip the job with a reason, or tell Claude “change my scoring”." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "Interested: Claude writes a deeper evaluation by the next morning and picks the best resume. Applied: pick the resume you sent. Skip: pick a reason; your reasons teach the scoring. Try one: nothing is saved during the tour." },
-    { tab: "triage", stage: "review", target: "#suggest-host .panel", title: "Sunday suggestions", text: "Once a week, the desk looks at what you skipped and what you went for, and suggests up to 3 changes to the scoring. Nothing changes until you approve." },
+    { tab: "triage", stage: "review", target: "#suggest-host .sugg", title: "Sunday suggestions", text: "Once a week, the desk looks at what you skipped and what you went for, and suggests up to 3 changes to the scoring. Nothing changes until you approve." },
     { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (LinkedIn does). It gets scored like the rest, and if your sources missed it, Scan sources tells you." },
-    { tab: "triage", stage: "applied", target: ".list .row", title: "After you apply", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own. “They replied” brings it back." },
-    { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
+    { tab: "triage", stage: "applied", target: ".list .row .side", title: "After you apply", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own. “They replied” brings it back." },
+    { tab: "resumes", target: "#view-resumes .ledger", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
     { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with “Add a source”." },
     { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The rest follows your applications from applied to offer, and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
 
   var tourEls = null;
+  function tourReflow() { placeTour(false); }
   function startTour() {
     if (tour.on) return;
     tour.on = true; tour.step = 0; tour.prevTab = state.tab;
@@ -1362,7 +1363,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
       card: el("div", { class: "tour-card", role: "dialog", "aria-modal": "false", "aria-labelledby": "tour-title" })
     };
     document.body.appendChild(tourEls.spot); document.body.appendChild(tourEls.card);
-    window.addEventListener("resize", placeTour); window.addEventListener("scroll", placeTour, true);
+    window.addEventListener("resize", tourReflow); window.addEventListener("scroll", tourReflow, true);
     document.addEventListener("keydown", tourKeys);
     tourGo(0);
   }
@@ -1394,30 +1395,52 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     ]));
     focusNext = "tour-next";
     render();
-    setTimeout(function () { var t = st.target && document.querySelector(st.target); if (t && t.scrollIntoView) t.scrollIntoView({ block: "center", behavior: "auto" }); placeTour(); }, 60);
+    setTimeout(function () { placeTour(true); }, 60);
   }
-  function placeTour() {
+  // The card never covers what it explains: it goes below the highlighted part, or above it,
+  // and when neither fits in the current view the page scrolls first (only on a step change,
+  // never while she scrolls). Phones get a full-width card placed the same way.
+  function placeTour(allowScroll) {
     if (!tour.on || !tourEls) return;
     var st = TOUR[tour.step], t = st.target ? document.querySelector(st.target) : null;
-    var spot = tourEls.spot, card = tourEls.card, mobile = window.innerWidth < 600;
+    var spot = tourEls.spot, card = tourEls.card, vw = window.innerWidth, vh = window.innerHeight, m = 12, padPx = 6;
     if (!t) { spot.hidden = true; card.className = "tour-card center"; card.style.top = card.style.left = ""; return; }
-    var r = t.getBoundingClientRect(), padPx = 6;
-    spot.hidden = false;
-    spot.style.top = (r.top - padPx) + "px"; spot.style.left = (r.left - padPx) + "px";
-    spot.style.width = (r.width + padPx * 2) + "px"; spot.style.height = (r.height + padPx * 2) + "px";
-    if (mobile) { card.className = "tour-card sheet"; card.style.top = card.style.left = ""; return; }
-    card.className = "tour-card";
-    var ch = card.offsetHeight, cw = card.offsetWidth;
-    var below = r.bottom + 14, above = r.top - ch - 14;
-    var top = below + ch < window.innerHeight - 8 ? below : above > 8 ? above : Math.max(8, window.innerHeight - ch - 8);
-    card.style.top = top + "px";
-    card.style.left = Math.max(8, Math.min(window.innerWidth - cw - 8, r.left)) + "px";
+    card.className = "tour-card" + (vw < 600 ? " wide" : "");
+    var ch = card.offsetHeight, cw = card.offsetWidth, r = t.getBoundingClientRect();
+    var gap = m + padPx;
+    var fitsBelow = function (b) { return b.top >= m && b.bottom + gap + ch <= vh - m; };
+    var fitsAbove = function (b) { return b.bottom <= vh - m && b.top - gap - ch >= m; };
+    if (allowScroll === true && !fitsBelow(r) && !fitsAbove(r)) {
+      // Target near the top of the view with the card under it; if the page can't scroll that
+      // far (target at the very end), the card goes above instead.
+      window.scrollBy(0, r.top - gap);
+      r = t.getBoundingClientRect();
+      if (!fitsBelow(r) && !fitsAbove(r) && r.bottom > vh - m) { window.scrollBy(0, r.bottom - (vh - m)); r = t.getBoundingClientRect(); }
+    }
+    var top;
+    if (fitsBelow(r)) top = r.bottom + gap;
+    else if (fitsAbove(r)) top = r.top - gap - ch;
+    else {
+      // Taller than the view allows: keep the card on whichever side has more room, and
+      // highlight only the part of the target the card leaves visible.
+      var roomBelow = vh - r.bottom, roomAbove = r.top;
+      top = roomBelow >= roomAbove ? Math.min(vh - ch - m, Math.max(r.bottom + gap, m)) : Math.max(m, r.top - gap - ch);
+    }
+    card.style.top = Math.round(top) + "px";
+    card.style.left = Math.round(vw < 600 ? 16 : Math.max(8, Math.min(vw - cw - 8, r.left))) + "px";
+    var cardTop = top, cardBottom = top + ch;
+    var sTop = r.top - padPx, sBottom = r.bottom + padPx;
+    if (cardTop >= sTop && cardTop < sBottom) sBottom = cardTop - padPx;
+    if (cardBottom > sTop && cardBottom <= sBottom) sTop = cardBottom + padPx;
+    spot.hidden = sBottom <= sTop;
+    spot.style.top = sTop + "px"; spot.style.left = (r.left - padPx) + "px";
+    spot.style.width = (r.width + padPx * 2) + "px"; spot.style.height = Math.max(0, sBottom - sTop) + "px";
   }
   async function endTour() {
     if (!tour.on) return;
     tour.on = false; D = R; drawer = {};
     state.tab = tour.prevTab || "triage"; state.stage = "review";
-    window.removeEventListener("resize", placeTour); window.removeEventListener("scroll", placeTour, true);
+    window.removeEventListener("resize", tourReflow); window.removeEventListener("scroll", tourReflow, true);
     document.removeEventListener("keydown", tourKeys);
     if (tourEls) { tourEls.spot.remove(); tourEls.card.remove(); tourEls = null; }
     focusNext = "help-btn"; render();

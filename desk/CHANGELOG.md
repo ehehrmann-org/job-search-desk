@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.4.1 (2026-10-11)
+- The tour's explanation boxes never cover the part of the page they explain, on phones too; the page scrolls to make room.
+
 ## 0.4.0 (2026-10-11)
 - A two-minute tour the first time you open your job page, on sample jobs you can click without changing anything. The sample jobs disappear when it ends. Take it again any time from the status button.
 - The job page fits phone screens without sideways scrolling.
