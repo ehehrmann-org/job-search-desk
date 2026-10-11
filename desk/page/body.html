@@ -2,6 +2,7 @@
   <header class="top">
     <div class="brand">Job Search Desk</div>
     <span class="meta-line" id="meta-line">Connecting…</span>
+    <span id="run-host"></span>
     <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
   </header>
   <div id="help-host"></div>
@@ -85,7 +86,7 @@
   var R = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, prefs: {}, run: null, sources: null, suggestions: null };
   var D = R;
   var tour = { on: false, step: 0, prevTab: null, offered: false };
-  var db = null, downloads = null, canWrite = true, loaded = false;
+  var db = null, downloads = null, mcp = null, canWrite = true, loaded = false, runBusy = false;
 
   // ---------- View state (per viewer, this browser only) ----------
   var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE };
@@ -122,7 +123,7 @@
   }
   var toastT;
   function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3600); }
-  function num(v) { var n = Number(v); return isFinite(n) ? n : null; }
+  function num(v) { if (v === null || v === undefined || v === "") return null; var n = Number(v); return isFinite(n) ? n : null; }
   function one(v) { var n = num(v); return n === null ? "–" : n.toFixed(1); }
   function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
   function fmt(n) { return (Number(n) || 0).toLocaleString("en-US"); }
@@ -293,7 +294,38 @@
     if (hrs > 30) out.push({ what: "The daily run hasn't finished since " + niceTime(r.at) + ".", fix: "Open Claude and check that your scheduled task is turned on. If it is, copy the message for Erik." });
     return out;
   }
+  // ---------- Run now (starts the daily task in quick mode: reads clicks, writes deep evaluations, updates the page) ----------
+  var RUN_MAX_MIN = 45;
+  function runState() {
+    var r = D.run, task = r && r.task_id, rn = D.prefs && D.prefs.run_now;
+    var started = rn && rn.at ? new Date(rn.at).getTime() : 0, last = r && r.at ? new Date(r.at).getTime() : 0;
+    var running = runBusy || (started > last && Date.now() - started < RUN_MAX_MIN * 60000);
+    return { ok: !!(mcp && task && canWrite && db && !tour.on), task: task, running: running, started: started, deepCap: (r && r.deep_cap) || 1 };
+  }
+  async function runNow() {
+    var st = runState(); if (!st.ok || st.running) return;
+    runBusy = true; render();
+    try {
+      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
+      var at = new Date().toISOString();
+      R.prefs = Object.assign({}, R.prefs, { run_now: { at: at } });
+      try { await db.doc("prefs/run_now").set({ at: at }); } catch (e) {}
+      toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
+    } catch (e) {
+      var code = e && e.code;
+      toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
+        : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
+        : "Not started: " + ((e && e.message) || "the run couldn't be reached") + ". Type “run my desk now” in Claude instead.");
+    } finally { runBusy = false; render(); }
+  }
+  function runButton(label) {
+    var st = runState(); if (!st.ok) return null;
+    return el("button", { class: "b runnow", "data-k": "runnow-" + label.length, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: runNow },
+      [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+  }
+
   function renderHeader() {
+    var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now"); if (rb) rh.appendChild(rb);
     var r = D.run;
     var meta = [];
     if (r && r.plan) meta.push(r.plan + (r.daily_cap ? ", up to " + r.daily_cap + " scored a day" : ""));
@@ -363,6 +395,12 @@
     if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (num(b.score) || 0) - (num(a.score) || 0) || cmpStr(b.found, a.found) || cmpStr(a.id, b.id); });
     else shown.sort(function (a, b) { return cmpStr((D.decisions[b.id] || {}).at, (D.decisions[a.id] || {}).at) || cmpStr(a.id, b.id); });
     var EMPTY = { review: loaded ? "Nothing new to review. Come back tomorrow." : "Loading your postings…", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
+    if (state.stage === "interested") {
+      var waitingDeep = shown.filter(function (p) { return !D.deep[p.id]; }).length, rs = runState();
+      if (waitingDeep && rs.ok) list.appendChild(el("div", { class: "note runnote" }, [
+        el("span", { text: (waitingDeep === 1 ? "1 job is" : waitingDeep + " jobs are") + " waiting for a deep evaluation. The morning run writes them, or start one now (up to " + rs.deepCap + " per run, about 10 minutes)." }),
+        runButton("Run now")]));
+    }
     if (!shown.length) list.appendChild(el("div", { class: "empty", text: EMPTY[state.stage] }));
     var limit = state.stage === "closed" ? state.closedLimit : Infinity;
     shown.slice(0, limit).forEach(function (p) { list.appendChild(card(p)); });
@@ -528,7 +566,7 @@
 
   function whyDrawer(p) {
     var thr = num(p.threshold);
-    var d = el("div", { class: "drawer wide" }, [el("h4", { text: "Why " + one(p.score) + " · scored on your dimensions" })]);
+    var d = el("div", { class: "drawer wide" }, [el("h4", { text: p.status_hint === "dealbreaker" ? "No score: a deal-breaker · rated on your dimensions" : "Why " + one(p.score) + " · scored on your dimensions" })]);
     var g = el("div", { class: "dims" });
     p.ratings.forEach(function (x) {
       var v = num(x.score) || 0;
@@ -537,7 +575,7 @@
       g.appendChild(el("div", { class: "dim" }, [el("div", { class: "dn" }, [x.name, el("small", { text: BUCKET[x.bucket] || x.bucket })]), pips, el("div", { class: "dr", text: x.why || "" })]));
     });
     d.appendChild(g);
-    (p.checks || []).forEach(function (c) { d.appendChild(el("p", { class: "calc", text: "Check: " + c })); });
+    (p.checks || []).forEach(function (c) { d.appendChild(el("p", { class: "calc", text: /^(Deal-breaker:|career-ops v1 )/.test(c) ? c : "Check: " + c })); });
     d.appendChild(el("p", { class: "calc", text: "Must have counts 3×, Important 2×, Nice to have 1×. Your bar is " + (thr === null ? "4.0" : thr.toFixed(1)) + ". Disagree with a line? Skip it with a reason, or tell Claude \"change my scoring\"." }));
     return d;
   }
@@ -1236,6 +1274,7 @@
     try { db = await claude.use("db"); } catch (e) { db = null; }
     if (!db) { loaded = true; canWrite = false; render(); toast("This view can't reach your tracker. Open the page in Claude while signed in."); return; }
     try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; }
+    claude.use("mcp").then(function (m) { mcp = m; render(); }, function () { mcp = null; });
     try { var u = await claude.use("user"); var cw = u && u.can ? u.can("data.write") : null; if (cw === false) canWrite = false; } catch (e) {}
     var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1, prefs: 1 };
     function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); offerTour(); } }

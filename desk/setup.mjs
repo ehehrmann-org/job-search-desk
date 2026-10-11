@@ -111,7 +111,7 @@ const CHECKS = {
   },
   11: () => {
     const idx = readYaml(f('resumes', 'index.yml'), {});
-    const list = (idx.resumes || []).filter(r => r?.kind !== 'master');
+    const list = (idx.resumes || []).filter(r => r?.kind !== 'master' && r?.kind !== 'tailored');
     const out = [];
     if (list.length < 1 || list.length > 3) out.push(`${list.length} default resumes; there should be 1 to 3`);
     for (const r of list) {

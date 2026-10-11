@@ -2,6 +2,11 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.7.0 (2026-10-11)
+- A Run now button on your job page: it reads your clicks, writes the deep evaluations for jobs you marked Interested and updates the page in about 10 minutes, so you can go from review to applying in one sitting. The job scan still runs each morning. Typing "run my desk now" in Claude does the same.
+- Jobs with a deal-breaker show a dash instead of 0.0, and their score breakdown names the deal-breaker.
+- Updating the career tool now refreshes your job page too.
+
 ## 0.6.0 (2026-10-11)
 - Setup goes live at the end of the first session: your job page and the daily run start right after you pick your job sources. The second session adds job alert emails, your achievements, your resumes and a check of the scoring on your real jobs.
 - A shorter first session (about 75 minutes) when time is tight.

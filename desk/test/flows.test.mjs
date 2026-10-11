@@ -180,6 +180,15 @@ test('push and ack: batches, --no-run, problems, nothing sent twice', () => {
   out = json(d, 'page-sync.mjs', 'push', '--no-run');
   assert.equal(out.writes, 0);
   assert.throws(() => sh(d, 'page-sync.mjs', 'ack', path.join(d, 'probs.txt')), /outbox/);
+  // A quick run (Run now) carries the task id and the quick flag; a malformed task id is left out
+  fs.appendFileSync(path.join(d, 'config', 'desk.yml'), '\ntask_id: trig_01AbC\ndeep_cap: 2\n');
+  out = json(d, 'page-sync.mjs', 'push', '--quick');
+  let run = JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.deepEqual([run.task_id, run.quick, run.deep_cap], ['trig_01AbC', true, 2]);
+  fs.writeFileSync(path.join(d, 'config', 'desk.yml'), read(path.join(d, 'config', 'desk.yml')).replace('trig_01AbC', 'bad id'));
+  out = json(d, 'page-sync.mjs', 'push');
+  run = JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.deepEqual([run.task_id, run.quick], [null, false]);
 });
 
 test('relink: the employer link takes over the posting id; login-only added links are unscorable', () => {
