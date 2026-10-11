@@ -30,19 +30,30 @@ export function blockedBy(lists, company, url) {
 
 export function listBlocked(lists) {
   const rows = [];
-  for (const e of lists.system.values()) rows.push({ company: e.company, since: e.since, reason: e.reason, system: true });
-  for (const e of lists.user.values()) rows.push({ company: e.company, since: e.since, reason: e.reason, system: false });
+  for (const e of lists.system.values()) rows.push({ company: e.company, since: e.since, reason: e.reason, system: true, website: e.scope === 'domain' });
+  for (const e of lists.user.values()) rows.push({ company: e.company, since: e.since, reason: e.reason, system: false, website: e.scope === 'domain' });
   return rows;
+}
+
+/** A website to block (job board, reposting site), as a bare host name, or null when the text is a company name. */
+export function websiteOf(text) {
+  const s = String(text ?? '').trim().toLowerCase();
+  if (!s || /\s/.test(s)) return null;
+  let host = s;
+  try { host = new URL(/^https?:\/\//.test(s) ? s : `https://${s}`).hostname; } catch { return null; }
+  host = host.replace(/^www\./, '').replace(/\.$/, '');
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) && /\.[a-z]{2,}$/.test(host) ? host : null;
 }
 
 const cell = s => String(s ?? '').replace(/[|\n\r\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();
 
-export function addToBlacklist(dataDir, company, reason, since) {
+export function addToBlacklist(dataDir, company, reason, since, scope = 'company') {
   const f = path.join(dataDir, 'data', 'blacklist.md');
   let txt = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : BLACKLIST_HEADER;
-  if (findBlacklistEntry(parseBlacklist(txt), company, '')) return false;
+  const have = parseBlacklist(txt);
+  if (scope === 'domain' ? have.has(`domain:${company}`) || !!findBlacklistEntry(have, '', `https://${company}/`) : !!findBlacklistEntry(have, company, '')) return false;
   if (!txt.endsWith('\n')) txt += '\n';
-  txt += `| ${cell(company)} | ${since} | company | ${cell(reason) || 'Blocked from the job page'} |\n`;
+  txt += `| ${cell(company)} | ${since} | ${scope === 'domain' ? 'domain' : 'company'} | ${cell(reason) || 'Blocked from the job page'} |\n`;
   fs.mkdirSync(path.dirname(f), { recursive: true });
   fs.writeFileSync(f, txt);
   return true;
@@ -55,6 +66,8 @@ export function removeFromBlacklist(dataDir, company) {
   const keep = lines.filter(l => {
     if (!/^\|/.test(l) || /^\|\s*-/.test(l) || /^\|\s*Company\s*\|/i.test(l)) return true;
     const m = parseBlacklist(`| Company | Since | Scope | Reason |\n|---|---|---|---|\n${l}\n`);
+    const e = [...m.values()][0];
+    if (e?.scope === 'domain') return e.company.toLowerCase() !== String(company).trim().toLowerCase();
     return !findBlacklistEntry(m, company, '');
   });
   if (keep.length === lines.length) return false;

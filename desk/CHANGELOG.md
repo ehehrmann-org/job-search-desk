@@ -2,6 +2,13 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.5.0 (2026-10-11)
+- New jobs have one main button, Interested; Applied appears once a job is in Interested. Applied jobs move on with Interviewing, Rejected or Withdrew.
+- "+ Add a source" asks what you're adding: a dream company, a job board, or a company or website to block. Blocked websites (like jobright.ai) stop every posting hosted there.
+- The status details open as a popup with a close button, and "Take the tour again" is a button.
+- The tour covers all five stages with sample jobs, with clearer wording and arrows on Next and Back.
+- Switches on Scan sources sit at the right edge on phones; buttons never break across lines.
+
 ## 0.4.1 (2026-10-11)
 - The tour's explanation boxes never cover the part of the page they explain, on phones too; the page scrolls to make room.
 

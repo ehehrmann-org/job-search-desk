@@ -196,3 +196,17 @@ test('relink: the employer link takes over the posting id; login-only added link
   assert.equal(t.to_score.length, 0);
   assert.equal(JSON.parse(read(path.join(d, 'data', 'scores', 'rx.json'))).verdict.status, 'unscorable');
 });
+
+test('block list: websites block by address, unblock removes them', async () => {
+  const { addToBlacklist, removeFromBlacklist, loadBlocklist, blockedBy, websiteOf } = await import('../lib/blocklist.mjs');
+  const d = profile();
+  assert.equal(websiteOf('https://www.Jobright.ai/jobs/1'), 'jobright.ai');
+  assert.equal(websiteOf('Acme Corp'), null);
+  assert.equal(addToBlacklist(d, 'jobright.ai', 'x', '2026-10-11', 'domain'), true);
+  assert.equal(addToBlacklist(d, 'jobright.ai', 'x', '2026-10-11', 'domain'), false);
+  const lists = loadBlocklist(d);
+  assert.ok(blockedBy(lists, 'Anyone', 'https://app.jobright.ai/jobs/9'));
+  assert.equal(blockedBy(lists, 'Anyone', 'https://notjobright.ai/x'), null);
+  assert.equal(removeFromBlacklist(d, 'jobright.ai'), true);
+  assert.equal(blockedBy(loadBlocklist(d), 'Anyone', 'https://app.jobright.ai/jobs/9'), null);
+});

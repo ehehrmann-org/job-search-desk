@@ -28,7 +28,7 @@ import * as yaml from 'js-yaml';
 import { postingDoc, belongsOnPage, runId, sourcesDoc, sourceCounts, slug } from './lib/page-docs.mjs';
 import { loadScoringConfig } from './lib/scoring.mjs';
 import { readFrontMatter } from './lib/frontmatter.mjs';
-import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist } from './lib/blocklist.mjs';
+import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist, websiteOf } from './lib/blocklist.mjs';
 import { boardFor } from './lib/boards.mjs';
 import { canonicalUrl, urlKey, seenKeys } from './lib/urls.mjs';
 import { DATA, ROOT, isMain, safeId, dict, readYamlStrict } from './lib/env.mjs';
@@ -184,9 +184,12 @@ async function handle(rid, r, summary, ctx) {
     return;
   }
   if (r.kind === 'block_company' && text(r.company)) {
-    const added = addToBlacklist(DATA, text(r.company, 120), text(r.reason, 160) || 'Blocked from the job page', day);
-    done(rid, added ? `Blocked ${text(r.company, 120)}` : `${text(r.company, 120)} was already blocked`);
-    summary.blocked.push(text(r.company, 120));
+    const site = r.website ? websiteOf(r.company) : null;
+    if (r.website && !site) return done(rid, `${text(r.company, 120)} isn't a website address. Type it like jobright.ai`);
+    const name = site || text(r.company, 120);
+    const added = addToBlacklist(DATA, name, text(r.reason, 160) || 'Blocked from the job page', day, site ? 'domain' : 'company');
+    done(rid, added ? `Blocked ${name}` : `${name} was already blocked`);
+    summary.blocked.push(name);
     return;
   }
   if (r.kind === 'unblock_company' && text(r.company)) {

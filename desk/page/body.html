@@ -75,7 +75,7 @@
     { k: "interviewing", label: "Interviewing", has: ["screen", "hm", "offer"] },
     { k: "closed", label: "Closed", has: ["skipped", "rejected", "withdrew", "noresp"] }
   ];
-  var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Recruiter screen", hm: "Hiring manager", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response" };
+  var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Interviewing", hm: "Interviewing", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response" };
   var BUCKET = { must: "Must have", important: "Important", nice: "Nice to have" };
   var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority"];
   var STAMPED = ["interested", "applied", "screen", "hm", "offer"];
@@ -124,6 +124,7 @@
   function toDate(iso) { return new Date(String(iso).length === 10 ? iso + "T00:00:00" : iso); }
   function daysSince(iso) { if (!iso) return null; var t = toDate(iso).getTime(); return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / DAY)); }
   function niceDate(iso) { if (!iso) return ""; var d = String(iso).length === 10 ? new Date(iso + "T12:00:00") : new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  function longDate(iso) { var d = new Date(String(iso).slice(0, 10) + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
   function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (daysSince(iso) === 0 ? "today, " : niceDate(iso) + ", ") + s; }
   function ago(iso, verb) { var n = daysSince(iso); if (n === null) return ""; return verb + " " + (n === 0 ? "today" : n === 1 ? "1 day ago" : n + " days ago"); }
   function stageOf(status) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].has.indexOf(status) > -1) return STAGES[i].k; return "review"; }
@@ -156,14 +157,14 @@
     var ix = { latest: {}, replaced: {}, blocked: {}, group: {}, board: {}, pendingAdds: 0, sugg: {} };
     Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (r && r.posting_id && (!ix.latest[r.posting_id] || cmpStr(r.at, ix.latest[r.posting_id].at) > 0)) ix.latest[r.posting_id] = r; });
     Object.keys(D.done).forEach(function (k) { var d = D.done[k]; if (d && d.replaces) ix.replaced[d.replaces] = true; });
-    ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system }; });
+    ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system, website: !!b.website }; });
     var snapAt = D.sources ? D.sources.at || "" : "";
     Object.keys(D.requests).map(function (rid) { return [rid, D.requests[rid]]; })
       .sort(function (a, b) { return cmpStr(a[1].at, b[1].at); })
       .forEach(function (pair) {
         var rid = pair[0], r = pair[1], k = normCo(r.company);
         var pending = !D.done[rid] || cmpStr(r.at, snapAt) > 0;
-        if (r.kind === "block_company" && k) ix.blocked[k] = ix.blocked[k] || { company: r.company, reason: r.reason, pending: !D.done[rid] };
+        if (r.kind === "block_company" && k) ix.blocked[k] = ix.blocked[k] || { company: r.company, reason: r.reason, website: !!r.website, pending: !D.done[rid] };
         if (r.kind === "unblock_company" && k && ix.blocked[k] && !ix.blocked[k].system) delete ix.blocked[k];
         if (r.kind === "switch_group" && pending) ix.group[r.group] = r;
         if (r.kind === "set_board" && pending) ix.board[r.source] = r;
@@ -301,7 +302,12 @@
     if (!helpOpen) return;
     var msg = helpMessage();
     var email = (r && r.help_email) || "";
-    var kids = [el("h2", { text: probs.length ? "Something needs attention" : "Everything is working" })];
+    function closeHelp() { helpOpen = false; focusNext = "help-btn"; render(); }
+    var kids = [el("div", { class: "dlg-head" }, [
+      el("h2", { id: "help-title", text: probs.length ? "Something needs attention" : "Everything is working" }),
+      el("button", { class: "dlg-x", "data-k": "help-x", "aria-label": "Close", onclick: closeHelp }, ["\u00d7"])
+    ])];
+    var to = email ? "me at " + email : "Erik";
     if (probs.length) {
       var ul = el("div", { class: "probs" });
       probs.forEach(function (p) {
@@ -313,17 +319,18 @@
         ]));
       });
       kids.push(ul);
+      kids.push(el("p", { class: "sub", text: "Copy this message and email it to " + to + ". It holds no job or profile details." }));
     } else {
-      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, send Erik this status report." }));
+      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds no job or profile details." }));
     }
-    kids.push(el("p", { class: "sub", text: "Copy this and email it to Erik" + (email ? " at " + email : "") + ". It holds no job or profile details." }));
     kids.push(el("pre", { class: "msg", text: msg }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
       el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
-      el("button", { class: "b", onclick: function () { helpOpen = false; focusNext = "help-btn"; render(); } }, ["Close"]),
-      el("button", { class: "link", onclick: function () { helpOpen = false; startTour(); } }, ["Take the tour again"])
+      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, ["Take the tour again"])
     ]));
-    hh.appendChild(el("div", { class: "panel help" + (probs.length ? " bad" : "") }, kids));
+    hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
+      el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title", onkeydown: function (e) { if (e.key === "Escape") closeHelp(); } }, kids)
+    ]));
   }
 
   // ---------- Counts on the tabs (every render, cheap) ----------
@@ -389,7 +396,7 @@
     var ta = el("textarea", { id: "aj-text", "data-k": "aj-text", placeholder: "Paste the posting link, or the job text if the link needs a login (LinkedIn does)", "aria-label": "Job link or text", oninput: function () { drafts.addText = ta.value; } });
     ta.value = drafts.addText;
     var radios = el("div", { class: "radios", role: "radiogroup", "aria-label": "Already applied?" });
-    [["no", "Not yet: score it for me"], ["yes", "I already applied"]].forEach(function (r) {
+    [["no", "I haven't yet applied"], ["yes", "I already applied"]].forEach(function (r) {
       var inp = el("input", { type: "radio", name: "aj-applied", id: "aj-" + r[0], "data-k": "aj-" + r[0], value: r[0], onchange: function () { drafts.addApplied = r[0]; } });
       inp.checked = drafts.addApplied === r[0];
       radios.appendChild(el("label", { for: "aj-" + r[0] }, [inp, r[1]]));
@@ -406,12 +413,11 @@
         addOpen = false; drafts.addText = ""; drafts.addApplied = "no";
         if (applied) {
           state.stage = "applied";
-          await saveDecision(rid, { status: "applied", outside: true }, "Added to Applied. Pick the resume you sent; it gets scored in the next run.");
-          drawer[rid] = "resume"; render();
+          await saveDecision(rid, { status: "applied", outside: true }, "Added to Applied. It gets scored in the next run.");
         } else { state.stage = "review"; render(); toast("Added to To review. It gets scored in the next run."); }
       } finally { addBusy = false; render(); }
     } }, [
-      el("label", { for: "aj-text", text: "Found a job yourself? Add it here. It gets scored like everything else, and if no scan source caught it, Scan sources flags the gap." }),
+      el("label", { for: "aj-text", text: "Found a job yourself? Add it here. It gets scored like everything else." }),
       ta, radios,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
         el("button", { class: "b primary", type: "submit", disabled: addBusy || !canWrite }, [addBusy ? "Adding…" : "Add job"]),
@@ -462,19 +468,18 @@
     var off = !canWrite || !!writing[p.id];
     function act(label, key, fn, extra) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [label]); }
     if (s === "new" || s === "interested") {
-      if (s === "new" && !p.pending) btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }));
-      btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }));
+      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }));
+      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }));
       btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }));
       if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
         more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, ["Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
-      var next = s === "applied" ? [["screen", "Recruiter screen"], ["hm", "Hiring manager"]] : s === "screen" ? [["hm", "Hiring manager"]] : [["offer", "Offer"]];
+      var next = s === "applied" ? [["screen", "Interviewing"]] : [["offer", "Offer"]];
       next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); })); });
       btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }));
       btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }));
-      if (s === "applied") more.appendChild(el("button", { class: "link", "data-k": dk + "chres", disabled: off, "aria-expanded": String(drawer[p.id] === "resume"), onclick: function () { toggleDrawer(p.id, "resume"); } }, ["Change resume sent"]));
       var left = windowLeft(p.id);
       if (left !== null) side.appendChild(el("div", { class: "timer", text: "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back" }));
     } else if (s === "offer") {
@@ -633,8 +638,8 @@
 
   // ---------- Scan sources ----------
   var GROUPS_SRC = [
-    ["mail", "Email alerts", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail. This is how LinkedIn postings get in."],
-    ["dream", "Dream companies", "Always checked, and their postings reach you even below your bar."],
+    ["mail", "Email alerts", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail."],
+    ["dream", "Dream companies", "Always checked, and their postings reach you even if they score low."],
     ["boards", "Job boards", "Companies whose job boards the free daily scan reads. No Claude usage."],
     ["search", "Can't be read yet", "No job board the scan can read was found for these, so they are not checked. Paste a company's job board link to fix it, or turn them off."]
   ];
@@ -685,7 +690,7 @@
       var rs = rows.filter(function (s) { return s.group === g[0]; });
       return { k: g[0], label: g[1], desc: g[2], rows: rs, count: g[0] === "mail" ? (rs.some(srcOn) ? "On" : "Off") : String(rs.length) };
     });
-    views.push({ k: "blocked", label: "Blocked", desc: "Jobs from these never reach scoring. Reposting services are blocked for everyone: they copy other companies' postings and hide who is hiring.", rows: [], count: String(bkeys.length) });
+    views.push({ k: "blocked", label: "Blocked", desc: "Jobs from these never reach scoring. Reposting services are blocked for everyone: they copy other companies' postings and hide who is hiring. You can also manually add websites to your personal blacklist here.", rows: [], count: String(bkeys.length) });
     if (!views.some(function (x) { return x.k === srcTab; })) srcTab = views.some(function (x) { return x.k === "dream" && x.rows.length; }) ? "dream" : views.some(function (x) { return x.k === "boards"; }) ? "boards" : views[0].k;
 
     // Sub-tabs: one view at a time
@@ -702,7 +707,12 @@
     search.value = srcQuery;
     search.addEventListener("input", function () { srcQuery = search.value; render(); });
     tools.appendChild(search);
-    tools.appendChild(el("button", { class: "b" + (addSrcOpen ? " on" : " primary"), "data-k": "addsrc", "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () { addSrcOpen = !addSrcOpen; if (!addSrcOpen) lastVerdict = ""; else focusNext = "src-input"; render(); } }, [addSrcOpen ? "Close" : "Add a source"]));
+    tools.appendChild(el("button", { class: "b addsrc" + (addSrcOpen ? " on" : ""), "data-k": "addsrc", "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () {
+      addSrcOpen = !addSrcOpen;
+      if (!addSrcOpen) lastVerdict = "";
+      else { drafts.srcKind = srcTab === "blocked" ? "block" : srcTab === "boards" || srcTab === "search" ? "board" : "dream"; focusNext = "src-input"; }
+      render();
+    } }, [addSrcOpen ? "Close" : "+ Add a source"]));
     v.appendChild(tools);
     if (addSrcOpen) addSourceForm(v);
 
@@ -716,24 +726,25 @@
     if (view.k === "blocked") {
       v.appendChild(el("p", { class: "banner", text: view.desc }));
       var keys = bkeys.filter(function (k) { return !q || String(V.blocked[k].company).toLowerCase().indexOf(q) > -1; });
+      keys.sort(function (a, b) { return String(V.blocked[a].company).localeCompare(String(V.blocked[b].company)); });
       var mine = keys.filter(function (k) { return !V.blocked[k].system; }), sys = keys.filter(function (k) { return V.blocked[k].system; });
       var bl = el("div", { class: "ledger" });
       mine.concat(sys).forEach(function (k) {
         var b = V.blocked[k];
         bl.appendChild(el("div", { class: "lrow" }, [
-          el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked") })]),
+          el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: (b.website ? "Website · " : "") + (b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked")) })]),
           el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
           b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, ["Unblock"])])
         ]));
       });
-      if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No blocked company matches." : "Nothing blocked. Skip a job with “Never show jobs from this company” to add one." })]));
+      if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Use “Add a source” to block a company or website, or skip a job with “Never show jobs from this company”." })]));
       v.appendChild(bl);
       return;
     }
 
     var found = 0, qual = 0;
     view.rows.forEach(function (s) { if (srcOn(s)) { found += s.found || 0; qual += s.qual || 0; } });
-    var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" || view.k === "mail" ? "" : " Last 30 days: " + found + " found, " + qual + " reached your bar.") })]);
+    var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" || view.k === "mail" ? "" : " Last 30 days: " + found + " found, " + qual + (view.k === "boards" ? " scored high enough to meet your requirements." : " reached your bar.")) })]);
     if (view.k === "search" && view.rows.length) {
       var anyOn = view.rows.some(srcOn);
       head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
@@ -742,7 +753,7 @@
 
     var rs = view.rows.filter(function (s) { return !q || String(s.name).toLowerCase().indexOf(q) > -1; });
     rs.sort(function (a, b) { return (b.qual || 0) - (a.qual || 0) || (b.found || 0) - (a.found || 0) || String(a.name).localeCompare(String(b.name)); });
-    var adds = view.k === "dream" ? Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_source" && !D.done[rid] && (!q || String(r.text).toLowerCase().indexOf(q) > -1); }) : [];
+    var adds = view.k === "dream" || view.k === "boards" ? Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_source" && !!r.dream === (view.k === "dream") && !D.done[rid] && (!q || String(r.text).toLowerCase().indexOf(q) > -1); }) : [];
     var split = (view.k === "dream" || view.k === "boards") && !q;
     var active = split ? rs.filter(function (s) { return s.found > 0; }) : rs;
     var quiet = split ? rs.filter(function (s) { return !(s.found > 0); }) : [];
@@ -759,27 +770,49 @@
     if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." : view.k === "dream" ? "No dream companies yet. Use “Add a source” and type a company name." : "Nothing here yet." })]));
     v.appendChild(l);
   }
+  var SRC_KINDS = [
+    ["dream", "Dream company", "Type a company name, or paste its careers page link. Dream companies are always checked, and their jobs reach you even if they score low.", "Company name or careers page link"],
+    ["board", "Job board", "Paste a company's careers page or job board link, or type its name. The next run works out how to check it daily.", "Careers page or job board link, or company name"],
+    ["block", "Block a company or website", "Type a company name, or a website address like jobright.ai. Jobs from it never reach scoring.", "Company name or website address"]
+  ];
+  function looksLikeSite(t) { return /^https?:\/\//i.test(t) || /^[\w-]+(\.[\w-]+)*\.[a-z]{2,}(\/.*)?$/i.test(t); }
   function addSourceForm(v) {
-    var input = el("input", { id: "src-input", "data-k": "src-input", type: "text", placeholder: "Company name, careers page link, or job board link", "aria-label": "Company name or link", oninput: function () { drafts.src = input.value; } });
+    var kind = drafts.srcKind || "dream";
+    var meta = SRC_KINDS.filter(function (k) { return k[0] === kind; })[0];
+    var input = el("input", { id: "src-input", "data-k": "src-input", type: "text", placeholder: meta[3], "aria-label": meta[3], oninput: function () { drafts.src = input.value; } });
     input.value = drafts.src;
+    var kinds = el("div", { class: "radios", role: "radiogroup", "aria-label": "What are you adding?" });
+    SRC_KINDS.forEach(function (k) {
+      var r = el("input", { type: "radio", name: "src-kind", id: "src-kind-" + k[0], "data-k": "src-kind-" + k[0], value: k[0], onchange: function () { drafts.srcKind = k[0]; lastVerdict = ""; render(); } });
+      r.checked = k[0] === kind;
+      kinds.appendChild(el("label", { for: "src-kind-" + k[0] }, [r, k[1]]));
+    });
     var out = el("div", { id: "src-out" });
     if (lastVerdict) out.appendChild(el("div", { class: "verdict", text: lastVerdict }));
     v.appendChild(el("form", { class: "addform", onsubmit: async function (e) {
       e.preventDefault();
       if (srcBusy) return;
       var q = drafts.src.trim(); if (!q) { input.focus(); return; }
-      var low = q.toLowerCase(), link = /^https?:\/\//.test(low) || /\.[a-z]{2,}(\/|$)/.test(low);
-      if (low.indexOf("linkedin.com") > -1) { lastVerdict = "Not added: LinkedIn can't be scanned directly. Set up a LinkedIn job alert instead; it arrives through Gmail."; render(); return; }
+      var low = q.toLowerCase(), link = looksLikeSite(q);
+      if (kind !== "block" && low.indexOf("linkedin.com") > -1) { lastVerdict = "Not added: LinkedIn can't be scanned directly. Set up a LinkedIn job alert instead; it arrives through Gmail."; render(); return; }
       srcBusy = true; render();
       try {
-        var rid = await saveRequest({ kind: "add_source", text: q.slice(0, 500), dream: !link }, null);
+        var rid, msg;
+        if (kind === "block") {
+          rid = await saveRequest({ kind: "block_company", company: q.slice(0, 300), website: link, reason: "Added on Scan sources" }, null);
+          msg = "Blocked " + q + ". Its jobs stop reaching scoring from the next run.";
+        } else {
+          rid = await saveRequest({ kind: "add_source", text: q.slice(0, 500), dream: kind === "dream" }, null);
+          msg = "Added " + q + ". " + (link ? "The next run opens the link and works out how to check it daily." : kind === "dream" ? "The next run searches for its careers page. If it can't find one, it's checked weekly by web search instead." : "The next run searches for its job board.");
+        }
         if (!rid) return;
-        drafts.src = "";
-        lastVerdict = "Added " + q + ". " + (link ? "The next run opens the link and works out how to check it daily." : "The next run searches for its careers page. If it can't find one, it's checked weekly by web search instead.");
+        drafts.src = ""; lastVerdict = msg;
       } finally { srcBusy = false; focusNext = "src-input"; render(); }
     } }, [
-      el("label", { for: "src-input", text: "Type a company name to add it as a dream company, or paste a careers page or job board link to skip the lookup." }),
-      el("div", { class: "fields" }, [input, el("button", { class: "b primary", type: "submit", disabled: !canWrite || srcBusy }, [srcBusy ? "Adding…" : "Add"])]),
+      el("div", { class: "s", text: "What are you adding?" }),
+      kinds,
+      el("label", { for: "src-input", text: meta[2] }),
+      el("div", { class: "fields" }, [input, el("button", { class: "b primary", type: "submit", disabled: !canWrite || srcBusy }, [srcBusy ? "Adding…" : kind === "block" ? "Block" : "Add"])]),
       out
     ]));
   }
@@ -803,7 +836,7 @@
         catch (e) { if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
         finally { swBusy[s.id] = false; render(); }
       } })]);
-    var row = el("div", { class: "lrow" }, [t, y, ctrl]);
+    var row = el("div", { class: "lrow src" }, [t, y, ctrl]);
     if (boardEdit !== s.id) return row;
     var inp = el("input", { type: "url", "data-k": "board-" + s.id, placeholder: "Link to one of their job postings or their job board", "aria-label": "Job board link for " + s.name, oninput: function () { drafts.board[s.id] = inp.value; } });
     inp.value = drafts.board[s.id] || "";
@@ -881,14 +914,14 @@
       labels.appendChild(el("div", null, [el("b", { text: decided ? Math.round(n / decided * 100) + "%" : "–" }), el("span", null, [el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:" + pt.color }), pt.label + " · " + n])]));
     });
     var f = r.funnel || {};
-    document.getElementById("funnel-sys-sub").textContent = f.since ? "Since " + niceDate(f.since) + ". Your sources list " + fmt(f.open_today) + " open postings today; these are the ones that matched your titles and locations, and how far they got." : "Appears after the first morning run.";
+    document.getElementById("funnel-sys-sub").textContent = f.since ? "Since you started using this tool on " + longDate(f.since) + ", your sources listed " + fmt(f.open_today) + " open postings. Here is a summary of the ones that matched your search criteria, and how far they moved down the funnel." : "Appears after the first morning run.";
     funnel(document.getElementById("funnel-sys"), [
       { k: "Passed filters", n: f.passed_filters || 0 },
       { k: "Scored", n: f.scored || 0 },
       { k: "Qualified", n: f.qualified || 0 }
     ], "var(--bar)", "of passed");
     document.getElementById("funnel-you-sub").textContent = "Of " + q.qualified + " qualified postings: " + q.applied + " applied, " + q.skipped + " skipped by you, " + Math.max(0, q.qualified - q.applied - q.skipped) + " not decided yet.";
-    funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Recruiter screen", n: you.screen }, { k: "Hiring manager", n: you.hm }, { k: "Offer", n: you.offer }], "var(--bar-2)", "of applied");
+    funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Interviewing", n: you.screen }, { k: "Offer", n: you.offer }], "var(--bar-2)", "of applied");
     renderClosed();
   }
   function bars(host, rows, color, emptyText) {
@@ -919,8 +952,7 @@
     ], "var(--bar)", "None yet.");
     bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--bar)", "No skips yet.");
     bars(document.getElementById("closed-where"), [
-      { k: "After applying", n: where.applied }, { k: "After recruiter screen", n: where.screen },
-      { k: "After hiring manager", n: where.hm }, { k: "At the offer", n: where.offer }
+      { k: "After applying", n: where.applied }, { k: "After interviewing", n: where.screen + where.hm }, { k: "At the offer", n: where.offer }
     ], "var(--bar-2)", "No applications closed yet.");
   }
   function funnel(host, stages, color, shareLabel) {
@@ -945,7 +977,7 @@
     render();
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
-  document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; render(); });
+  document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
   function showTab() {
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === state.tab)); });
     TABS.forEach(function (t) { document.getElementById("view-" + t).hidden = t !== state.tab; });
@@ -1049,20 +1081,25 @@
   }
 
   var TOUR = [
-    { title: "Welcome to your job page", text: "A two-minute tour on sample jobs, so you can click around without changing anything. The sample jobs disappear at the end, and your own jobs show from then on. Every morning around 6:45 new ones arrive here." },
-    { target: "#help-btn", title: "Is everything working?", text: "This button says “All working” when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
-    { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "To review holds new jobs that reached your bar. Then Interested, Applied, Interviewing, and Closed for jobs you skipped, lost or withdrew from." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "One job", text: "The number is its score from 0 to 5, built from what you told setup you care about. Click the title to open the posting. A star marks a dream company: those always show, even below your bar." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .dims', open: "why", title: "Why this score", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If a line looks wrong, skip the job with a reason, or tell Claude “change my scoring”." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "Interested: Claude writes a deeper evaluation by the next morning and picks the best resume. Applied: pick the resume you sent. Skip: pick a reason; your reasons teach the scoring. Try one: nothing is saved during the tour." },
-    { tab: "triage", stage: "review", target: "#suggest-host .sugg", title: "Sunday suggestions", text: "Once a week, the desk looks at what you skipped and what you went for, and suggests up to 3 changes to the scoring. Nothing changes until you approve." },
-    { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (LinkedIn does). It gets scored like the rest, and if your sources missed it, Scan sources tells you." },
-    { tab: "triage", stage: "applied", target: ".list .row .side", title: "After you apply", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own. “They replied” brings it back." },
+    { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. The daily scan runs at 6:45am every morning." },
+    { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
+    { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .dims', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and I will use it to improve the scoring mechanism over time. Try one! Nothing is saved during the tour." },
+    { tab: "triage", stage: "review", target: "#suggest-host .sugg", title: "Weekly setup improvements", text: "Once a week, I look at the jobs you skipped and the ones you applied to, and suggest up to 3 changes to the scoring algorithm. Nothing changes until you approve." },
+    { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (e.g. LinkedIn does). It gets scored like the rest, and if your sources missed it, **Scan sources** tells you." },
+    { tab: "triage", stage: "interested", target: '.row[data-id="s4"]', title: "Interested", text: "The deep evaluation arrives by the next morning: whether to apply, the main risk, and which of your resumes fits best. Click **Deep evaluation ready** to read it. When you've sent your application, click **Applied** and pick the resume you used." },
+    { tab: "triage", stage: "applied", target: ".list .row .side", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
+    { tab: "triage", stage: "interviewing", target: ".list .row .side", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
+    { tab: "triage", stage: "closed", target: ".list .row", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes .ledger", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
-    { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with “Add a source”." },
+    { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
     { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The rest follows your applications from applied to offer, and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
+  // Tour text: **word** shows in bold.
+  function richText(t) { return String(t).split(/\*\*(.+?)\*\*/g).map(function (part, i) { return i % 2 ? el("b", { text: part }) : part; }); }
 
   var tourEls = null;
   function tourReflow() { placeTour(false); }
@@ -1099,11 +1136,11 @@
     var c = tourEls.card; c.textContent = "";
     c.appendChild(el("div", { class: "tour-count", text: "Step " + (n + 1) + " of " + TOUR.length }));
     c.appendChild(el("h2", { id: "tour-title", text: st.title }));
-    c.appendChild(el("p", { text: st.text }));
+    c.appendChild(el("p", null, richText(st.text)));
     c.appendChild(el("div", { class: "btns" }, [
       last ? null : el("button", { class: "link", "data-k": "tour-skip", onclick: function () { endTour(); } }, ["Skip the tour"]),
-      n > 0 ? el("button", { class: "b", "data-k": "tour-back", onclick: function () { tourGo(tour.step - 1); } }, ["Back"]) : null,
-      el("button", { class: "b primary", "data-k": "tour-next", onclick: function () { tourGo(tour.step + 1); } }, [last ? "Finish" : n === 0 ? "Start" : "Next"])
+      n > 0 ? el("button", { class: "b", "data-k": "tour-back", onclick: function () { tourGo(tour.step - 1); } }, ["\u2190 Back"]) : null,
+      el("button", { class: "b primary", "data-k": "tour-next", onclick: function () { tourGo(tour.step + 1); } }, [last ? "Finish" : n === 0 ? "Start \u2192" : "Next \u2192"])
     ]));
     focusNext = "tour-next";
     render();
