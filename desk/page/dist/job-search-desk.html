@@ -689,7 +689,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var r = D.run;
     var meta = [];
     if (r && r.plan) meta.push(r.plan + (r.daily_cap ? ", up to " + r.daily_cap + " scored a day" : ""));
-    meta.push(!loaded ? "Connecting…" : !db ? "Not connected" : r ? "Last run " + niceTime(r.at) : "No run yet");
+    meta.push(!loaded ? "Connecting…" : !db ? "Not connected" : r ? "Last run " + niceTime(r.at) + (r.quick ? " (Run now)" : "") : "No run yet");
     document.getElementById("meta-line").textContent = meta.join(" · ");
     var probs = problems();
     var hb = document.getElementById("help-btn");
@@ -724,6 +724,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds no job or profile details." }));
     }
     kids.push(el("pre", { class: "msg", text: msg }));
+    if (runState().ok) kids.push(el("p", { class: "sub", text: "Run now, next to this button, does the part of the morning run you'd otherwise wait for: it reads your clicks, writes deep evaluations for jobs you marked Interested and updates this page, in about 10 minutes. New jobs still arrive with the morning run." }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
       el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, [ic("copy"), "Copy for Erik"]),
       el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
