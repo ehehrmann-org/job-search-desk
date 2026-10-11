@@ -2,6 +2,11 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.5.1 (2026-10-11)
+- Small icons on buttons and labels; the suggested resume shows as a document icon with its name.
+- Interviewing, Rejected and Withdrew sit on one line; the "Closes as No response" countdown moved under the job's details.
+- The tour highlights exactly what each step explains.
+
 ## 0.5.0 (2026-10-11)
 - New jobs have one main button, Interested; Applied appears once a job is in Interested. Applied jobs move on with Interviewing, Rejected or Withdrew.
 - "+ Add a source" asks what you're adding: a dream company, a job board, or a company or website to block. Blocked websites (like jobright.ai) stop every posting hosted there.

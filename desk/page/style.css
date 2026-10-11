@@ -301,3 +301,24 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 }
 .addform .radios input { width: auto; min-height: 0; padding: 0; margin: 0; flex: none; }
 .addform .radios { gap: 8px 18px; }
+
+/* Phosphor icons inside buttons, tags and links */
+.ic { display: inline-flex; width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.ic svg { width: 100%; height: 100%; }
+.b, .tag, .link, .addcard, .status { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tag .ic { width: 14px; height: 14px; }
+.dlg-x .ic { width: 20px; height: 20px; }
+.when { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+/* Three outcome buttons stay on one line */
+.btns.one { flex-wrap: nowrap; }
+.row { grid-template-columns: 56px minmax(0, 1fr) minmax(220px, max-content); }
+@media (max-width: 860px) {
+  .row { grid-template-columns: 44px minmax(0, 1fr); }
+  .side, .wide { grid-column: 1 / -1; }
+  .state, .timer { text-align: left; }
+  .btns, .more { justify-content: flex-start; }
+}
+@media (max-width: 400px) { .btns.one .b { padding: 8px 9px; gap: 5px; } }
+/* Button groups hug their buttons, so highlights and focus match what's visible */
+.side > .btns, .side > .more { justify-self: end; }
+@media (max-width: 860px) { .side > .btns, .side > .more { justify-self: start; } }

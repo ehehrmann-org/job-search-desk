@@ -97,6 +97,13 @@
   var V = null;   // per-render indexes, rebuilt in draw()
 
   // ---------- Helpers ----------
+  // Small Phosphor icon (JSD_ICONS is inlined by build.mjs), decorative: the label carries the meaning.
+  function ic(name) {
+    var paths = (typeof JSD_ICONS !== "undefined" && JSD_ICONS[name]) || "";
+    var n = document.createElement("span"); n.className = "ic"; n.setAttribute("aria-hidden", "true");
+    n.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16">' + paths + "</svg>";
+    return n;
+  }
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
     if (attrs) for (var k in attrs) {
@@ -305,7 +312,7 @@
     function closeHelp() { helpOpen = false; focusNext = "help-btn"; render(); }
     var kids = [el("div", { class: "dlg-head" }, [
       el("h2", { id: "help-title", text: probs.length ? "Something needs attention" : "Everything is working" }),
-      el("button", { class: "dlg-x", "data-k": "help-x", "aria-label": "Close", onclick: closeHelp }, ["\u00d7"])
+      el("button", { class: "dlg-x", "data-k": "help-x", "aria-label": "Close", onclick: closeHelp }, [ic("x")])
     ])];
     var to = email ? "me at " + email : "Erik";
     if (probs.length) {
@@ -325,8 +332,8 @@
     }
     kids.push(el("pre", { class: "msg", text: msg }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
-      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
-      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, ["Take the tour again"])
+      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, [ic("copy"), "Copy for Erik"]),
+      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
     ]));
     hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
       el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title", onkeydown: function (e) { if (e.key === "Escape") closeHelp(); } }, kids)
@@ -362,7 +369,7 @@
     if (shown.length > limit) list.appendChild(el("button", { class: "b showmore", "data-k": "showmore", onclick: function () { state.closedLimit += CLOSED_PAGE; render(); } }, ["Show " + Math.min(CLOSED_PAGE, shown.length - limit) + " more of " + (shown.length - limit)]));
     if (state.stage === "review" && canWrite) {
       if (addOpen) list.appendChild(addJobForm());
-      else list.appendChild(el("button", { class: "empty addcard", "data-k": "addcard", onclick: function () { addOpen = true; focusNext = "aj-text"; render(); } }, ["+ Add a job you found yourself"]));
+      else list.appendChild(el("button", { class: "empty addcard", "data-k": "addcard", onclick: function () { addOpen = true; focusNext = "aj-text"; render(); } }, [ic("plus"), "Add a job you found yourself"]));
     }
   }
 
@@ -383,8 +390,8 @@
         el("div", { class: "s2", text: x.why }),
         el("div", { class: "s2 muted", text: "What changes: " + x.change }),
         el("div", { class: "btns", style: "justify-content:flex-start" }, [
-          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, ["Approve"]),
-          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, ["Not now"])
+          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, [ic("check"), "Approve"]),
+          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, [ic("clock"), "Not now"])
         ])
       ]));
     });
@@ -446,52 +453,54 @@
     [p.location, p.pay, p.source, when].forEach(function (x) { if (x) meta.appendChild(el("span", { text: x })); });
     var tags = el("div", { class: "tags" });
     var dk = "d-" + p.id + "-";
-    if (p.pending) tags.appendChild(el("span", { class: "tag q", text: p.pendingNote || "Scoring in the next run" }));
+    if (p.pending) tags.appendChild(el("span", { class: "tag q" }, [ic("clock"), p.pendingNote || "Scoring in the next run"]));
     if (p.outside || dec.outside) tags.appendChild(el("span", { class: "tag", text: "Found outside the tool" }));
     if (p.warning) tags.appendChild(el("span", { class: "tag q", text: p.warning }));
     if (p.status_hint === "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Couldn't be scored: the posting couldn't be read" }));
-    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
-    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Scored from the title only: the description couldn't be read" }));
+    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [ic("chart-bar-horizontal"), drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
+    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
-      else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
+      else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [ic("file-magnifying-glass"), drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
       if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
       else if (!deep) tags.appendChild(el("span", { class: "tag", text: "Resume pick comes with the deep evaluation" }));
     }
-    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", text: "Sent: " + resumeName(dec.sent) }));
+    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", title: "Resume you sent" }, [ic("paper-plane-tilt"), resumeName(dec.sent)]));
     if (s === "skipped" && dec.reasons && dec.reasons.length) tags.appendChild(el("span", { class: "tag", text: "Skipped: " + dec.reasons.join(", ") }));
-    row.appendChild(el("div", { class: "main" }, [head, meta, tags]));
+    var main = el("div", { class: "main" }, [head, meta, tags]);
+    row.appendChild(main);
 
     var side = el("div", { class: "side" });
     side.appendChild(el("div", { class: "state", text: LABEL[s] }));
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
     var off = !canWrite || !!writing[p.id];
-    function act(label, key, fn, extra) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [label]); }
+    function act(label, key, fn, extra, icon) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [icon ? ic(icon) : null, label]); }
     if (s === "new" || s === "interested") {
-      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }));
-      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }));
-      btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }));
+      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }, "bookmark-simple"));
+      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }, "paper-plane-tilt"));
+      btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }, "x"));
       if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
-        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, ["Copy tailor prompt"]));
+        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, [ic("copy"), "Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
-      var next = s === "applied" ? [["screen", "Interviewing"]] : [["offer", "Offer"]];
-      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); })); });
-      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }));
-      btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }));
+      var next = s === "applied" ? [["screen", "Interviewing", "chats-circle"]] : [["offer", "Offer", "handshake"]];
+      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); }, null, n[2])); });
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
+      btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }, null, "sign-out"));
+      btns.className = "btns one";
       var left = windowLeft(p.id);
-      if (left !== null) side.appendChild(el("div", { class: "timer", text: "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back" }));
+      if (left !== null) main.appendChild(el("div", { class: "when" }, [ic("hourglass-medium"), "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back"]));
     } else if (s === "offer") {
-      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }));
+      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }, null, "x-circle"));
     } else if (s === "noresp") {
       // They answered after all: back to the stage where it went quiet, with a fresh date.
       var back = e.lost_at === "applied" ? "screen" : e.lost_at;
-      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }));
-      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }));
+      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, null, "arrow-bend-up-left"));
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
-      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }));
+      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
       if (e.lost_at) side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     }
     side.appendChild(btns);
@@ -513,8 +522,8 @@
 
   function resumeTag(id, suffix) {
     var r = D.resumes[id];
-    if (!r) return el("span", { class: "tag", text: "Resume: " + id + (suffix || "") });
-    return el("button", { class: "tag act", title: "Shows this resume on the Resumes tab", onclick: function () { setTab("resumes"); } }, ["Resume: " + r.name + (suffix || "")]);
+    if (!r) return el("span", { class: "tag", title: "Suggested resume" }, [ic("file-text"), id + (suffix || "")]);
+    return el("button", { class: "tag act", title: "Suggested resume. Shows it on the Resumes tab", "aria-label": "Suggested resume: " + r.name + (suffix || ""), onclick: function () { setTab("resumes"); } }, [ic("file-text"), r.name + (suffix || "")]);
   }
 
   function whyDrawer(p) {
@@ -613,9 +622,9 @@
     function row(k) {
       var r = D.resumes[k], msg = el("span", { class: "s" });
       var btns = [];
-      if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, ["Save PDF"]));
-      if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, ["Copy plain text"]));
-      if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, ["Copy update prompt"]));
+      if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
+      if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
+      if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + " postings · sent with " + stat[k].sent + " applications";
       return el("div", { class: "lrow" }, [
@@ -712,7 +721,7 @@
       if (!addSrcOpen) lastVerdict = "";
       else { drafts.srcKind = srcTab === "blocked" ? "block" : srcTab === "boards" || srcTab === "search" ? "board" : "dream"; focusNext = "src-input"; }
       render();
-    } }, [addSrcOpen ? "Close" : "+ Add a source"]));
+    } }, addSrcOpen ? [ic("x"), "Close"] : [ic("plus"), "Add a source"]));
     v.appendChild(tools);
     if (addSrcOpen) addSourceForm(v);
 
@@ -734,7 +743,7 @@
         bl.appendChild(el("div", { class: "lrow" }, [
           el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: (b.website ? "Website · " : "") + (b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked")) })]),
           el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
-          b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, ["Unblock"])])
+          b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, [ic("lock-simple-open"), "Unblock"])])
         ]));
       });
       if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Use “Add a source” to block a company or website, or skip a job with “Never show jobs from this company”." })]));
@@ -747,7 +756,7 @@
     var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" || view.k === "mail" ? "" : " Last 30 days: " + found + " found, " + qual + (view.k === "boards" ? " scored high enough to meet your requirements." : " reached your bar.")) })]);
     if (view.k === "search" && view.rows.length) {
       var anyOn = view.rows.some(srcOn);
-      head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
+      head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [ic("power"), anyOn ? "Turn all off" : "Turn all on"]));
     }
     v.appendChild(head);
 
@@ -823,7 +832,7 @@
     var y;
     if (fixing) y = el("div", { class: "m low", text: "Checking the link you pasted in the next run" });
     else if (!on) y = el("div", { class: "m", text: "Off" });
-    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", "data-k": "fix-" + s.id, disabled: !canWrite, onclick: function () { boardEdit = s.id; focusNext = "board-" + s.id; render(); } }, ["Paste its job board link"])]);
+    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", "data-k": "fix-" + s.id, disabled: !canWrite, onclick: function () { boardEdit = s.id; focusNext = "board-" + s.id; render(); } }, [ic("link"), "Paste its job board link"])]);
     else if (s.group === "mail") y = el("div", { class: "m", text: "On" });
     else { var low = (s.found || 0) >= 20 && !s.qual; y = el("div", { class: "m" + (low ? " low" : ""), text: (s.found || 0) + " found · " + (s.qual || 0) + " qualified · " + (s.app || 0) + " applied" + (low ? " · nothing reached your bar in 30 days, consider turning it off" : "") }); }
     var ctrl = el("div", { class: "ctrl" }, [el("button", { class: "sw", role: "switch", "data-k": "sw-" + s.id, disabled: !canWrite || !!swBusy[s.id], "aria-checked": String(on), "aria-label": s.name,
@@ -1085,17 +1094,17 @@
     { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .dims', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and I will use it to improve the scoring mechanism over time. Try one! Nothing is saved during the tour." },
-    { tab: "triage", stage: "review", target: "#suggest-host .sugg", title: "Weekly setup improvements", text: "Once a week, I look at the jobs you skipped and the ones you applied to, and suggest up to 3 changes to the scoring algorithm. Nothing changes until you approve." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side .btns', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and I will use it to improve the scoring mechanism over time. Try one! Nothing is saved during the tour." },
+    { tab: "triage", stage: "review", target: "#suggest-host .panel", title: "Weekly setup improvements", text: "Once a week, I look at the jobs you skipped and the ones you applied to, and suggest up to 3 changes to the scoring algorithm. Nothing changes until you approve." },
     { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (e.g. LinkedIn does). It gets scored like the rest, and if your sources missed it, **Scan sources** tells you." },
     { tab: "triage", stage: "interested", target: '.row[data-id="s4"]', title: "Interested", text: "The deep evaluation arrives by the next morning: whether to apply, the main risk, and which of your resumes fits best. Click **Deep evaluation ready** to read it. When you've sent your application, click **Applied** and pick the resume you used." },
-    { tab: "triage", stage: "applied", target: ".list .row .side", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
-    { tab: "triage", stage: "interviewing", target: ".list .row .side", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
-    { tab: "triage", stage: "closed", target: ".list .row", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
-    { tab: "resumes", target: "#view-resumes .ledger", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
-    { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
-    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The rest follows your applications from applied to offer, and why jobs closed." },
+    { tab: "triage", stage: "applied", target: ".list .row", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
+    { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
+    { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
+    { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
+    { tab: "sources", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
+    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
   // Tour text: **word** shows in bold.
@@ -1103,6 +1112,18 @@
 
   var tourEls = null;
   function tourReflow() { placeTour(false); }
+  // A step's target: one selector, or several whose combined box is highlighted.
+  function tourRect(target) {
+    var sels = Array.isArray(target) ? target : [target], r = null;
+    sels.forEach(function (sel) {
+      var n = document.querySelector(sel); if (!n) return;
+      var b = n.getBoundingClientRect();
+      r = r ? { top: Math.min(r.top, b.top), left: Math.min(r.left, b.left), bottom: Math.max(r.bottom, b.bottom), right: Math.max(r.right, b.right) } : { top: b.top, left: b.left, bottom: b.bottom, right: b.right };
+    });
+    if (r) { r.width = r.right - r.left; r.height = r.bottom - r.top; }
+    return r;
+  }
+  window.__jsdTourTargets = function () { return TOUR.map(function (x) { return x.target || null; }); };
   function startTour() {
     if (tour.on) return;
     tour.on = true; tour.step = 0; tour.prevTab = state.tab;
@@ -1151,11 +1172,11 @@
   // never while she scrolls). Phones get a full-width card placed the same way.
   function placeTour(allowScroll) {
     if (!tour.on || !tourEls) return;
-    var st = TOUR[tour.step], t = st.target ? document.querySelector(st.target) : null;
+    var st = TOUR[tour.step], t = st.target ? tourRect(st.target) : null;
     var spot = tourEls.spot, card = tourEls.card, vw = window.innerWidth, vh = window.innerHeight, m = 12, padPx = 6;
     if (!t) { spot.hidden = true; card.className = "tour-card center"; card.style.top = card.style.left = ""; return; }
     card.className = "tour-card" + (vw < 600 ? " wide" : "");
-    var ch = card.offsetHeight, cw = card.offsetWidth, r = t.getBoundingClientRect();
+    var ch = card.offsetHeight, cw = card.offsetWidth, r = t;
     var gap = m + padPx;
     var fitsBelow = function (b) { return b.top >= m && b.bottom + gap + ch <= vh - m; };
     var fitsAbove = function (b) { return b.bottom <= vh - m && b.top - gap - ch >= m; };
@@ -1163,8 +1184,10 @@
       // Target near the top of the view with the card under it; if the page can't scroll that
       // far (target at the very end), the card goes above instead.
       window.scrollBy(0, r.top - gap);
-      r = t.getBoundingClientRect();
-      if (!fitsBelow(r) && !fitsAbove(r) && r.bottom > vh - m) { window.scrollBy(0, r.bottom - (vh - m)); r = t.getBoundingClientRect(); }
+      r = tourRect(st.target);
+      // Only when it could fit: a target taller than the view stays anchored at its top.
+      if (!fitsBelow(r) && !fitsAbove(r) && r.bottom > vh - m && r.height + ch + 3 * gap <= vh) { window.scrollBy(0, r.bottom - (vh - m)); r = tourRect(st.target); }
+      if (r.top < m && r.height + ch + 3 * gap > vh) { window.scrollBy(0, r.top - gap); r = tourRect(st.target); }
     }
     var top;
     if (fitsBelow(r)) top = r.bottom + gap;
@@ -1172,13 +1195,14 @@
     else {
       // Taller than the view allows: keep the card on whichever side has more room, and
       // highlight only the part of the target the card leaves visible.
-      var roomBelow = vh - r.bottom, roomAbove = r.top;
-      top = roomBelow >= roomAbove ? Math.min(vh - ch - m, Math.max(r.bottom + gap, m)) : Math.max(m, r.top - gap - ch);
+      // Taller than the view: its top stays in view and the card sits at the bottom of the screen.
+      var roomBelow = vh - Math.min(r.bottom, vh), roomAbove = Math.max(r.top, 0);
+      top = r.top <= gap + 1 || roomBelow >= roomAbove ? vh - ch - m : Math.max(m, r.top - gap - ch);
     }
     card.style.top = Math.round(top) + "px";
     card.style.left = Math.round(vw < 600 ? 16 : Math.max(8, Math.min(vw - cw - 8, r.left))) + "px";
     var cardTop = top, cardBottom = top + ch;
-    var sTop = r.top - padPx, sBottom = r.bottom + padPx;
+    var sTop = Math.max(r.top - padPx, 2), sBottom = Math.min(r.bottom + padPx, vh - 2);
     if (cardTop >= sTop && cardTop < sBottom) sBottom = cardTop - padPx;
     if (cardBottom > sTop && cardBottom <= sBottom) sTop = cardBottom + padPx;
     spot.hidden = sBottom <= sTop;

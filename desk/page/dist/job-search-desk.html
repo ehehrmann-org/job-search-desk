@@ -306,8 +306,33 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 }
 .addform .radios input { width: auto; min-height: 0; padding: 0; margin: 0; flex: none; }
 .addform .radios { gap: 8px 18px; }
+
+/* Phosphor icons inside buttons, tags and links */
+.ic { display: inline-flex; width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.ic svg { width: 100%; height: 100%; }
+.b, .tag, .link, .addcard, .status { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tag .ic { width: 14px; height: 14px; }
+.dlg-x .ic { width: 20px; height: 20px; }
+.when { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+/* Three outcome buttons stay on one line */
+.btns.one { flex-wrap: nowrap; }
+.row { grid-template-columns: 56px minmax(0, 1fr) minmax(220px, max-content); }
+@media (max-width: 860px) {
+  .row { grid-template-columns: 44px minmax(0, 1fr); }
+  .side, .wide { grid-column: 1 / -1; }
+  .state, .timer { text-align: left; }
+  .btns, .more { justify-content: flex-start; }
+}
+@media (max-width: 400px) { .btns.one .b { padding: 8px 9px; gap: 5px; } }
+/* Button groups hug their buttons, so highlights and focus match what's visible */
+.side > .btns, .side > .more { justify-self: end; }
+@media (max-width: 860px) { .side > .btns, .side > .more { justify-self: start; } }
 </style>
 
+<script>
+// Phosphor Icons (regular weight), MIT license (see desk/page/PHOSPHOR-LICENSE.txt), https://phosphoricons.com. Generated from @phosphor-icons/core 2.1.1.
+var JSD_ICONS = {"file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
+</script>
 <div class="app">
   <header class="top">
     <div class="brand">Job Search Desk</div>
@@ -407,6 +432,13 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   var V = null;   // per-render indexes, rebuilt in draw()
 
   // ---------- Helpers ----------
+  // Small Phosphor icon (JSD_ICONS is inlined by build.mjs), decorative: the label carries the meaning.
+  function ic(name) {
+    var paths = (typeof JSD_ICONS !== "undefined" && JSD_ICONS[name]) || "";
+    var n = document.createElement("span"); n.className = "ic"; n.setAttribute("aria-hidden", "true");
+    n.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16">' + paths + "</svg>";
+    return n;
+  }
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
     if (attrs) for (var k in attrs) {
@@ -615,7 +647,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     function closeHelp() { helpOpen = false; focusNext = "help-btn"; render(); }
     var kids = [el("div", { class: "dlg-head" }, [
       el("h2", { id: "help-title", text: probs.length ? "Something needs attention" : "Everything is working" }),
-      el("button", { class: "dlg-x", "data-k": "help-x", "aria-label": "Close", onclick: closeHelp }, ["\u00d7"])
+      el("button", { class: "dlg-x", "data-k": "help-x", "aria-label": "Close", onclick: closeHelp }, [ic("x")])
     ])];
     var to = email ? "me at " + email : "Erik";
     if (probs.length) {
@@ -635,8 +667,8 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     }
     kids.push(el("pre", { class: "msg", text: msg }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
-      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
-      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, ["Take the tour again"])
+      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, [ic("copy"), "Copy for Erik"]),
+      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
     ]));
     hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
       el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title", onkeydown: function (e) { if (e.key === "Escape") closeHelp(); } }, kids)
@@ -672,7 +704,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     if (shown.length > limit) list.appendChild(el("button", { class: "b showmore", "data-k": "showmore", onclick: function () { state.closedLimit += CLOSED_PAGE; render(); } }, ["Show " + Math.min(CLOSED_PAGE, shown.length - limit) + " more of " + (shown.length - limit)]));
     if (state.stage === "review" && canWrite) {
       if (addOpen) list.appendChild(addJobForm());
-      else list.appendChild(el("button", { class: "empty addcard", "data-k": "addcard", onclick: function () { addOpen = true; focusNext = "aj-text"; render(); } }, ["+ Add a job you found yourself"]));
+      else list.appendChild(el("button", { class: "empty addcard", "data-k": "addcard", onclick: function () { addOpen = true; focusNext = "aj-text"; render(); } }, [ic("plus"), "Add a job you found yourself"]));
     }
   }
 
@@ -693,8 +725,8 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
         el("div", { class: "s2", text: x.why }),
         el("div", { class: "s2 muted", text: "What changes: " + x.change }),
         el("div", { class: "btns", style: "justify-content:flex-start" }, [
-          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, ["Approve"]),
-          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, ["Not now"])
+          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, [ic("check"), "Approve"]),
+          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, [ic("clock"), "Not now"])
         ])
       ]));
     });
@@ -756,52 +788,54 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     [p.location, p.pay, p.source, when].forEach(function (x) { if (x) meta.appendChild(el("span", { text: x })); });
     var tags = el("div", { class: "tags" });
     var dk = "d-" + p.id + "-";
-    if (p.pending) tags.appendChild(el("span", { class: "tag q", text: p.pendingNote || "Scoring in the next run" }));
+    if (p.pending) tags.appendChild(el("span", { class: "tag q" }, [ic("clock"), p.pendingNote || "Scoring in the next run"]));
     if (p.outside || dec.outside) tags.appendChild(el("span", { class: "tag", text: "Found outside the tool" }));
     if (p.warning) tags.appendChild(el("span", { class: "tag q", text: p.warning }));
     if (p.status_hint === "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Couldn't be scored: the posting couldn't be read" }));
-    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
-    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Scored from the title only: the description couldn't be read" }));
+    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [ic("chart-bar-horizontal"), drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
+    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
-      else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
+      else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [ic("file-magnifying-glass"), drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
       if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
       else if (!deep) tags.appendChild(el("span", { class: "tag", text: "Resume pick comes with the deep evaluation" }));
     }
-    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", text: "Sent: " + resumeName(dec.sent) }));
+    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", title: "Resume you sent" }, [ic("paper-plane-tilt"), resumeName(dec.sent)]));
     if (s === "skipped" && dec.reasons && dec.reasons.length) tags.appendChild(el("span", { class: "tag", text: "Skipped: " + dec.reasons.join(", ") }));
-    row.appendChild(el("div", { class: "main" }, [head, meta, tags]));
+    var main = el("div", { class: "main" }, [head, meta, tags]);
+    row.appendChild(main);
 
     var side = el("div", { class: "side" });
     side.appendChild(el("div", { class: "state", text: LABEL[s] }));
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
     var off = !canWrite || !!writing[p.id];
-    function act(label, key, fn, extra) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [label]); }
+    function act(label, key, fn, extra, icon) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [icon ? ic(icon) : null, label]); }
     if (s === "new" || s === "interested") {
-      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }));
-      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }));
-      btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }));
+      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }, "bookmark-simple"));
+      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }, "paper-plane-tilt"));
+      btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }, "x"));
       if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
-        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, ["Copy tailor prompt"]));
+        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, [ic("copy"), "Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
-      var next = s === "applied" ? [["screen", "Interviewing"]] : [["offer", "Offer"]];
-      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); })); });
-      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }));
-      btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }));
+      var next = s === "applied" ? [["screen", "Interviewing", "chats-circle"]] : [["offer", "Offer", "handshake"]];
+      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); }, null, n[2])); });
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
+      btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }, null, "sign-out"));
+      btns.className = "btns one";
       var left = windowLeft(p.id);
-      if (left !== null) side.appendChild(el("div", { class: "timer", text: "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back" }));
+      if (left !== null) main.appendChild(el("div", { class: "when" }, [ic("hourglass-medium"), "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back"]));
     } else if (s === "offer") {
-      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }));
+      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }, null, "x-circle"));
     } else if (s === "noresp") {
       // They answered after all: back to the stage where it went quiet, with a fresh date.
       var back = e.lost_at === "applied" ? "screen" : e.lost_at;
-      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }));
-      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }));
+      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, null, "arrow-bend-up-left"));
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
-      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }));
+      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
       if (e.lost_at) side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     }
     side.appendChild(btns);
@@ -823,8 +857,8 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 
   function resumeTag(id, suffix) {
     var r = D.resumes[id];
-    if (!r) return el("span", { class: "tag", text: "Resume: " + id + (suffix || "") });
-    return el("button", { class: "tag act", title: "Shows this resume on the Resumes tab", onclick: function () { setTab("resumes"); } }, ["Resume: " + r.name + (suffix || "")]);
+    if (!r) return el("span", { class: "tag", title: "Suggested resume" }, [ic("file-text"), id + (suffix || "")]);
+    return el("button", { class: "tag act", title: "Suggested resume. Shows it on the Resumes tab", "aria-label": "Suggested resume: " + r.name + (suffix || ""), onclick: function () { setTab("resumes"); } }, [ic("file-text"), r.name + (suffix || "")]);
   }
 
   function whyDrawer(p) {
@@ -923,9 +957,9 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     function row(k) {
       var r = D.resumes[k], msg = el("span", { class: "s" });
       var btns = [];
-      if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, ["Save PDF"]));
-      if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, ["Copy plain text"]));
-      if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, ["Copy update prompt"]));
+      if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
+      if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
+      if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + " postings · sent with " + stat[k].sent + " applications";
       return el("div", { class: "lrow" }, [
@@ -1022,7 +1056,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
       if (!addSrcOpen) lastVerdict = "";
       else { drafts.srcKind = srcTab === "blocked" ? "block" : srcTab === "boards" || srcTab === "search" ? "board" : "dream"; focusNext = "src-input"; }
       render();
-    } }, [addSrcOpen ? "Close" : "+ Add a source"]));
+    } }, addSrcOpen ? [ic("x"), "Close"] : [ic("plus"), "Add a source"]));
     v.appendChild(tools);
     if (addSrcOpen) addSourceForm(v);
 
@@ -1044,7 +1078,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
         bl.appendChild(el("div", { class: "lrow" }, [
           el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: (b.website ? "Website · " : "") + (b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked")) })]),
           el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
-          b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, ["Unblock"])])
+          b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, [ic("lock-simple-open"), "Unblock"])])
         ]));
       });
       if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Use “Add a source” to block a company or website, or skip a job with “Never show jobs from this company”." })]));
@@ -1057,7 +1091,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" || view.k === "mail" ? "" : " Last 30 days: " + found + " found, " + qual + (view.k === "boards" ? " scored high enough to meet your requirements." : " reached your bar.")) })]);
     if (view.k === "search" && view.rows.length) {
       var anyOn = view.rows.some(srcOn);
-      head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
+      head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [ic("power"), anyOn ? "Turn all off" : "Turn all on"]));
     }
     v.appendChild(head);
 
@@ -1133,7 +1167,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var y;
     if (fixing) y = el("div", { class: "m low", text: "Checking the link you pasted in the next run" });
     else if (!on) y = el("div", { class: "m", text: "Off" });
-    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", "data-k": "fix-" + s.id, disabled: !canWrite, onclick: function () { boardEdit = s.id; focusNext = "board-" + s.id; render(); } }, ["Paste its job board link"])]);
+    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", "data-k": "fix-" + s.id, disabled: !canWrite, onclick: function () { boardEdit = s.id; focusNext = "board-" + s.id; render(); } }, [ic("link"), "Paste its job board link"])]);
     else if (s.group === "mail") y = el("div", { class: "m", text: "On" });
     else { var low = (s.found || 0) >= 20 && !s.qual; y = el("div", { class: "m" + (low ? " low" : ""), text: (s.found || 0) + " found · " + (s.qual || 0) + " qualified · " + (s.app || 0) + " applied" + (low ? " · nothing reached your bar in 30 days, consider turning it off" : "") }); }
     var ctrl = el("div", { class: "ctrl" }, [el("button", { class: "sw", role: "switch", "data-k": "sw-" + s.id, disabled: !canWrite || !!swBusy[s.id], "aria-checked": String(on), "aria-label": s.name,
@@ -1395,17 +1429,17 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .dims', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
-    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and I will use it to improve the scoring mechanism over time. Try one! Nothing is saved during the tour." },
-    { tab: "triage", stage: "review", target: "#suggest-host .sugg", title: "Weekly setup improvements", text: "Once a week, I look at the jobs you skipped and the ones you applied to, and suggest up to 3 changes to the scoring algorithm. Nothing changes until you approve." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
+    { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side .btns', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and I will use it to improve the scoring mechanism over time. Try one! Nothing is saved during the tour." },
+    { tab: "triage", stage: "review", target: "#suggest-host .panel", title: "Weekly setup improvements", text: "Once a week, I look at the jobs you skipped and the ones you applied to, and suggest up to 3 changes to the scoring algorithm. Nothing changes until you approve." },
     { tab: "triage", stage: "review", target: ".addcard", title: "Found a job yourself?", text: "Add it here with its link, or paste the text if the link needs a login (e.g. LinkedIn does). It gets scored like the rest, and if your sources missed it, **Scan sources** tells you." },
     { tab: "triage", stage: "interested", target: '.row[data-id="s4"]', title: "Interested", text: "The deep evaluation arrives by the next morning: whether to apply, the main risk, and which of your resumes fits best. Click **Deep evaluation ready** to read it. When you've sent your application, click **Applied** and pick the resume you used." },
-    { tab: "triage", stage: "applied", target: ".list .row .side", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
-    { tab: "triage", stage: "interviewing", target: ".list .row .side", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
-    { tab: "triage", stage: "closed", target: ".list .row", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
-    { tab: "resumes", target: "#view-resumes .ledger", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
-    { tab: "sources", target: ".segtabs", title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
-    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The rest follows your applications from applied to offer, and why jobs closed." },
+    { tab: "triage", stage: "applied", target: ".list .row", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
+    { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
+    { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
+    { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
+    { tab: "sources", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
+    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
   // Tour text: **word** shows in bold.
@@ -1413,6 +1447,18 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 
   var tourEls = null;
   function tourReflow() { placeTour(false); }
+  // A step's target: one selector, or several whose combined box is highlighted.
+  function tourRect(target) {
+    var sels = Array.isArray(target) ? target : [target], r = null;
+    sels.forEach(function (sel) {
+      var n = document.querySelector(sel); if (!n) return;
+      var b = n.getBoundingClientRect();
+      r = r ? { top: Math.min(r.top, b.top), left: Math.min(r.left, b.left), bottom: Math.max(r.bottom, b.bottom), right: Math.max(r.right, b.right) } : { top: b.top, left: b.left, bottom: b.bottom, right: b.right };
+    });
+    if (r) { r.width = r.right - r.left; r.height = r.bottom - r.top; }
+    return r;
+  }
+  window.__jsdTourTargets = function () { return TOUR.map(function (x) { return x.target || null; }); };
   function startTour() {
     if (tour.on) return;
     tour.on = true; tour.step = 0; tour.prevTab = state.tab;
@@ -1461,11 +1507,11 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   // never while she scrolls). Phones get a full-width card placed the same way.
   function placeTour(allowScroll) {
     if (!tour.on || !tourEls) return;
-    var st = TOUR[tour.step], t = st.target ? document.querySelector(st.target) : null;
+    var st = TOUR[tour.step], t = st.target ? tourRect(st.target) : null;
     var spot = tourEls.spot, card = tourEls.card, vw = window.innerWidth, vh = window.innerHeight, m = 12, padPx = 6;
     if (!t) { spot.hidden = true; card.className = "tour-card center"; card.style.top = card.style.left = ""; return; }
     card.className = "tour-card" + (vw < 600 ? " wide" : "");
-    var ch = card.offsetHeight, cw = card.offsetWidth, r = t.getBoundingClientRect();
+    var ch = card.offsetHeight, cw = card.offsetWidth, r = t;
     var gap = m + padPx;
     var fitsBelow = function (b) { return b.top >= m && b.bottom + gap + ch <= vh - m; };
     var fitsAbove = function (b) { return b.bottom <= vh - m && b.top - gap - ch >= m; };
@@ -1473,8 +1519,10 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
       // Target near the top of the view with the card under it; if the page can't scroll that
       // far (target at the very end), the card goes above instead.
       window.scrollBy(0, r.top - gap);
-      r = t.getBoundingClientRect();
-      if (!fitsBelow(r) && !fitsAbove(r) && r.bottom > vh - m) { window.scrollBy(0, r.bottom - (vh - m)); r = t.getBoundingClientRect(); }
+      r = tourRect(st.target);
+      // Only when it could fit: a target taller than the view stays anchored at its top.
+      if (!fitsBelow(r) && !fitsAbove(r) && r.bottom > vh - m && r.height + ch + 3 * gap <= vh) { window.scrollBy(0, r.bottom - (vh - m)); r = tourRect(st.target); }
+      if (r.top < m && r.height + ch + 3 * gap > vh) { window.scrollBy(0, r.top - gap); r = tourRect(st.target); }
     }
     var top;
     if (fitsBelow(r)) top = r.bottom + gap;
@@ -1482,13 +1530,14 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     else {
       // Taller than the view allows: keep the card on whichever side has more room, and
       // highlight only the part of the target the card leaves visible.
-      var roomBelow = vh - r.bottom, roomAbove = r.top;
-      top = roomBelow >= roomAbove ? Math.min(vh - ch - m, Math.max(r.bottom + gap, m)) : Math.max(m, r.top - gap - ch);
+      // Taller than the view: its top stays in view and the card sits at the bottom of the screen.
+      var roomBelow = vh - Math.min(r.bottom, vh), roomAbove = Math.max(r.top, 0);
+      top = r.top <= gap + 1 || roomBelow >= roomAbove ? vh - ch - m : Math.max(m, r.top - gap - ch);
     }
     card.style.top = Math.round(top) + "px";
     card.style.left = Math.round(vw < 600 ? 16 : Math.max(8, Math.min(vw - cw - 8, r.left))) + "px";
     var cardTop = top, cardBottom = top + ch;
-    var sTop = r.top - padPx, sBottom = r.bottom + padPx;
+    var sTop = Math.max(r.top - padPx, 2), sBottom = Math.min(r.bottom + padPx, vh - 2);
     if (cardTop >= sTop && cardTop < sBottom) sBottom = cardTop - padPx;
     if (cardBottom > sTop && cardBottom <= sBottom) sTop = cardBottom + padPx;
     spot.hidden = sBottom <= sTop;

@@ -1,6 +1,6 @@
 # Job Search Desk
 
-**Built on [career-ops](https://github.com/santifer/career-ops) by Santiago Fernández de Valderrama ([santifer](https://santifer.io)), MIT license.** The daily job board scan, the job description readers and much of the code here are his work. Job Search Desk is an independent, non-commercial adaptation: it is not affiliated with or endorsed by career-ops. See [LICENSE](LICENSE), [UPSTREAM.md](UPSTREAM.md) (the exact upstream release this is built on) and [README-CAREER-OPS.md](README-CAREER-OPS.md) (the original project's readme).
+**Built on [career-ops](https://github.com/santifer/career-ops) by Santiago Fernández de Valderrama ([santifer](https://santifer.io)), MIT license.** The daily job board scan, the job description readers and much of the code here are his work. Job Search Desk is an independent, non-commercial adaptation: it is not affiliated with or endorsed by career-ops. See [LICENSE](LICENSE), [UPSTREAM.md](UPSTREAM.md) (the exact upstream release this is built on) and [README-CAREER-OPS.md](README-CAREER-OPS.md) (the original project's readme). Icons: [Phosphor Icons](https://phosphoricons.com), MIT license.
 
 ## What it does
 

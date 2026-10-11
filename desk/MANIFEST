@@ -194,9 +194,11 @@ desk/lib/urls.mjs
 desk/lists/reposting-services.md
 desk/packs/agencies.yml
 desk/page-sync.mjs
+desk/page/PHOSPHOR-LICENSE.txt
 desk/page/body.html
 desk/page/build.mjs
 desk/page/dist/job-search-desk.html
+desk/page/icons.js
 desk/page/style.css
 desk/resume.mjs
 desk/save.sh

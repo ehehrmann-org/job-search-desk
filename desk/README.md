@@ -18,7 +18,7 @@ Job Search Desk additions on top of upstream career-ops. Upstream files stay unt
 | `lib/blocklist.mjs` | Built-in and personal block lists (upstream's `data/blacklist.md` format) |
 | `save.sh` | Commit and push to main, retrying when the scan saved at the same time |
 | `../.claude/agents/` | `desk-extractor` (sonnet) and `desk-evaluator` (opus): read and write only |
-| `page/` | The page: `style.css` + `body.html`, assembled by `node desk/page/build.mjs` into `page/dist/job-search-desk.html` |
+| `page/` | The page: `style.css` + `body.html` + `icons.js` (Phosphor Icons, MIT, phosphoricons.com), assembled by `node desk/page/build.mjs` into `page/dist/job-search-desk.html` |
 | `DB.md` | Page database contract: who writes which collection |
 | `DAILY-TASK.md`, `daily.mjs` | The daily run's runbook and its deterministic steps |
 | `SETUP.md`, `setup.mjs` | The 12-step setup runbook, checkpoints, checklist and step checks |
