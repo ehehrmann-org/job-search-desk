@@ -105,13 +105,13 @@ function setDeskKey(key, value) {
 
 // ------------------------------------------------------------------ pull
 
-// Which run this is: "quick" or "update" when she clicked Run now or Update now in the last 20 minutes
+// Which run this is: "quick" when she clicked Run now in the last 20 minutes
 // and no run has finished since; otherwise "normal" (the scheduled morning run).
 export function runMode(rn, lastRunAt, now = Date.now()) {
   if (!rn || typeof rn !== 'object' || rn.failed) return 'normal';
   const kind = rn.kind === undefined ? 'quick' : rn.kind;
   const at = Date.parse(rn.at);
-  if (!['quick', 'update'].includes(kind) || !Number.isFinite(at) || at > now + 60000 || now - at > 20 * 60000) return 'normal';
+  if (kind !== 'quick' || !Number.isFinite(at) || at > now + 60000 || now - at > 20 * 60000) return 'normal';
   const last = Date.parse(lastRunAt || '');
   return Number.isFinite(last) && last >= at ? 'normal' : kind;
 }

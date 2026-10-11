@@ -16,7 +16,7 @@ Task writes are creates only, so the task never needs a document version (Artifa
 | `deep/<id>` | once, after a deep evaluation | `at, model, recommendation, resume{id, fits, note}, tailor_why, sections[[label, text]]` |
 | `requests_done/<request id>` | once, when the task handled a page request | `at, result, posting_id?, replaces?` (`replaces`: the posting id an added job took over, which the page then hides) |
 | `suggestions/<YYYY-Www>` | Sundays, when there is something to suggest | `week, at, items[{id, title, why, change}]` |
-| `runs/<run id>` | every daily run (id = `YYYY-MM-DDTHHMM`) | `at, ok, problems[{what, fix, detail?, since}], last_good_run, version, plan, daily_cap, deep_cap, help_email, task_id (the daily task the Run now button starts), quick (a Run now or Update now run), update{to, notes[], needs_erik} (a newer version of the tool exists; null when none), scoring{threshold, dims[{id,name,bucket}]}, funnel{since, open_today, passed_filters, scored, qualified}, today{scored, qualified}` |
+| `runs/<run id>` | every daily run (id = `YYYY-MM-DDTHHMM`) | `at, ok, problems[{what, fix, detail?, since}], last_good_run, version, plan, daily_cap, deep_cap, help_email, task_id (the daily task the Run now button starts), quick (a Run now run), update{to, notes[], needs_erik} (a newer version of the tool exists; null when none), scoring{threshold, dims[{id,name,bucket}]}, funnel{since, open_today, passed_filters, scored, qualified}, today{scored, qualified}` |
 | `sources/<YYYY-MM-DD>-<hash>` | when the source list, its 30-day counts or the block list change | `at, rows[{id, group (mail, dream, boards, search), name, desc, how, on, cost, found, qual, app}], gaps[{id, company, url, ats, note}], blocked[{company, since, reason, system}]` |
 | `resumes/<id>` | once, when a resume is approved | `name, kind (master, default, tailored), for_posting, updated, asset_id, text` |
 
@@ -28,7 +28,7 @@ Task writes are creates only, so the task never needs a document version (Artifa
 | `requests/<request id>` | `kind`, `at`, and per kind: `add_job {text, applied}` · `add_source {text, dream, gap?}` · `dismiss_gap {gap}` · `block_company {company, reason, website?}` (website: `company` is a site address like jobright.ai; blocks every posting hosted there) · `unblock_company {company}` · `set_board {source, company, url}` · `switch_group {group: "search", on}` · `apply_suggestion` and `decline_suggestion {week, sid}` |
 | `source_switches/<source id>` | `on, at` (`gmail`, or `co-<company slug>`) |
 | `prefs/tour` | `done, at`: she finished or skipped the first-visit tour. Absent: the page starts the tour on her first visit. |
-| `prefs/run_now` | `at, kind (quick, update), failed?`: she clicked Run now or Update now. Saved before the run starts; the run reads it in step 2 to pick its mode (within 20 minutes, and only once). The buttons show "Running" until a newer `runs` document arrives (45 minutes at most). |
+| `prefs/run_now` | `at, kind (quick), failed?`: she clicked Run now. Saved before the run starts; the run reads it in step 2 to pick its mode (within 20 minutes, and only once). The buttons show "Running" until a newer `runs` document arrives (45 minutes at most). |
 
 Request ids, posting ids and source ids are letters, digits, `_`, `-` (and `~` in rescores), at most 64. The task ignores documents with any other id.
 

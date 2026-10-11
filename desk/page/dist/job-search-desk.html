@@ -643,18 +643,17 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var running = runBusy || (started > last && Date.now() - started < RUN_MAX_MIN * 60000);
     return { ok: !!(mcp && task && canWrite && db && !tour.on), task: task, running: running, started: started, deepCap: (r && r.deep_cap) || 1 };
   }
-  async function runNow(kind) {
+  async function runNow() {
     var st = runState(); if (!st.ok || st.running) return;
-    var upd = kind === "update";
     runBusy = true; render();
     // The click is saved first: the run reads it to know which kind of run to do.
-    var doc = { at: new Date().toISOString(), kind: upd ? "update" : "quick" };
+    var doc = { at: new Date().toISOString(), kind: "quick" };
     try { await db.doc("prefs/run_now").set(doc); }
     catch (e) { runBusy = false; render(); toast("Not started: " + errText(e)); return; }
     try {
-      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: upd ? "MODE = update" : "MODE = quick" });
+      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
       R.prefs = Object.assign({}, R.prefs, { run_now: doc });
-      toast(upd ? "Updating. It takes about 10 minutes; this page reloads with the new version when it's done." : "Started. It takes about 10 minutes, and this page updates by itself when it's done.");
+      toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
       try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
       var code = e && e.code;
@@ -663,24 +662,22 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
         : "Not started: " + ((e && e.message) || "the run couldn't be reached") + ". Type “run my desk now” in Claude instead.");
     } finally { runBusy = false; render(); }
   }
-  function runButton(label, kind) {
+  function runButton(label) {
     var st = runState(); if (!st.ok) return null;
-    var upd = kind === "update";
-    return el("button", { class: "b runnow" + (upd ? " primary" : ""), "data-k": (upd ? "update-" : "runnow-") + label.length, disabled: st.running,
-      title: upd ? "Installs the new version in your private copy, checks it, and refreshes this page. Your jobs and settings stay as they are." : "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.",
-      onclick: function () { runNow(kind); } },
-      [ic(st.running ? "hourglass-medium" : upd ? "download-simple" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+    return el("button", { class: "b runnow", "data-k": "runnow-" + label.length, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
+      [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
   }
-  // A newer version of the career tool, as the last run found it
+  // A newer version of the career tool, as the last run found it. Installing it changes the tool's own files,
+  // which only Claude in a chat with her may do (she sees and approves it), so the button copies the request.
   function updateBanner() {
     var r = D.run, u = r && r.update;
     if (!u || !u.to || tour.on) return null;
     var box = el("div", { class: "panel update" }, [
       el("div", { class: "uphead" }, [
         el("h2", { text: "Update available: version " + u.to + (r.version ? " (you have " + r.version + ")" : "") }),
-        runButton("Update now", "update")
+        el("button", { class: "b primary", "data-k": "update-copy", onclick: function () { copy("update career tool", "Copied. Paste it into Claude, in your Job Search Desk chat."); } }, [ic("copy"), "Copy update request"])
       ]),
-      el("p", { class: "sub", text: "Your jobs, decisions, resumes and settings stay as they are. " + (runState().ok ? "Takes about 10 minutes." : "Type \u201cupdate career tool\u201d in Claude to install it.") })
+      el("p", { class: "sub", text: "Paste it into Claude, in your Job Search Desk chat: it shows what's new and asks before changing anything. Your jobs, decisions, resumes and settings stay as they are." })
     ]);
     if ((u.notes || []).length) box.appendChild(el("ul", { class: "upnotes" }, u.notes.map(function (n) { return el("li", { text: n }); })));
     if (u.needs_erik) box.appendChild(el("p", { class: "sub", text: "One part (the daily scan's own settings) needs Erik; the update tells you how." }));

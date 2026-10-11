@@ -2,15 +2,18 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.8.3 (2026-10-11)
+- The update notice's button copies "update career tool" for you to paste into Claude, which shows what's new and asks before changing anything. (Updates can't install themselves unattended.)
+
 ## 0.8.2 (2026-10-11)
-- Run now and Update now start only the short run you asked for, not a full morning run first.
+- Run now starts only the short run you asked for, not a full morning run first.
 - Claude keeps setup and chat replies to one sentence: what it needs from you and why.
 
 ## 0.8.1 (2026-10-11)
 - The status popup explains what Run now does, and "Last run" says when it was a Run now.
 
 ## 0.8.0 (2026-10-11)
-- Your job page tells you when a new version of the career tool exists, with what's new, and an Update now button installs it in about 10 minutes. Your jobs, decisions, resumes and settings stay as they are.
+- Your job page tells you when a new version of the career tool exists, with what's new.
 - Your job page can keep a name of your choosing in the browser tab across updates.
 
 ## 0.7.0 (2026-10-11)
