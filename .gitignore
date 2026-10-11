@@ -269,6 +269,9 @@ data/agent-inbox.md
 profile/.env
 profile/**/*.key
 
+# The blank profile the desk starts from (portals.yml is ignored at the root above).
+!desk/templates/profile/portals.yml
+
 # Job Search Desk page outbox (rebuilt every run)
 profile/data/page/outbox/
 

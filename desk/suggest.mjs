@@ -6,6 +6,9 @@
  *                                              of decisions; writes data/suggestions/<week>.json
  *   node desk/suggest.mjs apply <week> <id>    apply one approved suggestion to config/scoring.yml,
  *                                              rescore every undecided posting, print what changed
+ *   node desk/suggest.mjs decline <week> <id>  record "not now" (not suggested again for 4 weeks)
+ *   node desk/suggest.mjs rescore              rescore every undecided posting with the current
+ *                                              scoring.yml (the daily run does this every day)
  *
  * Everything here is arithmetic on stored data: no model calls, no Claude usage.
  * A suggestion is only made with at least 3 decisions behind it, and never repeats a
@@ -15,9 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as yaml from 'js-yaml';
 import { loadScoringConfig, validateScoringConfig, scorePosting, loadDreamCompanies, isDream } from './lib/scoring.mjs';
-
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const DATA = path.resolve(ROOT, process.env.CAREER_OPS_DATA_DIR || 'profile');
+import { DATA, isMain } from './lib/env.mjs';
 const P = {
   scoring: path.join(DATA, 'config', 'scoring.yml'),
   scores: path.join(DATA, 'data', 'scores'),
@@ -180,7 +181,16 @@ function week() {
   console.log(JSON.stringify({ week: wk, decided, suggestions: items.map(s => s.title) }, null, 2));
 }
 
+// Week and suggestion ids arrive from the page: only these shapes may reach a file path.
+const WEEK = /^\d{4}-W\d\d$/;
+const SID = /^[a-z0-9_-]{1,48}$/;
+// The only settings a suggestion may change.
+const ALLOWED = new Set(['threshold', 'dealbreakers.comp_floor', 'dealbreakers.excluded_industries', 'dealbreakers.company_size', 'dealbreakers.location', 'dimensions.*.bucket']);
+const pathKey = pth => pth.map(k => (typeof k === 'object' ? '*' : k)).join('.');
+
 function setPath(obj, pth, op, value) {
+  if (!Array.isArray(pth) || !ALLOWED.has(pathKey(pth))) throw new Error(`a suggestion may not change ${JSON.stringify(pth)}`);
+  if (pth.some(k => ['__proto__', 'constructor', 'prototype'].includes(typeof k === 'object' ? k?.id : k))) throw new Error('invalid setting name');
   let cur = obj;
   for (let i = 0; i < pth.length - 1; i++) {
     const key = pth[i];
@@ -195,6 +205,7 @@ function setPath(obj, pth, op, value) {
 
 /** Apply one suggestion; rescore every posting the user hasn't decided on. Prints the changes. */
 export function applySuggestion(wk, id) {
+  if (!WEEK.test(String(wk)) || !SID.test(String(id))) throw new Error('not a valid suggestion');
   const file = path.join(P.out, `${wk}.json`);
   const doc = readJson(file, null);
   const s = doc?.items?.find(x => x.id === id);
@@ -214,6 +225,7 @@ export function applySuggestion(wk, id) {
 }
 
 export function decline(wk, id) {
+  if (!WEEK.test(String(wk)) || !SID.test(String(id))) return false;
   const file = path.join(P.out, `${wk}.json`);
   const doc = readJson(file, null);
   const s = doc?.items?.find(x => x.id === id);
@@ -232,7 +244,7 @@ export function rescoreOpen() {
   for (const f of fs.readdirSync(P.scores).filter(f => f.endsWith('.json'))) {
     const rec = readJson(path.join(P.scores, f), null);
     const id = rec?.verdict?.id;
-    if (!id || decisions[id]) continue;
+    if (!id || decisions[id] || rec.verdict.status === 'unscorable') continue;
     const x = readJson(path.join(P.extractions, `${id}.json`), null);
     if (!x) continue;
     x.id = id;
@@ -246,11 +258,12 @@ export function rescoreOpen() {
 }
 
 const [cmd, a, b] = process.argv.slice(2);
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   try {
     if (cmd === 'week') week();
+    else if (cmd === 'rescore') { const c = rescoreOpen(); console.log(JSON.stringify({ rescored: c.length, changes: c }, null, 2)); }
     else if (cmd === 'apply') console.log(JSON.stringify(applySuggestion(a, b), null, 2));
     else if (cmd === 'decline') console.log(decline(a, b) ? 'declined' : 'not found');
-    else { console.error('usage: suggest.mjs week | apply <week> <id> | decline <week> <id>'); process.exit(2); }
+    else { console.error('usage: suggest.mjs week | rescore | apply <week> <id> | decline <week> <id>'); process.exit(2); }
   } catch (e) { console.error(`suggest: ${e.message}`); process.exit(1); }
 }

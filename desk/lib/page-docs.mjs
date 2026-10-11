@@ -52,11 +52,12 @@ export function postingDoc(rec, jd = {}) {
     score: v.score,
     threshold: v.threshold,
     status_hint: v.status,
-    ratings: v.ratings.map(r => ({ id: r.id, name: r.name, bucket: r.bucket, score: r.score, why: r.why })),
-    checks: v.checks,
+    ratings: (v.ratings || []).map(r => ({ id: r.id, name: r.name, bucket: r.bucket, score: r.score, why: r.why })),
+    checks: v.checks || [],
     suggested_resume: rec.suggested_resume || null,
     jd: jd.jd || 'saved',
     added_by_user: jd.added === 'true' || jd.added === true,
+    warning: rec.injection ? 'This posting contains text aimed at AI tools, a sign of a fake or careless listing.' : null,
   };
 }
 
@@ -77,12 +78,12 @@ export function sourcesDoc(rows, gaps, at, blocked = []) {
 
 /** Counts per company over the window, from jds front matter, score records and decisions. */
 export function sourceCounts(jds, scores, decisions, sinceIso) {
-  const by = {};
+  const by = Object.create(null);
   const bump = (co, k) => { const key = slug(co); (by[key] ||= { found: 0, qual: 0, app: 0 })[k]++; };
   for (const j of jds) if ((j.found || '') >= sinceIso) bump(j.company, 'found');
-  for (const s of scores) if ((s.scored_at || '').slice(0, 10) >= sinceIso && s.verdict.status === 'qualified') bump(s.company || s.verdict.company, 'qual');
+  for (const s of scores) if ((s.scored_at || '').slice(0, 10) >= sinceIso && s.verdict?.status === 'qualified') bump(s.company || s.verdict.company, 'qual');
   for (const s of scores) {
-    const d = decisions[s.verdict.id];
+    const d = s.verdict && Object.hasOwn(decisions, s.verdict.id) ? decisions[s.verdict.id] : null;
     if (d?.dates?.applied && d.dates.applied >= sinceIso) bump(s.company || s.verdict.company, 'app');
   }
   return by;

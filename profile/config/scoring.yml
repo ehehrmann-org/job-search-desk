@@ -17,10 +17,8 @@ dealbreakers:
   location:
     remote_ok: true
     max_office_days: 3
-    areas_ok:
-      - Manhattan and Brooklyn
-    areas_no:
-      - anywhere you would have to relocate
+    areas_ok: []              # e.g. ["Chicago and close suburbs"]; setup step 4 fills these in
+    areas_no: []              # e.g. ["anywhere you would have to relocate"]
   excluded_industries: []     # e.g. ["tobacco", "gambling"]
   excluded_companies: []      # your current employer is added at setup
   other: []                   # plain-language no's Claude checks, e.g. "requires weekend shifts"

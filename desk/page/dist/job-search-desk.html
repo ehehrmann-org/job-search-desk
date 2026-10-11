@@ -57,8 +57,6 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .brand { font-family: var(--f-label); font-weight: 600; font-size: 20px; letter-spacing: .01em; margin-right: auto; }
-.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg-2); font-size: 12px; white-space: nowrap; }
-.chip.sample { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; font-weight: 600; }
 .banner { font-size: 13px; color: var(--fg-2); margin: 0; }
 
 /* Tabs */
@@ -81,9 +79,6 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .step .sn { font-family: var(--f-mono); font-size: 18px; }
 .step[aria-pressed="true"] { background: var(--accent-soft); }
 .step[aria-pressed="true"] .sl { color: var(--accent); }
-.filters { display: flex; flex-wrap: wrap; gap: 6px; }
-.fbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--fg-2); }
-.fbtn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .list { display: grid; gap: 8px; }
 .empty { padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); }
 
@@ -100,7 +95,6 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 /* Posting rows */
 .row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; grid-template-columns: 56px minmax(0, 1fr) 220px; gap: 6px 16px; align-items: start; }
 .score { font-family: var(--f-mono); font-size: 20px; font-weight: 500; line-height: 1; padding-top: 2px; }
-.score small { display: block; font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: .04em; }
 .score.hi { color: var(--accent); }
 .score.na { color: var(--muted); font-size: 16px; }
 .main { min-width: 0; display: grid; gap: 4px; }
@@ -110,7 +104,6 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .co { color: var(--fg-2); }
 .star { color: var(--star); font-size: 13px; font-family: var(--f-label); font-weight: 600; }
 .meta { color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 2px 10px; }
-.why { color: var(--fg-2); font-size: 13px; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; align-items: center; }
 .tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; background: var(--surface-2); color: var(--fg-2); border: 0; }
 button.tag { cursor: pointer; }
@@ -216,12 +209,11 @@ button.tag { cursor: pointer; }
 }
 @media (prefers-reduced-motion: no-preference) { .fill, .seg { transition: width .3s ease; } }
 
-/* Live page additions: problem banner, help panel, link titles */
+/* Live page additions: help panel, link titles */
 [hidden] { display: none !important; }
 a.title { display: inline; }
-.note.problem { border: 1px solid var(--warn-ink); }
 .panel.help .msg { margin: 0; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; font-family: var(--f-mono); font-size: 12.5px; white-space: pre-wrap; color: var(--fg); }
-.sw[disabled], .b[disabled] { opacity: .55; cursor: default; }
+.sw[disabled] { opacity: .55; cursor: default; }
 
 /* Header: plain meta text, one status button (the check-engine light) */
 .meta-line { font-size: 12.5px; color: var(--muted); }
@@ -242,17 +234,11 @@ button.addcard { width: 100%; background: none; font: inherit; color: var(--acce
 button.addcard:hover { border-color: var(--accent); background: var(--accent-soft); }
 .list > .addjob { border-style: dashed; }
 
-/* Scan sources: group summary cards, search, quiet sub-list */
-.srctiles { margin-bottom: -2px; }
-button.srctile { text-align: left; cursor: pointer; font: inherit; color: inherit; }
-button.srctile:hover { border-color: var(--accent); }
-button.srctile.open { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+/* Scan sources: search, quiet sub-list */
 .srcsearch { width: 100%; box-sizing: border-box; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-height: 38px; }
 .sechead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 4px 0 -4px; }
-.sechead .sec { margin: 0; }
 button.quiettoggle { width: 100%; text-align: left; background: var(--surface-2); border: 0; border-top: 1px solid var(--line); font: inherit; color: var(--fg-2); cursor: pointer; display: block; }
 button.quiettoggle .t { font-weight: 500; }
-button.seclink { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .addform.inrow { border: 0; border-top: 1px dashed var(--line); border-radius: 0; }
 
 /* Weekly scoring suggestions */
@@ -270,42 +256,46 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 /* Scan sources: sub-tabs and a fixed toolbar */
 .segtabs { display: flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 10px; overflow-x: auto; scrollbar-width: none; }
 .segtabs::-webkit-scrollbar { display: none; }
-.seg { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; border-radius: 8px; padding: 8px 14px; font-family: var(--f-label); font-weight: 600; font-size: 14px; color: var(--fg-2); white-space: nowrap; min-height: 38px; }
-.seg:hover { color: var(--fg); }
-.seg[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.segn { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.stab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; border-radius: 8px; padding: 8px 14px; font-family: var(--f-label); font-weight: 600; font-size: 14px; color: var(--fg-2); white-space: nowrap; min-height: 38px; }
+.stab:hover { color: var(--fg); }
+.stab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.stabn { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
 .srctools { display: flex; gap: 8px; align-items: center; }
 .srctools .srcsearch { flex: 1 1 auto; min-width: 0; }
 .srctools .b { flex: none; min-height: 38px; }
 .sechead .banner { margin: 0; flex: 1 1 auto; }
-@media (max-width: 600px) { .segtabs { flex-wrap: wrap; } .seg { flex: 1 1 40%; } }
+@media (max-width: 600px) { .segtabs { flex-wrap: wrap; } .stab { flex: 1 1 40%; } }
+/* Recent results of her requests on Scan sources; "show more" on long lists */
+.recent { display: grid; gap: 4px; font-size: 13px; color: var(--fg-2); }
+.recent b { color: var(--fg); font-weight: 600; }
+.showmore { justify-self: center; }
 </style>
 
 <div class="app">
   <header class="top">
     <div class="brand">Job Search Desk</div>
     <span class="meta-line" id="meta-line">Connecting…</span>
-    <button class="status" id="help-btn" aria-expanded="false" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
+    <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
   </header>
   <div id="help-host"></div>
 
   <nav class="tabs" role="tablist" aria-label="Views">
-    <button class="tab" role="tab" data-tab="triage" aria-selected="true">Triage<span class="count" id="c-triage"></span></button>
-    <button class="tab" role="tab" data-tab="resumes" aria-selected="false">Resumes<span class="count" id="c-resumes"></span></button>
-    <button class="tab" role="tab" data-tab="sources" aria-selected="false">Scan sources<span class="count" id="c-sources"></span></button>
-    <button class="tab" role="tab" data-tab="stats" aria-selected="false">Stats</button>
+    <button class="tab" role="tab" id="tab-triage" data-tab="triage" aria-controls="view-triage" aria-selected="true">Triage<span class="count" id="c-triage"></span></button>
+    <button class="tab" role="tab" id="tab-resumes" data-tab="resumes" aria-controls="view-resumes" aria-selected="false">Resumes<span class="count" id="c-resumes"></span></button>
+    <button class="tab" role="tab" id="tab-sources" data-tab="sources" aria-controls="view-sources" aria-selected="false">Scan sources<span class="count" id="c-sources"></span></button>
+    <button class="tab" role="tab" id="tab-stats" data-tab="stats" aria-controls="view-stats" aria-selected="false">Stats</button>
   </nav>
 
-  <section class="view" id="view-triage" role="tabpanel">
+  <section class="view" id="view-triage" role="tabpanel" aria-labelledby="tab-triage">
     <div class="bar-top">
       <div class="steps" id="steps" role="group" aria-label="Pipeline stage"></div>
     </div>
     <div id="suggest-host"></div>
     <div class="list" id="list"></div>
   </section>
-  <section class="view" id="view-resumes" role="tabpanel" hidden></section>
-  <section class="view" id="view-sources" role="tabpanel" hidden></section>
-  <section class="view" id="view-stats" role="tabpanel" hidden>
+  <section class="view" id="view-resumes" role="tabpanel" aria-labelledby="tab-resumes" hidden></section>
+  <section class="view" id="view-sources" role="tabpanel" aria-labelledby="tab-sources" hidden></section>
+  <section class="view" id="view-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
     <div class="tiles" id="tiles"></div>
     <div class="panel">
       <h2>How your decided applications ended</h2>
@@ -338,7 +328,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     </div>
     <div class="foot">
       <span id="foot-acc"></span>
-      <span>An application counts as decided after 21 days, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
+      <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
 </div>
@@ -349,7 +339,8 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 (function () {
   // ---------- Constants ----------
   var DAY = 86400000;
-  var NO_RESPONSE_DAYS = 21, AFTER_INTERVIEW_DAYS = 14;
+  var NO_RESPONSE_DAYS = 21, AFTER_INTERVIEW_DAYS = 14, CLOSED_PAGE = 50;
+  var TABS = ["triage", "resumes", "sources", "stats"];
   var STAGES = [
     { k: "review", label: "To review", has: ["new"] },
     { k: "interested", label: "Interested", has: ["interested"] },
@@ -360,16 +351,20 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Recruiter screen", hm: "Hiring manager", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response" };
   var BUCKET = { must: "Must have", important: "Important", nice: "Nice to have" };
   var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority"];
+  var STAMPED = ["interested", "applied", "screen", "hm", "offer"];
 
   // ---------- Data (filled by the database) ----------
   var D = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, run: null, sources: null, suggestions: null };
   var db = null, downloads = null, canWrite = true, loaded = false;
 
   // ---------- View state (per viewer, this browser only) ----------
-  var state = { tab: "triage", stage: "review" };
-  try { var t0 = localStorage.getItem("jsd-tab"); if (t0) state.tab = t0; } catch (e) {}
-  var h = (location.hash || "").slice(1); if (["triage", "resumes", "sources", "stats"].indexOf(h) > -1) state.tab = h;
-  var open = {}, addOpen = false, helpOpen = false, lastVerdict = "";
+  var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE };
+  try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
+  var h0 = (location.hash || "").slice(1); if (TABS.indexOf(h0) > -1) state.tab = h0;
+  var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
+  // Unsent typing and picks survive the page redrawing when new data arrives.
+  var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "" };
+  var V = null;   // per-render indexes, rebuilt in draw()
 
   // ---------- Helpers ----------
   function el(tag, attrs, kids) {
@@ -377,49 +372,96 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     if (attrs) for (var k in attrs) {
       var v = attrs[k];
       if (v === null || v === undefined || v === false) continue;
-      if (k === "text") n.textContent = v;
+      if (k === "text") n.textContent = String(v);
       else if (k === "class") n.className = v;
       else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), v);
-      else n.setAttribute(k, v === true ? "" : v);
+      else n.setAttribute(k, v === true ? "" : String(v));
     }
-    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    (kids || []).forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      n.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+    });
     return n;
   }
   var toastT;
-  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3200); }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3600); }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : null; }
+  function one(v) { var n = num(v); return n === null ? "–" : n.toFixed(1); }
   function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
-  function fmt(n) { return (n || 0).toLocaleString("en-US"); }
-  function today() { return new Date().toISOString().slice(0, 10); }
-  function daysSince(iso) { return iso ? Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / DAY)) : null; }
-  function niceDate(iso) { if (!iso) return ""; var d = new Date(iso.length === 10 ? iso + "T12:00:00" : iso); return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
-  function niceTime(iso) { var d = new Date(iso); var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (daysSince(iso) === 0 ? "today, " : niceDate(iso) + ", ") + s; }
+  function fmt(n) { return (Number(n) || 0).toLocaleString("en-US"); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function toDate(iso) { return new Date(String(iso).length === 10 ? iso + "T00:00:00" : iso); }
+  function daysSince(iso) { if (!iso) return null; var t = toDate(iso).getTime(); return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / DAY)); }
+  function niceDate(iso) { if (!iso) return ""; var d = String(iso).length === 10 ? new Date(iso + "T12:00:00") : new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (daysSince(iso) === 0 ? "today, " : niceDate(iso) + ", ") + s; }
   function ago(iso, verb) { var n = daysSince(iso); if (n === null) return ""; return verb + " " + (n === 0 ? "today" : n === 1 ? "1 day ago" : n + " days ago"); }
   function stageOf(status) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].has.indexOf(status) > -1) return STAGES[i].k; return "review"; }
-  function toggle(id, which) { open[id] = open[id] === which ? null : which; render(); }
+  function cmpStr(a, b) { a = a || ""; b = b || ""; return a < b ? -1 : a > b ? 1 : 0; }
+  function toggleDrawer(id, which) { drawer[id] = drawer[id] === which ? null : which; render(); }
+  function isLink(u) { return typeof u === "string" && /^https?:\/\//i.test(u); }
   function copy(text, done) {
     try { navigator.clipboard.writeText(text).then(function () { toast(done); }, function () { toast("Couldn't copy. Select the text and copy it yourself."); }); }
     catch (e) { toast("Couldn't copy. Select the text and copy it yourself."); }
   }
+  function errText(e) {
+    var s = String((e && (e.code || e.message)) || "").toLowerCase();
+    if (/permission|denied|forbidden|unauth|consent/.test(s)) return "this page isn't allowed to save right now. Open it in Claude while signed in and try again.";
+    if (/network|unavailable|timeout|offline|fetch/.test(s)) return "the connection dropped. Try again in a moment.";
+    if (/quota|limit|too large|exhausted/.test(s)) return "the page's storage is full. Copy the message for Erik from the status button.";
+    return "something went wrong. Try again; if it keeps happening, tell Erik.";
+  }
   function newId() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function normCo(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
-  function blockedCompanies() {
-    var out = {};
-    ((D.sources && D.sources.blocked) || []).forEach(function (b) { out[normCo(b.company)] = b; });
-    Object.keys(D.requests).sort(function (a, b) { return (D.requests[a].at || "") < (D.requests[b].at || "") ? -1 : 1; }).forEach(function (rid) {
-      var r = D.requests[rid], k = normCo(r.company);
-      if (r.kind === "block_company" && k) out[k] = out[k] || { company: r.company, reason: r.reason, pending: !D.done[rid] };
-      if (r.kind === "unblock_company" && k && out[k] && !out[k].system) delete out[k];
-    });
-    return out;
-  }
   function resumeName(id) { if (id === "other") return "Something else"; var r = D.resumes[id]; return r ? r.name : id; }
+  function weekStart(wk) {
+    var m = /^(\d{4})-W(\d\d)$/.exec(wk || ""); if (!m) return "";
+    var jan4 = new Date(Date.UTC(+m[1], 0, 4)), day = jan4.getUTCDay() || 7;
+    var mon = new Date(jan4.getTime() + ((+m[2] - 1) * 7 - (day - 1)) * DAY);
+    return mon.toISOString().slice(0, 10);
+  }
+
+  // ---------- Per-render indexes ----------
+  function buildIndex() {
+    var ix = { latest: {}, replaced: {}, blocked: {}, group: {}, board: {}, pendingAdds: 0, sugg: {} };
+    Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (r && r.posting_id && (!ix.latest[r.posting_id] || cmpStr(r.at, ix.latest[r.posting_id].at) > 0)) ix.latest[r.posting_id] = r; });
+    Object.keys(D.done).forEach(function (k) { var d = D.done[k]; if (d && d.replaces) ix.replaced[d.replaces] = true; });
+    ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system }; });
+    var snapAt = D.sources ? D.sources.at || "" : "";
+    Object.keys(D.requests).map(function (rid) { return [rid, D.requests[rid]]; })
+      .sort(function (a, b) { return cmpStr(a[1].at, b[1].at); })
+      .forEach(function (pair) {
+        var rid = pair[0], r = pair[1], k = normCo(r.company);
+        var pending = !D.done[rid] || cmpStr(r.at, snapAt) > 0;
+        if (r.kind === "block_company" && k) ix.blocked[k] = ix.blocked[k] || { company: r.company, reason: r.reason, pending: !D.done[rid] };
+        if (r.kind === "unblock_company" && k && ix.blocked[k] && !ix.blocked[k].system) delete ix.blocked[k];
+        if (r.kind === "switch_group" && pending) ix.group[r.group] = r;
+        if (r.kind === "set_board" && pending) ix.board[r.source] = r;
+        if (r.kind === "add_job" && !D.done[rid]) ix.pendingAdds++;
+        if ((r.kind === "apply_suggestion" || r.kind === "decline_suggestion") && r.week) ix.sugg[r.week + "/" + r.sid] = r.kind;
+      });
+    return ix;
+  }
+  // A stored posting with its newest rescore applied.
+  function view(id) {
+    var p = D.postings[id]; if (!p) return null;
+    var r = V.latest[id];
+    return r ? Object.assign({}, p, { score: r.score, status_hint: r.status_hint, threshold: r.threshold, ratings: r.ratings, checks: r.checks }) : p;
+  }
+  // Postings hidden from Triage and Stats unless she already acted on them.
+  function hidden(p) {
+    if (D.decisions[p.id]) return false;
+    if (V.blocked[normCo(p.company)]) return true;
+    if (V.replaced[p.id]) return true;
+    return V.latest[p.id] && p.status_hint !== "qualified" && !p.dream && !p.added_by_user;
+  }
 
   // ---------- Effective status (No response is derived, never stored) ----------
   function eff(id) {
     var d = D.decisions[id] || {};
     var s = d.status || "new", dates = d.dates || {};
     if (s === "applied" && daysSince(dates.applied) >= NO_RESPONSE_DAYS) return { status: "noresp", lost_at: "applied", since: dates.applied, d: d };
-    if ((s === "screen" || s === "hm")) {
+    if (s === "screen" || s === "hm") {
       var last = dates[s] || dates.applied;
       if (daysSince(last) >= AFTER_INTERVIEW_DAYS) return { status: "noresp", lost_at: s, since: last, d: d };
     }
@@ -432,29 +474,17 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     return null;
   }
 
-  // ---------- Items: stored postings plus jobs the user added that wait for scoring ----------
+  // ---------- Items: stored postings plus jobs she added that wait for scoring ----------
   function items() {
     var out = [];
-    var blocked = blockedCompanies();
-    var latest = {};
-    Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (!latest[r.posting_id] || r.at > latest[r.posting_id].at) latest[r.posting_id] = r; });
-    Object.keys(D.postings).forEach(function (id) {
-      var p = D.postings[id];
-      if (blocked[normCo(p.company)] && !D.decisions[id]) return;
-      var r = latest[id];
-      if (r) {
-        p = Object.assign({}, p, { score: r.score, status_hint: r.status_hint, threshold: r.threshold, ratings: r.ratings, checks: r.checks, rescored: r.at });
-        if (r.status_hint !== "qualified" && !p.dream && !p.added_by_user && !D.decisions[id]) return;
-      }
-      out.push(p);
-    });
+    Object.keys(D.postings).forEach(function (id) { var p = view(id); if (p && !hidden(p)) out.push(p); });
     Object.keys(D.requests).forEach(function (rid) {
       var r = D.requests[rid];
       if (r.kind !== "add_job") return;
       var done = D.done[rid];
       if (done && done.posting_id && D.postings[done.posting_id]) return;
-      if (D.postings[rid]) return;
-      var m = (r.text || "").match(/https?:\/\/([^\/\s]+)/);
+      if (D.postings[rid] || V.replaced[rid]) return;
+      var m = String(r.text || "").match(/https?:\/\/([^\/\s]+)/);
       out.push({ id: rid, company: m ? m[1].replace(/^www\./, "") : "Pasted job text", title: "Added job", source: "Added by you", found: r.at, pending: true, outside: !!r.applied, pendingNote: done ? done.result : null });
     });
     return out;
@@ -462,33 +492,40 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 
   // ---------- Writes ----------
   var writing = {};
-  async function saveDecision(id, patch, msg) {
-    if (!db) { toast("Not connected. Your click wasn't saved."); return; }
-    if (writing[id]) { toast("Still saving the last change. Try again in a second."); return; }
-    var cur = JSON.parse(JSON.stringify(D.decisions[id] || { status: "new", dates: {}, reasons: [] }));
+  async function saveDecision(id, patch, msg, opts) {
+    opts = opts || {};
+    if (!db || !canWrite) { toast("Not connected. Your click wasn't saved."); return false; }
+    if (writing[id]) { toast("Still saving the last change. Try again in a second."); return false; }
+    var before = D.decisions[id];
+    var cur = JSON.parse(JSON.stringify(before || { status: "new", dates: {}, reasons: [] }));
     var next = Object.assign(cur, patch, { at: new Date().toISOString() });
-    if (patch.status && patch.status !== (D.decisions[id] || {}).status) {
-      next.prev = (D.decisions[id] || {}).status || "new";
-      next.dates = Object.assign({}, cur.dates || {});
-      if (["interested", "applied", "screen", "hm", "offer"].indexOf(patch.status) > -1) next.dates[patch.status] = today();
-      if (stageOf(patch.status) === "closed") next.dates.closed = today();
+    next.dates = Object.assign({}, cur.dates || {});
+    var changed = !!patch.status && patch.status !== (before || {}).status;
+    if (changed) next.prev = (before || {}).status || "new";
+    if (patch.status && (changed || opts.restamp)) {
+      var st = patch.status;
+      if (STAMPED.indexOf(st) > -1 && (opts.restamp || !opts.keepDates || !next.dates[st])) next.dates[st] = today();
+      if (stageOf(st) === "closed") next.dates.closed = today();
     }
-    writing[id] = true; delete open[id];
+    writing[id] = true; delete drawer[id];
     D.decisions[id] = next; render();
-    try { await db.doc("decisions/" + id).set(next); if (msg) toast(msg); }
-    catch (e) { toast("Not saved: " + (e && (e.message || e.code))); }
+    try { await db.doc("decisions/" + id).set(next); if (msg) toast(msg); return true; }
+    catch (e) {
+      if (before) D.decisions[id] = before; else delete D.decisions[id];
+      render(); toast("Not saved: " + errText(e)); return false;
+    }
     finally { writing[id] = false; }
   }
   async function saveRequest(body, msg) {
-    if (!db) { toast("Not connected. Nothing was saved."); return null; }
+    if (!db || !canWrite) { toast("Not connected. Nothing was saved."); return null; }
     var id = newId();
     var doc = Object.assign({ at: new Date().toISOString() }, body);
     D.requests[id] = doc; render();
     try { await db.doc("requests/" + id).set(doc); if (msg) toast(msg); return id; }
-    catch (e) { delete D.requests[id]; render(); toast("Not saved: " + (e && (e.message || e.code))); return null; }
+    catch (e) { delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
   }
 
-  // ---------- Header, problem banner, help ----------
+  // ---------- Header, status button, help ----------
   function helpMessage() {
     var r = D.run || {};
     var probs = problems();
@@ -508,8 +545,9 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     if (!loaded) return [];
     var out = [];
     var r = D.run;
+    if (!db) return [{ what: "This view can't reach your job page's data.", fix: "Open the page in Claude while signed in." }];
     if (!r) return [{ what: "The first morning run hasn't happened yet.", fix: "Results arrive after the first scheduled run. Nothing to do unless this is still here tomorrow afternoon." }];
-    (r.problems || []).forEach(function (p) { out.push(p); });
+    (r.problems || []).forEach(function (p) { if (p && p.what) out.push(p); });
     var hrs = (Date.now() - new Date(r.at).getTime()) / 3600000;
     if (hrs > 30) out.push({ what: "The daily run hasn't finished since " + niceTime(r.at) + ".", fix: "Open Claude and check that your scheduled task is turned on. If it is, copy the message for Erik." });
     return out;
@@ -547,38 +585,42 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     kids.push(el("p", { class: "sub", text: "Copy this and email it to Erik" + (email ? " at " + email : "") + ". It holds no job or profile details." }));
     kids.push(el("pre", { class: "msg", text: msg }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
-      el("button", { class: "b primary", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
-      el("button", { class: "b", onclick: function () { helpOpen = false; render(); } }, ["Close"])
+      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, ["Copy for Erik"]),
+      el("button", { class: "b", onclick: function () { helpOpen = false; focusNext = "help-btn"; render(); } }, ["Close"])
     ]));
     hh.appendChild(el("div", { class: "panel help" + (probs.length ? " bad" : "") }, kids));
   }
 
-  // ---------- Triage ----------
-  function counts(all) { var c = {}; STAGES.forEach(function (s) { c[s.k] = 0; }); all.forEach(function (p) { c[stageOf(eff(p.id).status)]++; }); return c; }
+  // ---------- Counts on the tabs (every render, cheap) ----------
+  function stageCounts(all) { var c = {}; STAGES.forEach(function (s) { c[s.k] = 0; }); all.forEach(function (p) { c[stageOf(eff(p.id).status)]++; }); return c; }
+  function renderCounts(all) {
+    document.getElementById("c-triage").textContent = stageCounts(all).review;
+    document.getElementById("c-resumes").textContent = Object.keys(D.resumes).filter(function (k) { return D.resumes[k].kind !== "master"; }).length || "";
+    var rows = D.sources ? D.sources.rows || [] : [];
+    document.getElementById("c-sources").textContent = rows.filter(function (s) { return s.group !== "search" && srcOn(s); }).length || "";
+  }
 
-  function renderTriage() {
-    var all = items();
-    var c = counts(all);
-    document.getElementById("c-triage").textContent = c.review;
+  // ---------- Triage ----------
+  function renderTriage(all) {
+    var c = stageCounts(all);
     var steps = document.getElementById("steps"); steps.textContent = "";
     STAGES.forEach(function (s) {
-      steps.appendChild(el("button", { class: "step", "aria-pressed": String(state.stage === s.k), onclick: function () { state.stage = s.k; open = {}; render(); } },
+      steps.appendChild(el("button", { class: "step", "data-k": "stage-" + s.k, "aria-pressed": String(state.stage === s.k), onclick: function () { state.stage = s.k; state.closedLimit = CLOSED_PAGE; drawer = {}; render(); } },
         [el("span", { class: "sl", text: s.label }), el("span", { class: "sn", text: String(c[s.k]) })]));
     });
     renderSuggestions();
     var list = document.getElementById("list"); list.textContent = "";
-    var shown = all.filter(function (p) {
-      var s = eff(p.id).status; if (stageOf(s) !== state.stage) return false;
-      return true;
-    });
-    if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (b.score || 0) - (a.score || 0); });
-    else shown.sort(function (a, b) { var x = (D.decisions[a.id] || {}).at || "", y = (D.decisions[b.id] || {}).at || ""; return x < y ? 1 : -1; });
-    var EMPTY = { review: loaded ? "Nothing new to review. Come back tomorrow." : "Loading your postings…", interested: "Mark postings \u201cInterested\u201d in the \u201cTo review\u201d queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
+    var shown = all.filter(function (p) { return stageOf(eff(p.id).status) === state.stage; });
+    if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (num(b.score) || 0) - (num(a.score) || 0) || cmpStr(b.found, a.found) || cmpStr(a.id, b.id); });
+    else shown.sort(function (a, b) { return cmpStr((D.decisions[b.id] || {}).at, (D.decisions[a.id] || {}).at) || cmpStr(a.id, b.id); });
+    var EMPTY = { review: loaded ? "Nothing new to review. Come back tomorrow." : "Loading your postings…", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
     if (!shown.length) list.appendChild(el("div", { class: "empty", text: EMPTY[state.stage] }));
-    shown.forEach(function (p) { list.appendChild(card(p)); });
+    var limit = state.stage === "closed" ? state.closedLimit : Infinity;
+    shown.slice(0, limit).forEach(function (p) { list.appendChild(card(p)); });
+    if (shown.length > limit) list.appendChild(el("button", { class: "b showmore", "data-k": "showmore", onclick: function () { state.closedLimit += CLOSED_PAGE; render(); } }, ["Show " + Math.min(CLOSED_PAGE, shown.length - limit) + " more of " + (shown.length - limit)]));
     if (state.stage === "review" && canWrite) {
       if (addOpen) list.appendChild(addJobForm());
-      else list.appendChild(el("button", { class: "empty addcard", onclick: function () { addOpen = true; render(); setTimeout(function () { var t = document.getElementById("aj-text"); if (t) t.focus(); }, 30); } }, ["+ Add a job you found yourself"]));
+      else list.appendChild(el("button", { class: "empty addcard", "data-k": "addcard", onclick: function () { addOpen = true; focusNext = "aj-text"; render(); } }, ["+ Add a job you found yourself"]));
     }
   }
 
@@ -586,15 +628,14 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var host = document.getElementById("suggest-host"); host.textContent = "";
     var sg = D.suggestions;
     if (!sg || !sg.items || state.stage !== "review") return;
-    var handled = {};
-    Object.keys(D.requests).forEach(function (rid) { var r = D.requests[rid]; if ((r.kind === "apply_suggestion" || r.kind === "decline_suggestion") && r.week === sg.week) handled[r.sid] = r.kind; });
-    var open = sg.items.filter(function (x) { return !handled[x.id]; });
-    if (!open.length) return;
+    var waiting = sg.items.filter(function (x) { return !V.sugg[sg.week + "/" + x.id]; });
+    if (!waiting.length) return;
+    var ws = weekStart(sg.week);
     var box = el("div", { class: "panel suggest" }, [
-      el("h2", { text: open.length === 1 ? "A scoring suggestion from this week" : open.length + " scoring suggestions from this week" }),
+      el("h2", { text: (waiting.length === 1 ? "A scoring suggestion" : waiting.length + " scoring suggestions") + (ws ? " from the week of " + niceDate(ws) : " from this week") }),
       el("p", { class: "sub", text: "Based on what you skipped and what you went for. Approved changes apply in the next run, and your open jobs are rescored then." })
     ]);
-    open.forEach(function (x) {
+    waiting.forEach(function (x) {
       box.appendChild(el("div", { class: "sugg" }, [
         el("div", { class: "pw", text: x.title }),
         el("div", { class: "s2", text: x.why }),
@@ -608,32 +649,37 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     host.appendChild(box);
   }
 
+  var addBusy = false;
   function addJobForm() {
-    var ta = el("textarea", { id: "aj-text", placeholder: "Paste the posting link, or the job text if the link needs a login (LinkedIn does)", "aria-label": "Job link or text" });
-    var already = "no";
+    var ta = el("textarea", { id: "aj-text", "data-k": "aj-text", placeholder: "Paste the posting link, or the job text if the link needs a login (LinkedIn does)", "aria-label": "Job link or text", oninput: function () { drafts.addText = ta.value; } });
+    ta.value = drafts.addText;
     var radios = el("div", { class: "radios", role: "radiogroup", "aria-label": "Already applied?" });
     [["no", "Not yet: score it for me"], ["yes", "I already applied"]].forEach(function (r) {
-      var inp = el("input", { type: "radio", name: "aj-applied", id: "aj-" + r[0], value: r[0], onchange: function () { already = r[0]; } });
-      if (r[0] === "no") inp.checked = true;
+      var inp = el("input", { type: "radio", name: "aj-applied", id: "aj-" + r[0], "data-k": "aj-" + r[0], value: r[0], onchange: function () { drafts.addApplied = r[0]; } });
+      inp.checked = drafts.addApplied === r[0];
       radios.appendChild(el("label", { for: "aj-" + r[0] }, [inp, r[1]]));
     });
     return el("form", { class: "addjob", onsubmit: async function (e) {
       e.preventDefault();
-      var v = ta.value.trim(); if (!v) { ta.focus(); return; }
-      var applied = already === "yes";
-      var rid = await saveRequest({ kind: "add_job", text: v.slice(0, 60000), applied: applied }, null);
-      if (!rid) return;
-      addOpen = false;
-      if (applied) {
-        state.stage = "applied"; open[rid] = "resume";
-        await saveDecision(rid, { status: "applied", outside: true }, "Added to Applied. Pick the resume you sent; it gets scored in the next run.");
-        open[rid] = "resume"; render();
-      } else { state.stage = "review"; render(); toast("Added to To review. It gets scored in the next run."); }
+      if (addBusy) return;
+      var v = drafts.addText.trim(); if (!v) { ta.focus(); return; }
+      var applied = drafts.addApplied === "yes";
+      addBusy = true; render();
+      try {
+        var rid = await saveRequest({ kind: "add_job", text: v.slice(0, 60000), applied: applied }, null);
+        if (!rid) return;
+        addOpen = false; drafts.addText = ""; drafts.addApplied = "no";
+        if (applied) {
+          state.stage = "applied";
+          await saveDecision(rid, { status: "applied", outside: true }, "Added to Applied. Pick the resume you sent; it gets scored in the next run.");
+          drawer[rid] = "resume"; render();
+        } else { state.stage = "review"; render(); toast("Added to To review. It gets scored in the next run."); }
+      } finally { addBusy = false; render(); }
     } }, [
       el("label", { for: "aj-text", text: "Found a job yourself? Add it here. It gets scored like everything else, and if no scan source caught it, Scan sources flags the gap." }),
       ta, radios,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", type: "submit" }, ["Add job"]),
+        el("button", { class: "b primary", type: "submit", disabled: addBusy || !canWrite }, [addBusy ? "Adding…" : "Add job"]),
         el("button", { class: "b", type: "button", onclick: function () { addOpen = false; render(); } }, ["Cancel"])
       ])
     ]);
@@ -642,11 +688,12 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   function card(p) {
     var e = eff(p.id), s = e.status, dec = e.d, deep = D.deep[p.id];
     var row = el("article", { class: "row", "aria-label": p.title + " at " + p.company });
-    if (p.pending || typeof p.score !== "number") row.appendChild(el("div", { class: "score na" }, ["–"]));
-    else row.appendChild(el("div", { class: "score" + (p.score >= (p.threshold || 4) + 0.5 ? " hi" : "") }, [p.score.toFixed(1)]));
+    var sc = num(p.score), thr = num(p.threshold);
+    if (p.pending || sc === null) row.appendChild(el("div", { class: "score na" }, ["–"]));
+    else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
 
     var head = el("div", { class: "head" }, [
-      p.url ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
+      isLink(p.url) ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
       el("span", { class: "co", text: p.company })
     ]);
     if (p.dream) head.appendChild(el("span", { class: "star", text: "★ Dream company" }));
@@ -657,15 +704,17 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
       : (dec.dates && dec.dates.closed) ? LABEL[s] + " " + niceDate(dec.dates.closed) : "";
     [p.location, p.pay, p.source, when].forEach(function (x) { if (x) meta.appendChild(el("span", { text: x })); });
     var tags = el("div", { class: "tags" });
+    var dk = "d-" + p.id + "-";
     if (p.pending) tags.appendChild(el("span", { class: "tag q", text: p.pendingNote || "Scoring in the next run" }));
     if (p.outside || dec.outside) tags.appendChild(el("span", { class: "tag", text: "Found outside the tool" }));
-    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "aria-expanded": String(open[p.id] === "why"), onclick: function () { toggle(p.id, "why"); } }, [open[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
-    if (p.jd === "missing") tags.appendChild(el("span", { class: "tag q", text: "Scored from the title only: the description couldn't be read" }));
+    if (p.warning) tags.appendChild(el("span", { class: "tag q", text: p.warning }));
+    if (p.status_hint === "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Couldn't be scored: the posting couldn't be read" }));
+    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
+    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Scored from the title only: the description couldn't be read" }));
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
-      else tags.appendChild(el("button", { class: "tag act", "aria-expanded": String(open[p.id] === "report"), onclick: function () { toggle(p.id, "report"); } }, [open[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
-      if (dec.tailor_requested) tags.appendChild(el("span", { class: "tag q", text: "Resume: tailoring for this posting" }));
-      else if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
+      else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
+      if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
       else if (!deep) tags.appendChild(el("span", { class: "tag", text: "Resume pick comes with the deep evaluation" }));
     }
     if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", text: "Sent: " + resumeName(dec.sent) }));
@@ -675,90 +724,99 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var side = el("div", { class: "side" });
     side.appendChild(el("div", { class: "state", text: LABEL[s] }));
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
-    var off = !canWrite;
+    var off = !canWrite || !!writing[p.id];
+    function act(label, key, fn, extra) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [label]); }
     if (s === "new" || s === "interested") {
-      if (s === "new" && !p.pending) btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); } }, ["Interested"]));
-      btns.appendChild(el("button", { class: "b primary", disabled: off, "aria-expanded": String(open[p.id] === "resume"), onclick: function () { toggle(p.id, "resume"); } }, ["Applied"]));
-      btns.appendChild(el("button", { class: "b", disabled: off, "aria-expanded": String(open[p.id] === "skip"), onclick: function () { toggle(p.id, "skip"); } }, ["Skip"]));
-      if (s === "interested" && deep && deep.resume && deep.resume.fits === false && !dec.tailor_requested) {
+      if (s === "new" && !p.pending) btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }));
+      btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }));
+      btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }));
+      if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
-        more.appendChild(el("button", { class: "link", onclick: function () { copy("Tailor my resume for " + p.id + " (" + p.company + ", " + p.title + ")", "Copied. Paste it into Claude on your Mac to tailor."); } }, ["Copy tailor prompt"]));
+        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, ["Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
       var next = s === "applied" ? [["screen", "Recruiter screen"], ["hm", "Hiring manager"]] : s === "screen" ? [["hm", "Hiring manager"]] : [["offer", "Offer"]];
-      next.forEach(function (n) { btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); } }, [n[1]])); });
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); } }, ["Rejected"]));
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); } }, ["Withdrew"]));
-      if (s === "applied") more.appendChild(el("button", { class: "link", onclick: function () { toggle(p.id, "resume"); } }, ["Change resume sent"]));
+      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); })); });
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }));
+      btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }));
+      if (s === "applied") more.appendChild(el("button", { class: "link", "data-k": dk + "chres", disabled: off, "aria-expanded": String(drawer[p.id] === "resume"), onclick: function () { toggleDrawer(p.id, "resume"); } }, ["Change resume sent"]));
       var left = windowLeft(p.id);
       if (left !== null) side.appendChild(el("div", { class: "timer", text: "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back" }));
     } else if (s === "offer") {
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Declined"); } }, ["Declined"]));
+      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }));
     } else if (s === "noresp") {
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: e.lost_at === "applied" ? "screen" : "hm" }, "Moved back to Interviewing"); } }, ["They replied"]));
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Rejected"); } }, ["Rejected"]));
+      // They answered after all: back to the stage where it went quiet, with a fresh date.
+      var back = e.lost_at === "applied" ? "screen" : e.lost_at;
+      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }));
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
-      btns.appendChild(el("button", { class: "b", disabled: off, onclick: function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened"); } }, ["Reopen"]));
+      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }));
       if (e.lost_at) side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     }
     side.appendChild(btns);
     if (more.childNodes.length) side.appendChild(more);
     row.appendChild(side);
 
-    if (open[p.id] === "why" && p.ratings) row.appendChild(whyDrawer(p));
-    if (open[p.id] === "report" && deep) {
+    if (drawer[p.id] === "why" && p.ratings) row.appendChild(whyDrawer(p));
+    if (drawer[p.id] === "report" && deep) {
       var rd = el("div", { class: "drawer wide" }, [el("h4", { text: "Deep evaluation" + (deep.model ? " · " + deep.model : "") })]);
       if (deep.recommendation) rd.appendChild(el("p", null, [el("b", { text: "Recommendation: " }), deep.recommendation]));
       if (deep.resume && deep.resume.note) rd.appendChild(el("p", null, [el("b", { text: "Resume: " }), deep.resume.note]));
-      (deep.sections || []).forEach(function (r) { rd.appendChild(el("p", null, [el("b", { text: r[0] + ": " }), r[1]])); });
+      (Array.isArray(deep.sections) ? deep.sections : []).forEach(function (r) { if (Array.isArray(r)) rd.appendChild(el("p", null, [el("b", { text: r[0] + ": " }), r[1]])); });
       row.appendChild(rd);
     }
-    if (open[p.id] === "skip") row.appendChild(skipDrawer(p));
-    if (open[p.id] === "resume") row.appendChild(resumeDrawer(p, s));
+    if (drawer[p.id] === "skip") row.appendChild(skipDrawer(p));
+    if (drawer[p.id] === "resume") row.appendChild(resumeDrawer(p, s));
     return row;
   }
 
   function resumeTag(id, suffix) {
     var r = D.resumes[id];
     if (!r) return el("span", { class: "tag", text: "Resume: " + id + (suffix || "") });
-    return el("button", { class: "tag act", title: "Shows this resume on the Resumes tab", onclick: function () { state.tab = "resumes"; render(); } }, ["Resume: " + r.name + (suffix || "")]);
+    return el("button", { class: "tag act", title: "Shows this resume on the Resumes tab", onclick: function () { setTab("resumes"); } }, ["Resume: " + r.name + (suffix || "")]);
   }
 
   function whyDrawer(p) {
-    var d = el("div", { class: "drawer wide" }, [el("h4", { text: "Why " + p.score.toFixed(1) + " · scored on your dimensions" })]);
+    var thr = num(p.threshold);
+    var d = el("div", { class: "drawer wide" }, [el("h4", { text: "Why " + one(p.score) + " · scored on your dimensions" })]);
     var g = el("div", { class: "dims" });
     p.ratings.forEach(function (x) {
-      var v = typeof x.score === "number" ? x.score : 0;
-      var pips = el("div", { class: "pips", role: "img", "aria-label": v + " out of 5" });
+      var v = num(x.score) || 0;
+      var pips = el("div", { class: "pips", role: "img", "aria-label": (num(x.score) === null ? "not rated" : v + " out of 5") });
       for (var n = 1; n <= 5; n++) pips.appendChild(el("span", { class: "pip" + (n <= Math.round(v) ? " f" : "") }));
       g.appendChild(el("div", { class: "dim" }, [el("div", { class: "dn" }, [x.name, el("small", { text: BUCKET[x.bucket] || x.bucket })]), pips, el("div", { class: "dr", text: x.why || "" })]));
     });
     d.appendChild(g);
     (p.checks || []).forEach(function (c) { d.appendChild(el("p", { class: "calc", text: "Check: " + c })); });
-    d.appendChild(el("p", { class: "calc", text: "Must have counts 3×, Important 2×, Nice to have 1×. Your bar is " + (p.threshold || 4).toFixed(1) + ". Disagree with a line? Skip it with a reason, or tell Claude \"change my scoring\"." }));
+    d.appendChild(el("p", { class: "calc", text: "Must have counts 3×, Important 2×, Nice to have 1×. Your bar is " + (thr === null ? "4.0" : thr.toFixed(1)) + ". Disagree with a line? Skip it with a reason, or tell Claude \"change my scoring\"." }));
     return d;
   }
 
   function skipDrawer(p) {
-    var picked = {};
+    var dr = drafts.skip[p.id] = drafts.skip[p.id] || { reasons: {}, block: false };
+    var off = !canWrite || !!writing[p.id];
     var chips = el("div", { class: "rchips" });
-    REASONS.forEach(function (r) {
-      var b = el("button", { class: "b", "aria-pressed": "false", onclick: function () { picked[r] = !picked[r]; b.className = "b" + (picked[r] ? " on" : ""); b.setAttribute("aria-pressed", String(!!picked[r])); } }, [r]);
+    REASONS.forEach(function (r, i) {
+      var b = el("button", { class: "b" + (dr.reasons[r] ? " on" : ""), "data-k": "skip-" + p.id + "-" + i, "aria-pressed": String(!!dr.reasons[r]), onclick: function () { dr.reasons[r] = !dr.reasons[r]; b.className = "b" + (dr.reasons[r] ? " on" : ""); b.setAttribute("aria-pressed", String(!!dr.reasons[r])); } }, [r]);
       chips.appendChild(b);
     });
-    var block = el("input", { type: "checkbox", id: "blk-" + p.id });
+    var block = el("input", { type: "checkbox", id: "blk-" + p.id, "data-k": "blk-" + p.id, onchange: function () { dr.block = block.checked; } });
+    block.checked = !!dr.block;
     return el("div", { class: "drawer wide" }, [
       el("p", { text: "Why skip it? Pick any that apply. Your reasons feed next week's scoring suggestions." }),
       chips,
       p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", onclick: async function () {
-          var reasons = Object.keys(picked).filter(function (k) { return picked[k]; });
-          await saveDecision(p.id, { status: "skipped", reasons: reasons }, block.checked ? null : "Moved to Closed as Skipped");
-          if (block.checked) await saveRequest({ kind: "block_company", company: p.company, reason: reasons.length ? "Skipped: " + reasons.join(", ") : "Skipped from the job page" }, "Skipped, and " + p.company + " is blocked from now on.");
+        el("button", { class: "b primary", disabled: off, onclick: async function () {
+          var reasons = REASONS.filter(function (k) { return dr.reasons[k]; });
+          var blockIt = !!dr.block && p.company && !p.pending;
+          var ok = await saveDecision(p.id, { status: "skipped", reasons: reasons }, blockIt ? null : "Moved to Closed as Skipped");
+          if (!ok) return;
+          delete drafts.skip[p.id];
+          if (blockIt) await saveRequest({ kind: "block_company", company: p.company, reason: reasons.length ? "Skipped: " + reasons.join(", ") : "Skipped from the job page" }, "Skipped, and " + p.company + " is blocked from now on.");
         } }, ["Skip it"]),
-        el("button", { class: "b", onclick: function () { toggle(p.id, "skip"); } }, ["Cancel"])
+        el("button", { class: "b", onclick: function () { delete drafts.skip[p.id]; toggleDrawer(p.id, "skip"); } }, ["Cancel"])
       ])
     ]);
   }
@@ -767,27 +825,28 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var deep = D.deep[p.id];
     var suggested = (deep && deep.resume && deep.resume.id) || p.suggested_resume || null;
     var dec = D.decisions[p.id] || {};
-    var choice = dec.sent || suggested || "other";
+    if (!drafts.res[p.id]) drafts.res[p.id] = dec.sent || (suggested && D.resumes[suggested] ? suggested : "other");
+    var off = !canWrite || !!writing[p.id];
     var opts = el("div", { class: "resopts", role: "radiogroup", "aria-label": "Resume sent" });
-    var keys = Object.keys(D.resumes).filter(function (k) { return D.resumes[k].kind !== "master"; });
-    keys.forEach(function (k) {
-      var inp = el("input", { type: "radio", name: "res-" + p.id, id: "res-" + p.id + "-" + k, value: k, onchange: function () { choice = k; } });
-      if (k === choice) inp.checked = true;
-      opts.appendChild(el("label", { class: "resopt", for: "res-" + p.id + "-" + k }, [inp, D.resumes[k].name, k === suggested ? el("small", { text: "suggested" }) : null]));
-    });
-    var other = el("input", { type: "radio", name: "res-" + p.id, id: "res-" + p.id + "-other", value: "other", onchange: function () { choice = "other"; } });
-    if (choice === "other") other.checked = true;
-    opts.appendChild(el("label", { class: "resopt", for: "res-" + p.id + "-other" }, [other, "Something else", el("small", { text: "a version made outside the tool" })]));
+    function opt(k, label, note) {
+      var inp = el("input", { type: "radio", name: "res-" + p.id, id: "res-" + p.id + "-" + k, "data-k": "res-" + p.id + "-" + k, value: k, onchange: function () { drafts.res[p.id] = k; } });
+      inp.checked = drafts.res[p.id] === k;
+      opts.appendChild(el("label", { class: "resopt", for: "res-" + p.id + "-" + k }, [inp, label, note ? el("small", { text: note }) : null]));
+    }
+    Object.keys(D.resumes).filter(function (k) { return D.resumes[k].kind !== "master"; }).forEach(function (k) { opt(k, D.resumes[k].name, k === suggested ? "suggested" : null); });
+    opt("other", "Something else", "a version made outside the tool");
     var isApplied = s === "applied";
     return el("div", { class: "drawer wide" }, [
       el("p", { text: "Which resume did you send? Stats compare how each one does." }),
       opts,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", onclick: function () {
-          if (isApplied) saveDecision(p.id, { sent: choice }, "Saved");
-          else saveDecision(p.id, { status: "applied", sent: choice }, "Moved to Applied. The 21-day response window starts today.");
+        el("button", { class: "b primary", disabled: off, onclick: async function () {
+          var choice = drafts.res[p.id];
+          var ok = isApplied ? await saveDecision(p.id, { sent: choice }, "Saved")
+            : await saveDecision(p.id, { status: "applied", sent: choice }, "Moved to Applied. The 21-day response window starts today.");
+          if (ok) delete drafts.res[p.id];
         } }, [isApplied ? "Save" : "Mark applied"]),
-        el("button", { class: "b", onclick: function () { toggle(p.id, "resume"); } }, ["Cancel"])
+        el("button", { class: "b", onclick: function () { delete drafts.res[p.id]; toggleDrawer(p.id, "resume"); } }, ["Cancel"])
       ])
     ]);
   }
@@ -796,17 +855,16 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   async function savePdf(r, msg) {
     if (!downloads) { msg.textContent = "Saving files isn't available in this view."; return; }
     try {
-      var res = await fetch("/_blob/" + r.asset_id);
+      var res = await fetch("/_blob/" + encodeURIComponent(r.asset_id));
       if (!res.ok) { msg.textContent = "Couldn't load the file (" + res.status + ")."; return; }
       var blob = await res.blob();
-      var out = await downloads.save({ filename: (r.file || (r.name || "resume").replace(/[^\w\- ]+/g, "") + ".pdf"), data: blob });
+      var out = await downloads.save({ filename: String(r.name || "resume").replace(/[^\w\- ]+/g, "").trim() + ".pdf", data: blob });
       msg.textContent = out && out.status === "saved" ? "Saved" : "Sent to your downloads";
-    } catch (e) { msg.textContent = "Not saved: " + (e && (e.code || e.message)); }
+    } catch (e) { msg.textContent = "Not saved: " + errText(e); }
   }
   function renderResumes() {
     var v = document.getElementById("view-resumes"); v.textContent = "";
     var keys = Object.keys(D.resumes);
-    document.getElementById("c-resumes").textContent = keys.filter(function (k) { return D.resumes[k].kind !== "master"; }).length || "";
     var stat = {};
     keys.forEach(function (k) { stat[k] = { sug: 0, sent: 0 }; });
     Object.keys(D.postings).forEach(function (id) { var p = D.postings[id], dp = D.deep[id]; var sg = (dp && dp.resume && dp.resume.id) || p.suggested_resume; if (sg && stat[sg]) stat[sg].sug++; });
@@ -830,7 +888,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     [["master", "Master resume", ""],
      ["default", "Default versions", "One per kind of role you're targeting. Scoring suggests one of these, or a tailored version, for every posting that reaches your bar."],
      ["tailored", "Tailored versions", "Made when no existing resume fit a posting. Reused whenever a new posting matches one better than the defaults."]].forEach(function (grp) {
-      var ks = keys.filter(function (k) { return (D.resumes[k].kind || "default") === grp[0]; });
+      var ks = keys.filter(function (k) { return (D.resumes[k].kind || "default") === grp[0]; }).sort(function (a, b) { return cmpStr(D.resumes[a].name, D.resumes[b].name); });
       if (!ks.length) return;
       v.appendChild(el("h3", { class: "sec", text: grp[1] }));
       if (grp[2]) v.appendChild(el("p", { class: "banner", text: grp[2] }));
@@ -845,28 +903,36 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     ["boards", "Job boards", "Companies whose job boards the free daily scan reads. No Claude usage."],
     ["search", "Can't be read yet", "No job board the scan can read was found for these, so they are not checked. Paste a company's job board link to fix it, or turn them off."]
   ];
-  var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false;
+  var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false, srcBusy = false, swBusy = {};
   try { srcTab = localStorage.getItem("jsd-src-tab"); } catch (e) {}
-  function pendingReq(kind, test) {
-    var snapAt = D.sources ? D.sources.at : "";
-    var hit = null;
-    Object.keys(D.requests).forEach(function (rid) { var r = D.requests[rid]; if (r.kind === kind && (!D.done[rid] || (r.at || "") > snapAt) && test(r)) { if (!hit || (r.at || "") > (hit.at || "")) hit = r; } });
-    return hit;
-  }
   function srcOn(s) {
-    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.at : "";
-    var grp = pendingReq("switch_group", function (r) { return r.group === s.group; });
-    var own = sw && (!snapAt || sw.at > snapAt) ? sw : null;
-    if (grp && (!own || grp.at > own.at)) return !!grp.on;
+    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.at || "" : "";
+    var grp = V.group[s.group];
+    var own = sw && (!snapAt || cmpStr(sw.at, snapAt) > 0) ? sw : null;
+    if (grp && (!own || cmpStr(grp.at, own.at) > 0)) return !!grp.on;
     return own ? !!own.on : s.on !== false;
+  }
+  var KIND_TEXT = {
+    add_source: function (r) { return "Add " + r.text; },
+    set_board: function (r) { return "Job board link for " + (r.company || "a company"); },
+    block_company: function (r) { return "Block " + r.company; },
+    unblock_company: function (r) { return "Unblock " + r.company; },
+    switch_group: function (r) { return "Turn all unreadable companies " + (r.on ? "on" : "off"); }
+  };
+  function recentResults() {
+    var out = [];
+    Object.keys(D.done).forEach(function (rid) {
+      var d = D.done[rid], r = D.requests[rid];
+      if (!r || !KIND_TEXT[r.kind] || !d || daysSince(d.at) > 3) return;
+      out.push({ at: d.at, what: KIND_TEXT[r.kind](r), result: d.result });
+    });
+    return out.sort(function (a, b) { return cmpStr(b.at, a.at); }).slice(0, 5);
   }
   function renderSources() {
     var v = document.getElementById("view-sources"); v.textContent = "";
     var snap = D.sources;
     var rows = snap ? snap.rows || [] : [];
-    document.getElementById("c-sources").textContent = rows.filter(function (s) { return s.group !== "search" && srcOn(s); }).length || "";
-    var pendingAdds = Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_job" && !D.done[rid]; });
-    if (pendingAdds.length) v.appendChild(el("div", { class: "note" }, [el("span", { text: pendingAdds.length + (pendingAdds.length === 1 ? " job you added is" : " jobs you added are") + " checked against your sources in the next run. Any the scan never saw get flagged here with a suggestion to add their company." })]));
+    if (V.pendingAdds) v.appendChild(el("div", { class: "note" }, [el("span", { text: V.pendingAdds + (V.pendingAdds === 1 ? " job you added is" : " jobs you added are") + " checked against your sources in the next run. Any the scan never saw get flagged here with a suggestion to add their company." })]));
     (snap && snap.gaps || []).forEach(function (g) {
       var handled = Object.keys(D.requests).some(function (rid) { var r = D.requests[rid]; return (r.kind === "dismiss_gap" || r.kind === "add_source") && r.gap === g.id; });
       if (handled) return;
@@ -876,8 +942,10 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
         el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "dismiss_gap", gap: g.id }, "Dismissed"); } }, ["Dismiss"])
       ]));
     });
+    var recent = recentResults();
+    if (recent.length) v.appendChild(el("div", { class: "panel recent" }, [el("h3", { class: "mini", text: "Done in recent runs" })].concat(recent.map(function (x) { return el("div", null, [el("b", { text: x.what + ": " }), x.result]); }))));
     if (!snap) { v.appendChild(el("div", { class: "empty", text: loaded ? "Your sources appear here after the first morning run." : "Loading…" })); return; }
-    var blk = blockedCompanies(), bkeys = Object.keys(blk);
+    var bkeys = Object.keys(V.blocked);
     var views = GROUPS_SRC.filter(function (g) { return g[0] === "dream" || rows.some(function (s) { return s.group === g[0]; }); }).map(function (g) {
       var rs = rows.filter(function (s) { return s.group === g[0]; });
       return { k: g[0], label: g[1], desc: g[2], rows: rs, count: g[0] === "mail" ? (rs.some(srcOn) ? "On" : "Off") : String(rs.length) };
@@ -888,34 +956,35 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     // Sub-tabs: one view at a time
     var bar = el("div", { class: "segtabs", role: "tablist", "aria-label": "Source groups" });
     views.forEach(function (x) {
-      bar.appendChild(el("button", { class: "seg", role: "tab", "aria-selected": String(srcTab === x.k), onclick: function () { srcTab = x.k; srcQuery = ""; try { localStorage.setItem("jsd-src-tab", srcTab); } catch (e) {} render(); } },
-        [x.label, el("span", { class: "segn", text: x.count })]));
+      bar.appendChild(el("button", { class: "stab", role: "tab", "data-k": "stab-" + x.k, "aria-selected": String(srcTab === x.k), onclick: function () { srcTab = x.k; srcQuery = ""; boardEdit = null; lastVerdict = ""; try { localStorage.setItem("jsd-src-tab", srcTab); } catch (e) {} render(); } },
+        [x.label, el("span", { class: "stabn", text: x.count })]));
     });
     v.appendChild(bar);
 
     // Fixed toolbar: find on the left, add on the right, same place on every view
     var tools = el("div", { class: "srctools" });
-    var search = el("input", { type: "search", class: "srcsearch", placeholder: "Find a company", "aria-label": "Find a company", value: srcQuery });
-    search.addEventListener("input", function () { srcQuery = search.value; renderSources(); var n = document.querySelector(".srcsearch"); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } });
+    var search = el("input", { type: "search", class: "srcsearch", "data-k": "srcsearch", placeholder: "Find a company", "aria-label": "Find a company" });
+    search.value = srcQuery;
+    search.addEventListener("input", function () { srcQuery = search.value; render(); });
     tools.appendChild(search);
-    tools.appendChild(el("button", { class: "b" + (addSrcOpen ? " on" : " primary"), "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () { addSrcOpen = !addSrcOpen; render(); if (addSrcOpen) setTimeout(function () { var i = document.getElementById("src-input"); if (i) i.focus(); }, 30); } }, [addSrcOpen ? "Close" : "Add a source"]));
+    tools.appendChild(el("button", { class: "b" + (addSrcOpen ? " on" : " primary"), "data-k": "addsrc", "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () { addSrcOpen = !addSrcOpen; if (!addSrcOpen) lastVerdict = ""; else focusNext = "src-input"; render(); } }, [addSrcOpen ? "Close" : "Add a source"]));
     v.appendChild(tools);
-    if (addSrcOpen || lastVerdict) addSourceForm(v);
+    if (addSrcOpen) addSourceForm(v);
 
     var q = srcQuery.trim().toLowerCase();
     var view = views.filter(function (x) { return x.k === srcTab; })[0];
     if (q) {
-      var elsewhere = views.filter(function (x) { return x.k !== srcTab && x.rows.some(function (s) { return s.name.toLowerCase().indexOf(q) > -1; }); });
+      var elsewhere = views.filter(function (x) { return x.k !== srcTab && x.rows.some(function (s) { return String(s.name).toLowerCase().indexOf(q) > -1; }); });
       if (elsewhere.length) v.appendChild(el("p", { class: "banner", text: "Also matches in: " + elsewhere.map(function (x) { return x.label; }).join(", ") + "." }));
     }
 
     if (view.k === "blocked") {
       v.appendChild(el("p", { class: "banner", text: view.desc }));
-      var keys = bkeys.filter(function (k) { return !q || blk[k].company.toLowerCase().indexOf(q) > -1; });
-      var mine = keys.filter(function (k) { return !blk[k].system; }), sys = keys.filter(function (k) { return blk[k].system; });
+      var keys = bkeys.filter(function (k) { return !q || String(V.blocked[k].company).toLowerCase().indexOf(q) > -1; });
+      var mine = keys.filter(function (k) { return !V.blocked[k].system; }), sys = keys.filter(function (k) { return V.blocked[k].system; });
       var bl = el("div", { class: "ledger" });
       mine.concat(sys).forEach(function (k) {
-        var b = blk[k];
+        var b = V.blocked[k];
         bl.appendChild(el("div", { class: "lrow" }, [
           el("div", null, [el("div", { class: "t", text: b.company }), el("div", { class: "s", text: b.system ? "Reposting service · blocked by default" : (b.since ? "Blocked " + niceDate(b.since) : "Blocked") })]),
           el("div", { class: "m" + (b.pending ? " low" : ""), text: b.pending ? "Takes effect in the next run" : (b.reason || "") }),
@@ -929,15 +998,15 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 
     var found = 0, qual = 0;
     view.rows.forEach(function (s) { if (srcOn(s)) { found += s.found || 0; qual += s.qual || 0; } });
-    var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" ? "" : " Last 30 days: " + found + " found, " + qual + " reached your bar.") })]);
+    var head = el("div", { class: "sechead" }, [el("p", { class: "banner", text: view.desc + (view.k === "search" || view.k === "mail" ? "" : " Last 30 days: " + found + " found, " + qual + " reached your bar.") })]);
     if (view.k === "search" && view.rows.length) {
       var anyOn = view.rows.some(srcOn);
       head.appendChild(el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "switch_group", group: "search", on: !anyOn }, anyOn ? "All turned off. You can still fix any one with its job board link." : "All turned on."); } }, [anyOn ? "Turn all off" : "Turn all on"]));
     }
     v.appendChild(head);
 
-    var rs = view.rows.filter(function (s) { return !q || s.name.toLowerCase().indexOf(q) > -1; });
-    rs.sort(function (a, b) { return (b.qual || 0) - (a.qual || 0) || (b.found || 0) - (a.found || 0) || a.name.localeCompare(b.name); });
+    var rs = view.rows.filter(function (s) { return !q || String(s.name).toLowerCase().indexOf(q) > -1; });
+    rs.sort(function (a, b) { return (b.qual || 0) - (a.qual || 0) || (b.found || 0) - (a.found || 0) || String(a.name).localeCompare(String(b.name)); });
     var adds = view.k === "dream" ? Object.keys(D.requests).filter(function (rid) { var r = D.requests[rid]; return r.kind === "add_source" && !D.done[rid] && (!q || String(r.text).toLowerCase().indexOf(q) > -1); }) : [];
     var split = (view.k === "dream" || view.k === "boards") && !q;
     var active = split ? rs.filter(function (s) { return s.found > 0; }) : rs;
@@ -947,7 +1016,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     active.forEach(function (s) { l.appendChild(srcRow(s)); });
     if (quiet.length) {
       var qo = !!quietOpen[view.k];
-      l.appendChild(el("button", { class: "lrow quiettoggle", "aria-expanded": String(qo), onclick: function () { quietOpen[view.k] = !qo; render(); } }, [
+      l.appendChild(el("button", { class: "lrow quiettoggle", "data-k": "quiet-" + view.k, "aria-expanded": String(qo), onclick: function () { quietOpen[view.k] = !qo; render(); } }, [
         el("span", { class: "t", text: (qo ? "▾ " : "▸ ") + "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days" })
       ]));
       if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
@@ -956,79 +1025,86 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     v.appendChild(l);
   }
   function addSourceForm(v) {
-    var input = el("input", { id: "src-input", type: "text", placeholder: "Company name, careers page link, or job board link", "aria-label": "Company name or link" });
+    var input = el("input", { id: "src-input", "data-k": "src-input", type: "text", placeholder: "Company name, careers page link, or job board link", "aria-label": "Company name or link", oninput: function () { drafts.src = input.value; } });
+    input.value = drafts.src;
     var out = el("div", { id: "src-out" });
     if (lastVerdict) out.appendChild(el("div", { class: "verdict", text: lastVerdict }));
     v.appendChild(el("form", { class: "addform", onsubmit: async function (e) {
       e.preventDefault();
-      var q = input.value.trim(); if (!q) { input.focus(); return; }
-      var low = q.toLowerCase(), isLink = /^https?:\/\//.test(low) || /\.[a-z]{2,}(\/|$)/.test(low);
+      if (srcBusy) return;
+      var q = drafts.src.trim(); if (!q) { input.focus(); return; }
+      var low = q.toLowerCase(), link = /^https?:\/\//.test(low) || /\.[a-z]{2,}(\/|$)/.test(low);
       if (low.indexOf("linkedin.com") > -1) { lastVerdict = "Not added: LinkedIn can't be scanned directly. Set up a LinkedIn job alert instead; it arrives through Gmail."; render(); return; }
-      var rid = await saveRequest({ kind: "add_source", text: q, dream: !isLink }, null);
-      if (!rid) return;
-      lastVerdict = "Added " + q + ". " + (isLink ? "The next run opens the link and works out how to check it daily." : "The next run searches for its careers page. If it can't find one, it's checked weekly by web search instead.");
-      addSrcOpen = true; render();
+      srcBusy = true; render();
+      try {
+        var rid = await saveRequest({ kind: "add_source", text: q.slice(0, 500), dream: !link }, null);
+        if (!rid) return;
+        drafts.src = "";
+        lastVerdict = "Added " + q + ". " + (link ? "The next run opens the link and works out how to check it daily." : "The next run searches for its careers page. If it can't find one, it's checked weekly by web search instead.");
+      } finally { srcBusy = false; focusNext = "src-input"; render(); }
     } }, [
       el("label", { for: "src-input", text: "Type a company name to add it as a dream company, or paste a careers page or job board link to skip the lookup." }),
-      el("div", { class: "fields" }, [input, el("button", { class: "b primary", type: "submit", disabled: !canWrite }, ["Add"])]),
+      el("div", { class: "fields" }, [input, el("button", { class: "b primary", type: "submit", disabled: !canWrite || srcBusy }, [srcBusy ? "Adding…" : "Add"])]),
       out
     ]));
   }
   function srcRow(s) {
     var on = srcOn(s);
-    var fixing = pendingReq("set_board", function (r) { return r.source === s.id; });
-    var t = el("div", null, [el("div", { class: "t" }, [s.name, s.cost ? el("span", { class: "pill", text: "Uses Claude usage" }) : null]), el("div", { class: "s", text: [s.desc, s.how].filter(Boolean).join(" · ") })]);
+    var fixing = V.board[s.id];
+    var t = el("div", null, [el("div", { class: "t" }, [s.name, s.cost ? el("span", { class: "pill", text: "Uses Claude" }) : null]), el("div", { class: "s", text: [s.desc, s.how].filter(Boolean).join(" · ") })]);
     var y;
     if (fixing) y = el("div", { class: "m low", text: "Checking the link you pasted in the next run" });
     else if (!on) y = el("div", { class: "m", text: "Off" });
-    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", disabled: !canWrite, onclick: function () { boardEdit = s.id; render(); } }, ["Paste its job board link"])]);
+    else if (s.group === "search") y = el("div", { class: "m" }, [el("button", { class: "link", "data-k": "fix-" + s.id, disabled: !canWrite, onclick: function () { boardEdit = s.id; focusNext = "board-" + s.id; render(); } }, ["Paste its job board link"])]);
+    else if (s.group === "mail") y = el("div", { class: "m", text: "On" });
     else { var low = (s.found || 0) >= 20 && !s.qual; y = el("div", { class: "m" + (low ? " low" : ""), text: (s.found || 0) + " found · " + (s.qual || 0) + " qualified · " + (s.app || 0) + " applied" + (low ? " · nothing reached your bar in 30 days, consider turning it off" : "") }); }
-    var ctrl = el("div", { class: "ctrl" }, [el("button", { class: "sw", role: "switch", disabled: !canWrite, "aria-checked": String(on), "aria-label": (on ? "Turn off " : "Turn on ") + s.name,
+    var ctrl = el("div", { class: "ctrl" }, [el("button", { class: "sw", role: "switch", "data-k": "sw-" + s.id, disabled: !canWrite || !!swBusy[s.id], "aria-checked": String(on), "aria-label": s.name,
       onclick: async function () {
-        if (!db) return;
+        if (!db || swBusy[s.id]) return;
+        var before = D.switches[s.id];
         var doc = { on: !on, at: new Date().toISOString() };
-        D.switches[s.id] = doc; render();
+        swBusy[s.id] = true; D.switches[s.id] = doc; render();
         try { await db.doc("source_switches/" + s.id).set(doc); toast(s.name + (on ? " turned off. The next run skips it." : " turned on. The next run includes it.")); }
-        catch (e) { toast("Not saved: " + (e && (e.message || e.code))); }
+        catch (e) { if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
+        finally { swBusy[s.id] = false; render(); }
       } })]);
     var row = el("div", { class: "lrow" }, [t, y, ctrl]);
     if (boardEdit !== s.id) return row;
-    var inp = el("input", { type: "url", placeholder: "Link to one of their job postings or their job board", "aria-label": "Job board link for " + s.name });
-    var wrap = el("div", null, [row, el("form", { class: "addform inrow", onsubmit: async function (e) {
+    var inp = el("input", { type: "url", "data-k": "board-" + s.id, placeholder: "Link to one of their job postings or their job board", "aria-label": "Job board link for " + s.name, oninput: function () { drafts.board[s.id] = inp.value; } });
+    inp.value = drafts.board[s.id] || "";
+    return el("div", null, [row, el("form", { class: "addform inrow", onsubmit: async function (e) {
       e.preventDefault();
-      var url = inp.value.trim(); if (!/^https?:\/\//i.test(url)) { inp.focus(); toast("Paste a full link, starting with https://"); return; }
-      boardEdit = null;
-      await saveRequest({ kind: "set_board", source: s.id, company: s.name, url: url }, "Saved. The next run checks the link and, if it can read it, adds " + s.name + " to the daily scan.");
+      var url = (drafts.board[s.id] || "").trim(); if (!/^https?:\/\//i.test(url)) { inp.focus(); toast("Paste a full link, starting with https://"); return; }
+      var rid = await saveRequest({ kind: "set_board", source: s.id, company: s.name, url: url.slice(0, 2000) }, "Saved. The next run checks the link and, if it can read it, adds " + s.name + " to the daily scan.");
+      if (rid) { boardEdit = null; delete drafts.board[s.id]; render(); }
     } }, [
-      el("label", { text: "Open " + s.name + "'s careers page, click any job, and paste that link here. It usually reveals the job board behind the page." }),
-      el("div", { class: "fields" }, [inp, el("button", { class: "b primary", type: "submit" }, ["Save"]), el("button", { class: "b", type: "button", onclick: function () { boardEdit = null; render(); } }, ["Cancel"])])
+      el("label", { for: "board-" + s.id, text: "Open " + s.name + "'s careers page, click any job, and paste that link here. It usually reveals the job board behind the page." }),
+      el("div", { class: "fields" }, [inp, el("button", { class: "b primary", type: "submit", disabled: !canWrite }, ["Save"]), el("button", { class: "b", type: "button", onclick: function () { boardEdit = null; render(); } }, ["Cancel"])])
     ])]);
-    setTimeout(function () { inp.focus(); }, 30);
-    return wrap;
   }
 
   // ---------- Stats ----------
   var tip = document.getElementById("tip");
   function hover(node, text) {
-    node.setAttribute("tabindex", "0"); node.setAttribute("aria-label", text);
-    function show(e) {
+    node.setAttribute("role", "img"); node.setAttribute("aria-label", text);
+    node.addEventListener("mousemove", function (e) {
       tip.textContent = text; tip.hidden = false;
-      var r = node.getBoundingClientRect(), x = e && e.clientX ? e.clientX : r.left + r.width / 2, y = e && e.clientY ? e.clientY : r.top;
-      tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, x - tip.offsetWidth / 2)) + "px";
-      tip.style.top = Math.max(8, y - tip.offsetHeight - 12) + "px";
-    }
-    node.addEventListener("mousemove", show); node.addEventListener("focus", show);
-    node.addEventListener("mouseleave", function () { tip.hidden = true; }); node.addEventListener("blur", function () { tip.hidden = true; });
+      tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, e.clientX - tip.offsetWidth / 2)) + "px";
+      tip.style.top = Math.max(8, e.clientY - tip.offsetHeight - 12) + "px";
+    });
+    node.addEventListener("mouseleave", function () { tip.hidden = true; });
   }
+  function width(n, max, floor) { return Math.min(100, Math.max(max ? n / max * 100 : 0, floor)) + "%"; }
   function computeStats() {
     var q = { qualified: 0, acted: 0, applied: 0, skipped: 0 };
     var you = { applied: 0, screen: 0, hm: 0, offer: 0 };
     var dec = { interview: 0, rejected: 0, noresp: 0, withdrew: 0, pending: 0 };
     var ids = {}; Object.keys(D.postings).forEach(function (k) { ids[k] = 1; }); Object.keys(D.decisions).forEach(function (k) { ids[k] = 1; });
     Object.keys(ids).forEach(function (id) {
-      var p = D.postings[id], e = eff(id), d = e.d, dates = d.dates || {};
-      var qualified = p && p.status_hint === "qualified" && !p.added_by_user;
-      if (qualified) {
+      var p = view(id);
+      if (p && hidden(p)) return;
+      var e = eff(id), d = e.d, dates = d.dates || {};
+      if (p && p.status_hint === "qualified" && !p.added_by_user) {
         q.qualified++;
         if (dates.interested || dates.applied) q.acted++;
         if (dates.applied) q.applied++;
@@ -1039,8 +1115,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
       if (dates.screen || dates.hm || dates.offer) you.screen++;
       if (dates.hm || dates.offer) you.hm++;
       if (dates.offer) you.offer++;
-      var interviewed = !!(dates.screen || dates.hm || dates.offer);
-      if (interviewed) dec.interview++;
+      if (dates.screen || dates.hm || dates.offer) dec.interview++;
       else if (e.status === "rejected") dec.rejected++;
       else if (e.status === "noresp") dec.noresp++;
       else if (e.status === "withdrew") dec.withdrew++;
@@ -1050,15 +1125,15 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   }
   function renderStats() {
     var S = computeStats(), q = S.q, you = S.you, dec = S.dec, r = D.run || {};
-    var thr = r.scoring && r.scoring.threshold;
+    var thr = r.scoring && num(r.scoring.threshold);
     var decided = dec.interview + dec.rejected + dec.noresp + dec.withdrew;
     var tiles = document.getElementById("tiles"); tiles.textContent = "";
     function tile(k, v, n, thin) { tiles.appendChild(el("div", { class: "tile" + (thin ? " thin" : "") }, [el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "n", text: n })])); }
     tile("Scoring accuracy", q.qualified ? Math.round(q.acted / q.qualified * 100) + "%" : "–", q.acted + " of " + q.qualified + " qualified postings you acted on", q.qualified < 10);
-    tile("Applications", String(you.applied), dec.pending + " still inside their 21-day window");
+    tile("Applications", String(you.applied), dec.pending + " still waiting for an answer");
     tile("Application → interview", decided ? Math.round(dec.interview / decided * 100) + "%" : "–", dec.interview + " of " + decided + " decided applications", decided < 10);
     tile("Interview → offer", dec.interview ? Math.round(you.offer / dec.interview * 100) + "%" : "–", dec.interview < 10 ? "Too few to judge yet (" + dec.interview + " interviews)" : you.offer + " of " + dec.interview + " interviews", dec.interview < 10);
-    document.getElementById("foot-acc").textContent = "Scoring accuracy: of postings that reached your " + (thr ? thr.toFixed(1) + " " : "") + "bar, the share you marked Interested or Applied. Below 50% means the scoring needs tuning.";
+    document.getElementById("foot-acc").textContent = "Scoring accuracy: of postings that reached your " + (thr !== null && thr !== undefined ? thr.toFixed(1) + " " : "") + "bar, the share you marked Interested or Applied. Below 50% means the scoring needs tuning.";
 
     document.getElementById("split-sub").textContent = decided ? decided + (decided === 1 ? " application has" : " applications have") + " an outcome. " + dec.pending + " more " + (dec.pending === 1 ? "is" : "are") + " still waiting and " + (dec.pending === 1 ? "isn't" : "aren't") + " counted." : "No application has an outcome yet.";
     var split = document.getElementById("split"); split.textContent = "";
@@ -1067,17 +1142,16 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     split.setAttribute("aria-label", parts.map(function (pt) { return pt.label + " " + dec[pt.k]; }).join(", "));
     parts.forEach(function (pt) {
       var n = dec[pt.k];
-      if (decided && n) { var seg = el("div", { class: "seg", style: "background:" + pt.color + ";width:" + (n / decided * 100) + "%" }); hover(seg, pt.label + ": " + n + " of " + decided + " (" + pct(n, decided) + "%)"); split.appendChild(seg); }
+      if (decided && n) { var seg = el("div", { class: "seg", style: "background:" + pt.color + ";width:" + width(n, decided, 0) }); hover(seg, pt.label + ": " + n + " of " + decided + " (" + pct(n, decided) + "%)"); split.appendChild(seg); }
       labels.appendChild(el("div", null, [el("b", { text: decided ? Math.round(n / decided * 100) + "%" : "–" }), el("span", null, [el("i", { style: "display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:" + pt.color }), pt.label + " · " + n])]));
     });
     var f = r.funnel || {};
-    document.getElementById("funnel-sys-sub").textContent = f.since ? "Since " + niceDate(f.since) + ". Open postings is today's count on your sources; the rest add up across the search." : "Appears after the first morning run.";
+    document.getElementById("funnel-sys-sub").textContent = f.since ? "Since " + niceDate(f.since) + ". Your sources list " + fmt(f.open_today) + " open postings today; these are the ones that matched your titles and locations, and how far they got." : "Appears after the first morning run.";
     funnel(document.getElementById("funnel-sys"), [
-      { k: "Open postings", n: f.open_today || 0, note: "on your sources today" },
       { k: "Passed filters", n: f.passed_filters || 0 },
       { k: "Scored", n: f.scored || 0 },
       { k: "Qualified", n: f.qualified || 0 }
-    ], "var(--bar)", "of open");
+    ], "var(--bar)", "of passed");
     document.getElementById("funnel-you-sub").textContent = "Of " + q.qualified + " qualified postings: " + q.applied + " applied, " + q.skipped + " skipped by you, " + Math.max(0, q.qualified - q.applied - q.skipped) + " not decided yet.";
     funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Recruiter screen", n: you.screen }, { k: "Hiring manager", n: you.hm }, { k: "Offer", n: you.offer }], "var(--bar-2)", "of applied");
     renderClosed();
@@ -1087,8 +1161,8 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     var total = rows.reduce(function (a, r) { return a + r.n; }, 0);
     if (!total) { host.appendChild(el("p", { class: "s", text: emptyText })); return; }
     var max = Math.max.apply(null, rows.map(function (r) { return r.n; }));
-    rows.filter(function (r) { return r.n > 0; }).sort(function (a, b) { return b.n - a.n; }).forEach(function (r) {
-      var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + (r.color || color) + ";width:" + Math.max(r.n / max * 100, 2) + "%" })]);
+    rows.filter(function (r) { return r.n > 0; }).sort(function (a, b) { return b.n - a.n || cmpStr(a.k, b.k); }).forEach(function (r) {
+      var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + (r.color || color) + ";width:" + width(r.n, max, 2) })]);
       hover(track, r.k + ": " + r.n + " (" + pct(r.n, total) + "%)");
       host.appendChild(el("div", { class: "stage small" }, [el("span", { class: "lbl", text: r.k }), track, el("span", { class: "num", text: String(r.n) })]));
     });
@@ -1120,47 +1194,87 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
     stages.forEach(function (st, idx) {
       if (idx > 0) {
         var prev = stages[idx - 1], thin = prev.n < 10;
-        host.appendChild(el("div", { class: "conv" }, [el("span", null, ["↓ ", el("span", { class: "rate" + (thin ? " thin" : ""), text: pct(st.n, prev.n) + "%" + (thin ? " (n=" + prev.n + ")" : "") }), " from " + prev.k.toLowerCase()]), el("span", { text: pct(st.n, max) + "% " + shareLabel })]));
+        host.appendChild(el("div", { class: "conv" }, [el("span", null, ["↓ ", el("span", { class: "rate" + (thin ? " thin" : ""), text: pct(st.n, prev.n) + "%" + (thin ? " (only " + prev.n + ")" : "") }), " from " + prev.k.toLowerCase()]), el("span", { text: pct(st.n, max) + "% " + shareLabel })]));
       }
-      var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + color + ";width:" + Math.max(st.n / max * 100, 0.6) + "%" })]);
+      var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + color + ";width:" + width(st.n, max, 0.6) })]);
       hover(track, st.k + ": " + fmt(st.n) + (idx ? " · " + pct(st.n, stages[idx - 1].n) + "% from " + stages[idx - 1].k.toLowerCase() : "") + (st.note ? " · " + st.note : ""));
       host.appendChild(el("div", { class: "stage" }, [el("span", { class: "lbl", text: st.k }), track, el("span", { class: "num", text: fmt(st.n) })]));
     });
   }
 
   // ---------- Tabs and render ----------
-  var TABS = ["triage", "resumes", "sources", "stats"];
-  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { state.tab = b.getAttribute("data-tab"); try { localStorage.setItem("jsd-tab", state.tab); } catch (e) {} render(); }); });
+  function setTab(t) {
+    if (TABS.indexOf(t) < 0) return;
+    state.tab = t; drawer = {}; lastVerdict = ""; boardEdit = null; tip.hidden = true;
+    try { localStorage.setItem("jsd-tab", t); } catch (e) {}
+    render();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; render(); });
   function showTab() {
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === state.tab)); });
     TABS.forEach(function (t) { document.getElementById("view-" + t).hidden = t !== state.tab; });
   }
+  function safe(name, fn) {
+    try { fn(); }
+    catch (e) {
+      try { console.error(e); } catch (x) {}
+      var host = document.getElementById("view-" + name) || document.getElementById("help-host");
+      host.appendChild(el("div", { class: "note rerr" }, [el("span", { text: "Part of this page couldn't be shown. Reload the page; if it stays, copy the message for Erik from the status button." })]));
+    }
+  }
   var raf = 0;
-  function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(function () { renderHeader(); renderTriage(); renderResumes(); renderSources(); renderStats(); showTab(); }); }
+  function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
+  function draw() {
+    // Keep focus and the text cursor where they were when new data redraws the page.
+    var a = document.activeElement, k = focusNext || (a && a.getAttribute && a.getAttribute("data-k")), sel = null;
+    if (!focusNext && k && a && typeof a.selectionStart === "number") { try { sel = [a.selectionStart, a.selectionEnd]; } catch (e) {} }
+    focusNext = null;
+    tip.hidden = true;
+    Array.prototype.forEach.call(document.querySelectorAll(".rerr"), function (x) { x.remove(); });
+    V = buildIndex();
+    var all = [];
+    safe("triage", function () { all = items(); });
+    safe("header", renderHeader);
+    safe("header", function () { renderCounts(all); });
+    if (state.tab === "triage") safe("triage", function () { renderTriage(all); });
+    if (state.tab === "resumes") safe("resumes", renderResumes);
+    if (state.tab === "sources") safe("sources", renderSources);
+    if (state.tab === "stats") safe("stats", renderStats);
+    showTab();
+    if (k) {
+      var n = null;
+      Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
+      if (n && n !== document.activeElement) {
+        try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
+        if (sel && typeof n.setSelectionRange === "function") { try { n.setSelectionRange(sel[0], sel[1]); } catch (e) {} }
+      }
+    }
+  }
   render();
 
   // ---------- Connect ----------
-  function collect(name, target, snap) { D[target] = {}; snap.docs.forEach(function (d) { D[target][d.id] = Object.assign({ id: d.id }, d.data()); }); render(); }
-  function onErr(what) { return function (e) { toast("Lost the live connection to " + what + ". Reload the page."); }; }
+  function collect(target, snap) { var m = {}; snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); D[target] = m; render(); }
   (async function () {
-    db = await claude.use("db");
+    try { db = await claude.use("db"); } catch (e) { db = null; }
     if (!db) { loaded = true; canWrite = false; render(); toast("This view can't reach your tracker. Open the page in Claude while signed in."); return; }
-    downloads = await claude.use("downloads");
+    try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; }
     try { var u = await claude.use("user"); var cw = u && u.can ? u.can("data.write") : null; if (cw === false) canWrite = false; } catch (e) {}
-    var pending = 3;
-    function ready() { if (--pending <= 0 && !loaded) { loaded = true; render(); } }
-    db.collection("postings").onSnapshot(function (s) { collect("postings", "postings", s); ready(); }, onErr("postings"));
-    db.collection("decisions").onSnapshot(function (s) { collect("decisions", "decisions", s); ready(); }, onErr("decisions"));
-    db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.run = s.empty ? null : s.docs[0].data(); ready(); render(); }, onErr("runs"));
-    db.collection("deep").onSnapshot(function (s) { collect("deep", "deep", s); }, onErr("deep evaluations"));
-    db.collection("rescores").onSnapshot(function (s) { collect("rescores", "rescores", s); }, onErr("scores"));
-    db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { D.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions"));
-    db.collection("requests").onSnapshot(function (s) { collect("requests", "requests", s); }, onErr("requests"));
-    db.collection("requests_done").onSnapshot(function (s) { collect("requests_done", "done", s); }, onErr("requests"));
-    db.collection("resumes").onSnapshot(function (s) { collect("resumes", "resumes", s); }, onErr("resumes"));
-    db.collection("source_switches").onSnapshot(function (s) { collect("source_switches", "switches", s); }, onErr("sources"));
-    db.collection("sources").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.sources = s.empty ? null : s.docs[0].data(); render(); }, onErr("sources"));
+    var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1 };
+    function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); } }
+    function onErr(name, what) { return function () { ready(name); toast("Lost the live connection to " + what + ". Reload the page."); }; }
+    function watch(name, target, label) { db.collection(name).onSnapshot(function (s) { collect(target, s); ready(name); }, onErr(name, label)); }
+    watch("postings", "postings", "postings");
+    watch("decisions", "decisions", "your decisions");
+    watch("requests", "requests", "requests");
+    watch("requests_done", "done", "requests");
+    watch("deep", "deep", "deep evaluations");
+    watch("rescores", "rescores", "scores");
+    watch("resumes", "resumes", "resumes");
+    watch("source_switches", "switches", "sources");
+    db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.run = s.empty ? null : s.docs[0].data(); ready("runs"); render(); }, onErr("runs", "the run status"));
+    db.collection("sources").orderBy("at", "desc").limit(1).onSnapshot(function (s) { D.sources = s.empty ? null : s.docs[0].data(); ready("sources"); render(); }, onErr("sources", "sources"));
+    db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { D.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions", "suggestions"));
   })();
 })();
 </script>

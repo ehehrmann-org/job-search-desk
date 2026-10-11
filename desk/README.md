@@ -7,11 +7,17 @@ Job Search Desk additions on top of upstream career-ops. Upstream files stay unt
 | `lib/scoring.mjs` | Scorer: deal-breakers, bucket-weighted dimensions (3/2/1), threshold, dream companies, candidacy gaps, quote checks, extraction brief |
 | `score.mjs` | CLI. `--check` validates `config/scoring.yml`, `--brief` prints the extraction brief for the daily task, otherwise scores extraction JSON |
 | `test-scoring.mjs` | Scores `config/scoring-cases.yml` (real decisions) and reports agreement, e.g. "6 of 8" |
-| `test/scoring.test.mjs` | Unit tests: `node --test desk/test/scoring.test.mjs` |
+| `test/*.test.mjs` | Unit tests: `node --test desk/test/*.test.mjs` |
 | `templates/scoring.example.yml` | Starting point for setup step 5 |
 | `fetch-pending-jds.mjs` | Runs in the daily scan: saves each pending posting's description to `jds/<id>.md` |
 | `page-sync.mjs` | `pull` page clicks into the repo, `push` new postings and the run status out as ArtifactData batch files, `ack` after a batch is written |
 | `lib/page-docs.mjs` | Builds the page documents (contract in `DB.md`) |
+| `lib/env.mjs` | Shared paths (`ROOT`, `DATA`), entry-point check, safe ids, strict YAML reads |
+| `lib/urls.mjs` | Clean posting links (alert tracking removed) and the "seen before" key |
+| `lib/boards.mjs` | Which job board reader the scan would use for a company or link |
+| `lib/blocklist.mjs` | Built-in and personal block lists (upstream's `data/blacklist.md` format) |
+| `save.sh` | Commit and push to main, retrying when the scan saved at the same time |
+| `../.claude/agents/` | `desk-extractor` (sonnet) and `desk-evaluator` (opus): read and write only |
 | `page/` | The page: `style.css` + `body.html`, assembled by `node desk/page/build.mjs` into `page/dist/job-search-desk.html` |
 | `DB.md` | Page database contract: who writes which collection |
 | `DAILY-TASK.md`, `daily.mjs` | The daily run's runbook and its deterministic steps |
@@ -23,4 +29,4 @@ Job Search Desk additions on top of upstream career-ops. Upstream files stay unt
 | `suggest.mjs` | Sunday scoring suggestions from skips and picks; applies approved ones and rescores open jobs (no model calls) |
 | `lists/`, `packs/` | Built-in block list of reposting services; ready-made source packs for setup step 7 |
 
-All commands read the profile from `$CAREER_OPS_DATA_DIR` (always `profile`).
+All commands read the profile from `$CAREER_OPS_DATA_DIR` (default and always `profile`). The daily scan (`.github/workflows/daily-scan.yml`) runs at 3:13 and 9:13 UTC; the daily run is a scheduled Claude task at 6:27 AM the user's time.

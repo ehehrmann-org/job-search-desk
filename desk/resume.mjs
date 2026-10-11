@@ -13,8 +13,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const DATA = path.resolve(ROOT, process.env.CAREER_OPS_DATA_DIR || 'profile');
+import { DATA, isMain } from './lib/env.mjs';
 
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -53,11 +52,14 @@ export function toText(md) {
 
 /** Numbers (with %, $, K/M suffixes) in the resume that never appear in the master. */
 export function unsupportedNumbers(md, master) {
-  const norm = s => s.toLowerCase().replace(/,/g, '');
+  const norm = s => s.toLowerCase().replace(/(\d),(?=\d{3}\b)/g, '$1').replace(/\$\s+/g, '$');
   const m = norm(master);
-  const nums = norm(md.replace(/<!--[\s\S]*?-->/g, '')).match(/\$?\d+(?:\.\d+)?\s?(?:%|k|m|x|\+)?/g) || [];
+  const nums = norm(md.replace(/<!--[\s\S]*?-->/g, '')).match(/\$?\d+(?:\.\d+)?\s?(?:%|k\b|m\b|x\b|\+)?/g) || [];
   const years = /^(19|20)\d\d$/;
-  return [...new Set(nums.map(n => n.trim()))].filter(n => !years.test(n) && n.replace(/\D/g, '').length && !m.includes(n));
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Whole numbers only: "35%" is not backed by "135%", and "2" is not backed by "2026".
+  const inMaster = n => new RegExp(`(^|[^\\d.])${esc(n)}(?!\\d|\\.\\d)`).test(m);
+  return [...new Set(nums.map(n => n.trim()))].filter(n => !years.test(n) && /\d/.test(n) && !inMaster(n));
 }
 
 async function launch() {
@@ -90,10 +92,12 @@ async function build(file) {
   } finally { await browser.close(); }
 }
 
-const [cmd, file] = process.argv.slice(2);
-if (cmd === 'build' && file) build(file).catch(e => { console.error(`resume: ${e.message}`); process.exit(1); });
-else if (cmd === 'check' && file) {
-  const bad = unsupportedNumbers(fs.readFileSync(file, 'utf8'), fs.readFileSync(path.join(DATA, 'cv.md'), 'utf8'));
-  console.log(bad.length ? `Not in the master resume: ${bad.join(', ')}` : 'Every number is in the master resume.');
-  if (bad.length) process.exitCode = 1;
-} else { console.error('usage: resume.mjs build <resumes/x.md> | check <resumes/x.md>'); process.exit(2); }
+if (isMain(import.meta.url)) {
+  const [cmd, file] = process.argv.slice(2);
+  if (cmd === 'build' && file) build(file).catch(e => { console.error(`resume: ${e.message}`); process.exit(1); });
+  else if (cmd === 'check' && file) {
+    const bad = unsupportedNumbers(fs.readFileSync(file, 'utf8'), fs.readFileSync(path.join(DATA, 'cv.md'), 'utf8'));
+    console.log(bad.length ? `Not in the master resume: ${bad.join(', ')}` : 'Every number is in the master resume.');
+    if (bad.length) process.exitCode = 1;
+  } else { console.error('usage: resume.mjs build <resumes/x.md> | check <resumes/x.md>'); process.exit(2); }
+}

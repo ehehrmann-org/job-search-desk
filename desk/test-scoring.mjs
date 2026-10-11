@@ -27,12 +27,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as yaml from 'js-yaml';
 import { loadScoringConfig, scorePosting, loadDreamCompanies, isDream } from './lib/scoring.mjs';
+import { DATA } from './lib/env.mjs';
 
-const DATA = process.env.CAREER_OPS_DATA_DIR || '.';
 const cfg = loadScoringConfig(path.join(DATA, 'config', 'scoring.yml'));
 const casesFile = path.join(DATA, 'config', 'scoring-cases.yml');
 if (!fs.existsSync(casesFile)) { console.log('No scoring-cases.yml yet. Setup step 11 creates it.'); process.exit(0); }
-const cases = yaml.load(fs.readFileSync(casesFile, 'utf8')) || [];
+const cases = (yaml.load(fs.readFileSync(casesFile, 'utf8')) || []).filter(c => c && c.input && typeof c.input === 'object');
 const dreams = loadDreamCompanies(path.join(DATA, 'portals.yml'));
 
 let agree = 0, counted = 0;

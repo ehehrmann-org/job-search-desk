@@ -17,8 +17,8 @@ import path from 'node:path';
 import * as yaml from 'js-yaml';
 import { loadScoringConfig, validateScoringConfig, scorePosting } from './lib/scoring.mjs';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const DATA = path.resolve(ROOT, process.env.CAREER_OPS_DATA_DIR || 'profile');
+import { ROOT, DATA, isMain } from './lib/env.mjs';
+import { loadDreamCompanies, isDream } from './lib/scoring.mjs';
 const STATE = path.join(DATA, '.setup-state.json');
 const f = (...p) => path.join(DATA, ...p);
 
@@ -37,7 +37,7 @@ export const STEPS = [
   { n: 12, title: 'Go live', min: 5, session: 2 },
 ];
 
-const readState = () => { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch { return { steps: {} }; } };
+const readState = () => { try { const s = JSON.parse(fs.readFileSync(STATE, 'utf8')); return s && typeof s.steps === 'object' ? s : { steps: {} }; } catch { return { steps: {} }; } };
 const writeState = s => { fs.mkdirSync(path.dirname(STATE), { recursive: true }); fs.writeFileSync(STATE, JSON.stringify(s, null, 2) + '\n'); };
 const readYaml = (p, d) => { try { return yaml.load(fs.readFileSync(p, 'utf8')) ?? d; } catch { return d; } };
 const exists = p => fs.existsSync(p);
@@ -62,6 +62,7 @@ const CHECKS = {
     if (!p?.candidate?.full_name) out.push('profile.yml has no name');
     if (!p?.target_roles?.primary?.length) out.push('profile.yml has no target roles');
     if (!p?.location?.city) out.push('profile.yml has no location');
+    if (!p?.location?.timezone) out.push('profile.yml has no time zone (location.timezone, e.g. America/Chicago); step 12 needs it for the daily run');
     const portals = readYaml(f('portals.yml'), {});
     if (!portals?.title_filter?.positive?.length) out.push('portals.yml has no job titles to look for');
     if (!(portals?.location_filter?.allow || []).length) out.push('portals.yml has no locations to allow (location_filter.allow)');
@@ -74,6 +75,7 @@ const CHECKS = {
     try { cfg = readYaml(f('config', 'scoring.yml'), null); } catch { cfg = null; }
     if (!cfg) return ['scoring.yml is missing'];
     out.push(...validateScoringConfig(cfg));
+    if (!(cfg.history || []).some(h => /step 5/i.test(String(h)))) out.push('scoring.yml history has no "step 5" line recording that she approved the first version');
     const emp = readYaml(f('config', 'desk.yml'), {}).current_employer;
     if (emp && emp !== 'none' && !(cfg.dealbreakers?.excluded_companies || []).some(c => String(c).toLowerCase() === String(emp).toLowerCase()))
       out.push(`the current employer (${emp}) is not in excluded_companies`);
@@ -100,10 +102,11 @@ const CHECKS = {
   9: () => {
     const cv = exists(f('cv.md')) ? fs.readFileSync(f('cv.md'), 'utf8') : '';
     const bullets = (cv.match(/^\s*[-*] .+/gm) || []).length;
-    const stories = exists(f('interview-prep', 'story-bank.md'));
+    const bank = exists(f('interview-prep', 'story-bank.md')) ? fs.readFileSync(f('interview-prep', 'story-bank.md'), 'utf8') : '';
+    const stories = (bank.match(/^#{2,3} \S/gm) || []).length;
     const out = [];
     if (bullets < 8) out.push(`the master resume has ${bullets} bullets; aim for 8 to 12 approved achievement bullets`);
-    if (!stories) out.push('interview-prep/story-bank.md (one story per theme) is missing');
+    if (stories < 3) out.push(`interview-prep/story-bank.md has ${stories} stories (one "## " heading each); write at least 3, one per theme`);
     return out;
   },
   10: () => {
@@ -119,13 +122,16 @@ const CHECKS = {
     return out;
   },
   11: () => {
-    const cases = readYaml(f('config', 'scoring-cases.yml'), []);
+    const cases = (readYaml(f('config', 'scoring-cases.yml'), []) || []).filter(c => c?.input && typeof c.input === 'object');
     const counted = cases.filter(c => c.decision === 'apply' || c.decision === 'skip');
-    if (cases.length < 8) return [`${cases.length} test postings recorded; step 11 uses 8`];
+    if (cases.length < 5) return [`${cases.length} test postings recorded; step 11 needs at least 5 (8 when the scan found enough)`];
     let cfg; try { cfg = loadScoringConfig(f('config', 'scoring.yml')); } catch (e) { return [e.message]; }
-    const agree = counted.filter(c => { const r = scorePosting(c.input, cfg); return c.decision === 'apply' ? r.status === 'qualified' : r.status !== 'qualified'; }).length;
+    if (counted.length < 4) return [`only ${counted.length} of the test postings got a Would apply or Wouldn't; at least 4 are needed to measure agreement`];
+    const dreams = loadDreamCompanies(f('portals.yml'));
+    const agree = counted.filter(c => { const r = scorePosting(c.input, cfg, { dream: isDream(c.input.company, dreams) }); return c.decision === 'apply' ? r.status === 'qualified' : r.status !== 'qualified'; }).length;
     const changes = (cfg.history || []).filter(h => /step 11/i.test(String(h))).length;
-    return agree >= 6 || changes >= 3 ? [] : [`${agree} of ${counted.length} agree, and fewer than 3 changes were tried (record each accepted change in scoring.yml history with "step 11")`];
+    const target = Math.ceil(counted.length * 0.75);
+    return agree >= target || changes >= 3 ? [] : [`${agree} of ${counted.length} agree (${target} needed), and fewer than 3 changes were tried (record each accepted change in scoring.yml history with "step 11")`];
   },
   12: () => {
     const d = readYaml(f('config', 'desk.yml'), {});
@@ -159,6 +165,8 @@ function status() {
 }
 
 function start(n) {
+  if (!STEPS.some(x => x.n === Number(n))) throw new Error(`no step ${n}`);
+  n = Number(n);
   const s = readState();
   (s.steps[n] ||= {}).started = new Date().toISOString();
   writeState(s);
@@ -166,6 +174,7 @@ function start(n) {
 }
 
 function check(n) {
+  if (n && !CHECKS[Number(n)]) throw new Error(`no step ${n}`);
   const list = n ? [Number(n)] : STEPS.map(x => x.n).filter(k => readState().steps[k]?.done);
   let bad = 0;
   for (const k of list) {
@@ -205,9 +214,12 @@ function init() {
 /** Step 11: 8 scored postings, about 3 high, 3 middle, 2 low, spread across title families. */
 function sample() {
   const dir = f('data', 'scores');
-  const recs = exists(dir) ? fs.readdirSync(dir).filter(x => x.endsWith('.json')).map(x => JSON.parse(fs.readFileSync(path.join(dir, x), 'utf8'))) : [];
-  const scored = recs.filter(r => typeof r.verdict.score === 'number' && r.facts !== undefined);
-  if (scored.length < 8) { console.log(JSON.stringify({ error: `only ${scored.length} scored postings without a deal-breaker; run the first scan and score at least 8` })); return; }
+  const recs = exists(dir) ? fs.readdirSync(dir).filter(x => x.endsWith('.json')).map(x => { try { return JSON.parse(fs.readFileSync(path.join(dir, x), 'utf8')); } catch { return null; } }) : [];
+  const scored = recs.filter(r => typeof r?.verdict?.score === 'number' && fs.existsSync(f('data', 'extractions', `${r.verdict.id}.json`)));
+  if (scored.length < 8) {
+    console.log(JSON.stringify({ short: true, scored: scored.length, picked: scored.map(r => ({ id: r.verdict.id, jd_file: `jds/${r.verdict.id}.md` })), note: 'fewer than 8 scored postings without a deal-breaker: score more first (daily.mjs todo --cap 20), or add live postings found by web search (see SETUP step 11)' }, null, 2));
+    return;
+  }
   const family = r => String(r.title || r.verdict.title || '').toLowerCase().replace(/\b(senior|sr|lead|head|director|vp|vice president|manager|of|the|and|associate|principal)\b/g, '').replace(/[^a-z ]/g, ' ').trim().split(/\s+/).slice(0, 2).join(' ');
   const sorted = [...scored].sort((a, b) => b.verdict.score - a.verdict.score);
   const third = Math.ceil(sorted.length / 3);
@@ -226,13 +238,14 @@ function sample() {
 
 /** Steps 6 and 7: does the daily scan have a reader for this careers or job board link? */
 async function board(url) {
-  const { loadProviders, resolveProvider } = await import('../providers/_registry.mjs');
-  const providers = await loadProviders(path.join(ROOT, 'providers'));
-  const r = resolveProvider({ name: 'check', careers_url: url }, providers, { skipIds: ['local-parser'] });
-  console.log(JSON.stringify(r?.provider ? { readable: true, board: r.provider.id } : { readable: false, note: 'no reader for this link; find the job board behind the careers page, or use a weekly web search' }));
+  const { boardFor } = await import('./lib/boards.mjs');
+  const id = url ? await boardFor(url) : null;
+  console.log(JSON.stringify(id ? { readable: true, board: id } : { readable: false, note: 'no reader for this link; find the job board behind the careers page, or use a weekly web search' }));
 }
 
-const [cmd, a, b] = process.argv.slice(2);
-const run = { board: () => board(a), status, start: () => start(a), done: () => done(a, b), check: () => { if (!check(a)) process.exitCode = 1; }, init, sample }[cmd];
-if (!run) { console.error('usage: setup.mjs status | start <step> | done <step> ["note"] | check [step] | init | sample | board <url>'); process.exit(2); }
-Promise.resolve().then(run).catch(e => { console.error(`setup: ${e.message}`); process.exit(1); });
+if (isMain(import.meta.url)) {
+  const [cmd, a, b] = process.argv.slice(2);
+  const run = { board: () => board(a), status, start: () => start(a), done: () => done(a, b), check: () => { if (!check(a)) process.exitCode = 1; }, init, sample }[cmd];
+  if (!run) { console.error('usage: setup.mjs status | start <step> | done <step> ["note"] | check [step] | init | sample | board <url>'); process.exit(2); }
+  Promise.resolve().then(run).catch(e => { console.error(`setup: ${e.message}`); process.exit(1); });
+}

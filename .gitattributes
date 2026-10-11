@@ -38,3 +38,9 @@ cops       text eol=lf
 *.ico   binary
 *.woff2 binary
 *.pdf   binary
+
+# Job Search Desk: the daily scan and the daily run both append to these.
+# Keep both sides' lines when their saves cross, instead of stopping on a conflict.
+profile/data/scan-history.tsv merge=union
+profile/data/scan-runs.tsv    merge=union
+profile/data/pipeline.md      merge=union

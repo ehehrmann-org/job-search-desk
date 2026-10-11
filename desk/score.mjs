@@ -15,9 +15,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import * as yaml from 'js-yaml';
-import { loadScoringConfig, scorePosting, buildExtractionBrief, loadDreamCompanies, isDream } from './lib/scoring.mjs';
+import { loadScoringConfig, scorePosting, buildExtractionBrief, loadDreamCompanies, isDream, cleanFacts } from './lib/scoring.mjs';
+import { readFrontMatter } from './lib/frontmatter.mjs';
+import { DATA, safeId } from './lib/env.mjs';
 
-const DATA = process.env.CAREER_OPS_DATA_DIR || '.';
 const CONFIG = path.join(DATA, 'config', 'scoring.yml');
 const args = process.argv.slice(2);
 
@@ -45,7 +46,10 @@ const results = (Array.isArray(input) ? input : [input]).map(x => {
   let jdText = x.jd_text;
   if (jdText == null && x.jd_file) {
     const p = path.resolve(DATA, x.jd_file);
-    if (p.startsWith(path.resolve(DATA)) && fs.existsSync(p)) jdText = fs.readFileSync(p, 'utf8');
+    if (p.startsWith(DATA + path.sep) && fs.existsSync(p)) {
+      const { meta, body } = readFrontMatter(p);
+      jdText = meta.jd === 'missing' || !body.trim() ? null : body;
+    }
   }
   return scorePosting(x, cfg, { dream: isDream(x.company, dreams), jdText });
 });
@@ -58,9 +62,9 @@ if (args.includes('--record')) {
   const list = Array.isArray(input) ? input : [input];
   results.forEach((r, i) => {
     const x = list[i];
-    if (!r.id || !/^[A-Za-z0-9_-]{1,64}$/.test(r.id)) { console.error(`not recorded: posting has no usable id (${r.company} / ${r.title})`); return; }
+    if (!safeId(r.id)) { console.error(`not recorded: posting has no usable id (${r.company} / ${r.title})`); return; }
     fs.writeFileSync(path.join(dir, `${r.id}.json`), JSON.stringify({
-      verdict: r, facts: x.facts || {}, company: x.company || null, title: x.title || null,
+      verdict: r, facts: cleanFacts(x.facts), company: x.company || null, title: x.title || null,
       suggested_resume: x.suggested_resume || null, scored_at: new Date().toISOString(),
     }, null, 2) + '\n');
   });

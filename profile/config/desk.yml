@@ -1,7 +1,7 @@
-# Job Search Desk settings. Setup writes these; "change my settings" in Claude edits them.
+# Job Search Desk settings. Setup writes these; the Scan sources tab turns Gmail alerts on and off.
 plan: ""               # Pro | Max 5x | Max 20x | Not sure (step 3)
 daily_cap: 10          # postings scored per day (step 3 sets it from the plan)
-deep_cap: 2            # deep evaluations per day
+deep_cap: 1            # deep evaluations per day (step 3 sets it from the plan)
 help_email: ""         # shown on the job page next to "Copy message for Erik"
 current_employer: ""   # step 4; "none" when not employed. Never shown jobs from it.
 gmail_alerts: true     # step 8

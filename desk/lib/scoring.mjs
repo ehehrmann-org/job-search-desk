@@ -110,7 +110,7 @@ export function normalizeCompany(name) {
 
 // "Herman Miller / MillerKnoll" matches either name. Substring matches need 4+ characters
 // on both sides and whole words, so "Ogilvy" matches "Ogilvy Health" but "Co" matches nothing.
-function companyMatches(a, b) {
+export function companyMatches(a, b) {
   const as = String(a ?? '').split('/').map(normalizeCompany).filter(Boolean);
   const bs = String(b ?? '').split('/').map(normalizeCompany).filter(Boolean);
   const word = (hay, needle) => needle.length > 3 && ` ${hay} `.includes(` ${needle} `);
@@ -128,6 +128,22 @@ function bandScore(value, bands) {
 
 const round2 = n => Math.round(n * 100) / 100;
 
+// The model sometimes writes numbers as text ("150,000", "$180K"); anything else unreadable is null.
+const NUMERIC_FACTS = ['base_bottom', 'base_top', 'base_top_stated', 'employees', 'office_days'];
+function toNumber(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  const m = String(v).toLowerCase().replace(/[$,\s]/g, '').match(/^(\d+(?:\.\d+)?)(k|m)?$/);
+  if (!m) return null;
+  return Number(m[1]) * (m[2] === 'k' ? 1e3 : m[2] === 'm' ? 1e6 : 1);
+}
+export function cleanFacts(f) {
+  const out = f && typeof f === 'object' && !Array.isArray(f) ? { ...f } : {};
+  for (const k of NUMERIC_FACTS) out[k] = toNumber(out[k]);
+  out.pay_includes_variable = out.pay_includes_variable === true || out.pay_includes_variable === 'true';
+  return out;
+}
+
 // ---------------------------------------------------------------- scoring
 
 /**
@@ -137,8 +153,7 @@ const round2 = n => Math.round(n * 100) / 100;
  * @param {object} [opts] - { dream: boolean, jdText: string }
  */
 export function scorePosting(x, cfg, opts = {}) {
-  const facts = x.facts || {};
-  const ev = facts.evidence || {};
+  const facts = cleanFacts(x.facts);
   const jd = opts.jdText != null ? norm(opts.jdText) : (x.jd_text ? norm(x.jd_text) : null);
   const out = {
     id: x.id ?? null, company: x.company ?? null, title: x.title ?? null, url: x.url ?? null,
@@ -158,6 +173,10 @@ export function scorePosting(x, cfg, opts = {}) {
     if (!quote || !String(quote).trim()) { out.evidence_issues.push(`${field}: no quote`); return; }
     if (jd && !jd.includes(norm(quote))) out.evidence_issues.push(`${field}: quote not found in the posting`);
   };
+
+  // ---- quotes behind the facts
+  const ev = facts.evidence && typeof facts.evidence === 'object' ? facts.evidence : {};
+  for (const [k, q] of Object.entries(ev)) if (typeof q === 'string' && q.trim()) checkQuote(`fact ${k}`, q);
 
   // ---- deal-breakers
   const db = cfg.dealbreakers;
@@ -209,7 +228,8 @@ export function scorePosting(x, cfg, opts = {}) {
     else out.evidence_issues.push(`industry_excluded "${facts.industry_excluded}" is not one listed in scoring.yml`);
   }
 
-  for (const h of x.dealbreakers_hit || []) {
+  for (const h of Array.isArray(x.dealbreakers_hit) ? x.dealbreakers_hit : []) {
+    if (!h || typeof h !== 'object') continue;
     const rule = db.other.find(r => norm(r) === norm(h.rule));
     if (!rule) { out.evidence_issues.push(`dealbreakers_hit "${h.rule}" is not one listed in scoring.yml`); continue; }
     checkQuote(`deal-breaker "${rule}"`, h.evidence);
@@ -217,7 +237,7 @@ export function scorePosting(x, cfg, opts = {}) {
   }
 
   // ---- candidacy (the employer's bar, not the user's preferences)
-  const cand = Array.isArray(x.candidacy) ? x.candidacy : [];
+  const cand = (Array.isArray(x.candidacy) ? x.candidacy : []).filter(c => c && typeof c === 'object');
   cand.forEach((c, i) => checkQuote(`requirement ${i + 1} (${c.requirement || 'unlabelled'})`, c.evidence));
   const C = cfg.candidacy;
   out.candidacy_gaps = cand.map(c => ({
@@ -247,7 +267,7 @@ export function scorePosting(x, cfg, opts = {}) {
       out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score, why, source: 'fact' });
       continue;
     }
-    const r = x.ratings?.[d.id];
+    const r = x.ratings && Object.hasOwn(x.ratings, d.id) ? x.ratings[d.id] : null;
     if (!r || typeof r.score !== 'number' || r.score < 0 || r.score > 5) {
       out.evidence_issues.push(`${d.id}: no rating from 0 to 5`);
       out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score: null, why: 'Not rated', source: 'judged' });

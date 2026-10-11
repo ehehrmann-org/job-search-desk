@@ -4,17 +4,20 @@ name: daily-scan
 # Runs upstream career-ops scan.mjs against the user's sources in profile/
 # and commits the results back, so the cloud scoring task can read them.
 #
-# Schedule is UTC. 10:13 UTC = 5:13 AM Central (summer) / 4:13 AM (winter),
-# about an hour before the scoring task. Off the hour on purpose: GitHub
-# delays or skips heavily contended :00 schedules.
+# Two fixed times, both UTC, both before 6:27 AM anywhere in the mainland US
+# (when the daily run reads the results): 3:13 and 9:13. The second run is a
+# safety net, since GitHub sometimes skips scheduled runs; when the first one
+# worked it finds little that is new. Off the hour on purpose: GitHub delays
+# heavily contended :00 schedules. The times are fixed so nobody has to edit
+# this file (Claude's GitHub access can't change it).
 #
-# A push to the scan-now branch triggers a run without API access; the
-# scoring task and the setup flow push an empty commit there to start a
-# scan on demand. Every run scans and commits on main, whatever the trigger.
+# A push to the scan-now branch triggers a run on demand (setup step 7).
+# Every run scans and commits on main, whatever the trigger.
 
 on:
   schedule:
-    - cron: "13 10 * * *"
+    - cron: "13 3 * * *"
+    - cron: "13 9 * * *"
   workflow_dispatch: {}
   push:
     branches: [scan-now]
@@ -29,6 +32,10 @@ concurrency:
 env:
   CAREER_OPS_DATA_DIR: profile
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   scan:
@@ -49,22 +56,35 @@ jobs:
         id: ready
         run: |
           if [ -f profile/.setup-state.json ] || [ -f profile/cv.md ]; then echo "go=true" >> "$GITHUB_OUTPUT"; else echo "Setup has not started yet; nothing to scan."; fi
+      # A failed scan is recorded (scan-runs.tsv, last-scan.log) and shown on the job page;
+      # the run itself still succeeds, so GitHub doesn't email her about it.
       - name: Scan job boards
         if: steps.ready.outputs.go == 'true'
-        run: node scan.mjs --quiet 2>&1 | tee profile/data/last-scan.log
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          node scan.mjs --quiet 2>&1 | tee profile/data/last-scan.log
       - name: Save job descriptions
         if: always() && steps.ready.outputs.go == 'true'
-        run: node desk/fetch-pending-jds.mjs 2>&1 | tee -a profile/data/last-scan.log
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          node desk/fetch-pending-jds.mjs 2>&1 | tee -a profile/data/last-scan.log
       - name: Commit results
-        if: always()
+        if: always() && steps.ready.outputs.go == 'true'
         run: |
           git config user.name "job-search-desk-bot"
           git config user.email "actions@users.noreply.github.com"
           git add profile/data profile/jds || true
           if git diff --cached --quiet; then
             echo "No changes to commit."
-          else
-            git commit -m "scan: $(date -u +%F) results"
-            git pull --rebase origin main || true
-            git push origin HEAD:main
+            exit 0
           fi
+          git commit -qm "scan: $(date -u +%F) results"
+          for i in 1 2 3; do
+            if git pull -q --rebase origin main && git push -q origin HEAD:main; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((i * 10))
+          done
+          echo "Could not save the scan results after 3 tries."
+          exit 1

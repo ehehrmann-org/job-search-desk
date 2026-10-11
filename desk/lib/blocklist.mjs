@@ -3,9 +3,10 @@
 // scan.mjs already honours). Matching is upstream's: case- and punctuation-insensitive.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseBlacklist, findBlacklistEntry } from '../../scan.mjs';
 
-const SYSTEM = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'lists', 'reposting-services.md');
+const SYSTEM = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'lists', 'reposting-services.md');
 export const BLACKLIST_HEADER = `# Company Blacklist
 
 Companies you never want to see. The Job Search Desk page adds a row when you skip a job with "Never show jobs from this company", and removes it when you unblock. You can also edit this table by hand.
@@ -34,7 +35,7 @@ export function listBlocked(lists) {
   return rows;
 }
 
-const cell = s => String(s ?? '').replace(/[|\n\r]+/g, ' ').trim();
+const cell = s => String(s ?? '').replace(/[|\n\r\t]+/g, ' ').replace(/ {2,}/g, ' ').trim();
 
 export function addToBlacklist(dataDir, company, reason, since) {
   const f = path.join(dataDir, 'data', 'blacklist.md');

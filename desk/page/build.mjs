@@ -2,7 +2,8 @@
 // Assembles the Job Search Desk page from style.css and body.html into dist/job-search-desk.html.
 import fs from 'node:fs';
 import path from 'node:path';
-const dir = path.dirname(new URL(import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+const dir = path.dirname(fileURLToPath(import.meta.url));
 const css = fs.readFileSync(path.join(dir, 'style.css'), 'utf8');
 const body = fs.readFileSync(path.join(dir, 'body.html'), 'utf8');
 const head = `<title>Job Search Desk</title>
