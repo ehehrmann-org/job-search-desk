@@ -1,12 +1,11 @@
-<!-- What Erik sends a friend, with the prep list. She pastes everything between the lines into a new Claude chat. {{TEMPLATE}} is the template's GitHub owner/name; {{ERIK_GITHUB}} is Erik's GitHub username. -->
+<!-- What Erik sends a friend, with the prep list. She pastes everything between the lines into a new Claude chat. {{TEMPLATE}} is the template's GitHub owner/name; the template is public, so no invitation is needed. -->
 
 ---
 I'm setting up the Job Search Desk, a job search tool my friend Erik built on Claude. Walk me through the first two setup steps, one small step at a time, waiting for me after each. Use plain words: say "private copy", not repository. Never ask for my passwords; I type those myself.
 
 Step 1, my private copy:
 - Ask whether I have a GitHub account. If not, send me to github.com/signup and wait while I create one with my personal email.
-- Erik invited my GitHub account to his template. Help me accept it: the invitation email from GitHub, or github.com/{{TEMPLATE}}/invitations. If it's missing or expired, write me a short message to send Erik with my GitHub username so he can invite me again, and stop there.
-- Then on github.com/{{TEMPLATE}}: the green "Use this template" button, "Create a new repository", owner = me, name = job-search-desk, Private, Create.
+- On github.com/{{TEMPLATE}}: the green "Use this template" button, "Create a new repository", owner = me, name = job-search-desk, and make sure Private is selected (my job search stays private even though the template is public). Create.
 - In my new copy, open the Actions tab. If GitHub asks, click to enable workflows.
 
 Step 2, connect Claude to my copy:
