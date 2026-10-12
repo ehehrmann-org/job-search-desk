@@ -432,8 +432,8 @@
     kids.push(el("pre", { class: "msg", text: msg }));
     if (runState().ok) kids.push(el("p", { class: "sub", text: "Run now, next to this button, does the part of the morning run you'd otherwise wait for: it reads your clicks, writes deep evaluations for jobs you marked Interested and updates this page, in about 10 minutes. New jobs still arrive with the morning run." }));
     kids.push(el("div", { class: "btns", style: "justify-content:flex-start" }, [
-      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, [ic("copy"), "Copy for Erik"]),
-      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
+      el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"]),
+      el("button", { class: "b primary", "data-k": "help-copy", onclick: function () { copy(msg, "Copied. Paste it into an email to Erik."); } }, [ic("copy"), "Copy for Erik"])
     ]));
     hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
       el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title" }, kids)
@@ -499,8 +499,8 @@
         el("div", { class: "s2", text: x.why }),
         el("div", { class: "s2 muted", text: "What changes: " + x.change }),
         el("div", { class: "btns", style: "justify-content:flex-start" }, [
-          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, [ic("check"), "Approve"]),
-          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, [ic("clock"), "Not now"])
+          el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "decline_suggestion", week: sg.week, sid: x.id }, "Okay, not now."); } }, [ic("clock"), "Not now"]),
+          el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "apply_suggestion", week: sg.week, sid: x.id }, "Approved. It applies in the next run."); } }, [ic("check"), "Approve"])
         ])
       ]));
     });
@@ -536,8 +536,8 @@
       el("label", { for: "aj-text", text: "Found a job yourself? Add it here. It gets scored like everything else." }),
       ta, radios,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", type: "submit", disabled: addBusy || !canWrite }, [addBusy ? "Adding…" : "Add job"]),
-        el("button", { class: "b", type: "button", onclick: function () { addOpen = false; render(); } }, ["Cancel"])
+        el("button", { class: "b", type: "button", onclick: function () { addOpen = false; render(); } }, ["Cancel"]),
+        el("button", { class: "b primary", type: "submit", disabled: addBusy || !canWrite }, [addBusy ? "Adding…" : "Add job"])
       ])
     ]);
   }
@@ -589,30 +589,32 @@
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
     var off = !canWrite || !!writing[p.id];
     function act(label, key, fn, extra, icon) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [icon ? ic(icon) : null, label]); }
+    // The preferred next step is always the rightmost button, in the "pref" style.
+    var PREF = { class: "b pref" };
     if (s === "new" || s === "interested") {
-      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, { class: "b primary" }, "bookmark-simple"));
-      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, { class: "b primary", "aria-expanded": String(drawer[p.id] === "resume") }, "paper-plane-tilt"));
       btns.appendChild(act("Skip", "skip", function () { toggleDrawer(p.id, "skip"); }, { "aria-expanded": String(drawer[p.id] === "skip") }, "x"));
+      if (s === "new") btns.appendChild(act("Interested", "int", function () { saveDecision(p.id, { status: "interested" }, "Moved to Interested. Deep evaluation queued for the next run."); }, PREF, "bookmark-simple"));
+      else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, Object.assign({ "aria-expanded": String(drawer[p.id] === "resume") }, PREF), "paper-plane-tilt"));
       if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
         more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, [ic("copy"), "Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
-      var next = s === "applied" ? [["screen", "Interviewing", "chats-circle"]] : [["offer", "Offer", "handshake"]];
-      next.forEach(function (n) { btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); }, null, n[2])); });
-      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
       btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }, null, "sign-out"));
+      btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: s }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
+      var n = s === "applied" ? ["screen", "Interviewing", "chats-circle"] : ["offer", "Offer", "handshake"];
+      btns.appendChild(act(n[1], n[0], function () { saveDecision(p.id, { status: n[0] }, "Moved to " + LABEL[n[0]]); }, PREF, n[2]));
       btns.className = "btns one";
       var left = windowLeft(p.id);
       if (left !== null) main.appendChild(el("div", { class: "when" }, [ic("hourglass-medium"), "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back"]));
     } else if (s === "offer") {
-      btns.appendChild(act("Offer accepted", "acc", function () { saveDecision(p.id, { status: "accepted", lost_at: null }, "Moved to Closed: offer accepted. Congratulations!"); }, { class: "b primary" }, "check"));
       btns.appendChild(act("Offer declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed: offer declined"); }, null, "x-circle"));
+      btns.appendChild(act("Offer accepted", "acc", function () { saveDecision(p.id, { status: "accepted", lost_at: null }, "Moved to Closed: offer accepted. Congratulations!"); }, PREF, "check"));
     } else if (s === "noresp") {
       // They answered after all: back to the stage where it went quiet, with a fresh date.
       var back = e.lost_at === "applied" ? "screen" : e.lost_at;
-      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, null, "arrow-bend-up-left"));
       btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
+      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, PREF, "arrow-bend-up-left"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
       btns.appendChild(act("Reopen", "reo", function () { var pv = s === "accepted" ? "offer" : dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
@@ -676,13 +678,13 @@
       el("label", { for: key, text: "Paste the job description. The next run rescores the job from it (Run now does it right away)." }),
       ta,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
+        el("button", { class: "b", onclick: function () { delete drafts.desc[p.id]; toggleDrawer(p.id, "desc"); } }, ["Cancel"]),
         el("button", { class: "b primary", "data-k": "d-" + p.id + "-descgo", disabled: off, onclick: async function () {
           var t = String(drafts.desc[p.id] || "").trim();
           if (t.length < 200) { toast("That's too short for a job description. Paste the whole description."); return; }
           var rid = await saveRequest({ kind: "add_description", posting: p.id, text: t.slice(0, 60000) }, "Saved. The next run rescores this job from the description.");
           if (rid) { delete drafts.desc[p.id]; drawer[p.id] = null; render(); }
-        } }, ["Save description"]),
-        el("button", { class: "b", onclick: function () { delete drafts.desc[p.id]; toggleDrawer(p.id, "desc"); } }, ["Cancel"])
+        } }, ["Save description"])
       ])
     ]);
   }
@@ -702,6 +704,7 @@
       chips,
       p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
+        el("button", { class: "b", onclick: function () { delete drafts.skip[p.id]; toggleDrawer(p.id, "skip"); } }, ["Cancel"]),
         el("button", { class: "b primary", "data-k": "d-" + p.id + "-skipgo", disabled: off, onclick: async function () {
           var reasons = REASONS.filter(function (k) { return dr.reasons[k]; });
           var blockIt = !!dr.block && p.company && !p.pending;
@@ -709,8 +712,7 @@
           if (!ok) return;
           delete drafts.skip[p.id];
           if (blockIt) await saveRequest({ kind: "block_company", company: p.company, reason: reasons.length ? "Skipped: " + reasons.join(", ") : "Skipped from the job page" }, "Skipped, and " + p.company + " is blocked from now on.");
-        } }, ["Skip it"]),
-        el("button", { class: "b", onclick: function () { delete drafts.skip[p.id]; toggleDrawer(p.id, "skip"); } }, ["Cancel"])
+        } }, ["Skip it"])
       ])
     ]);
   }
@@ -734,13 +736,13 @@
       el("p", { text: "Which resume did you send? Stats compare how each one does." }),
       opts,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
+        el("button", { class: "b", onclick: function () { delete drafts.res[p.id]; toggleDrawer(p.id, "resume"); } }, ["Cancel"]),
         el("button", { class: "b primary", "data-k": "d-" + p.id + "-appgo", disabled: off, onclick: async function () {
           var choice = drafts.res[p.id];
           var ok = isApplied ? await saveDecision(p.id, { sent: choice }, "Saved")
             : await saveDecision(p.id, { status: "applied", sent: choice }, "Moved to Applied. The 21-day response window starts today.");
           if (ok) delete drafts.res[p.id];
-        } }, [isApplied ? "Save" : "Mark applied"]),
-        el("button", { class: "b", onclick: function () { delete drafts.res[p.id]; toggleDrawer(p.id, "resume"); } }, ["Cancel"])
+        } }, [isApplied ? "Save" : "Mark applied"])
       ])
     ]);
   }
@@ -851,8 +853,8 @@
       if (handled) return;
       v.appendChild(el("div", { class: "note" }, [
         el("span", { text: "Missed by the scan: " + g.note }),
-        el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "add_source", text: g.url || g.company, gap: g.id, dream: true }, "Added as a dream company. The next run sets it up."); } }, ["Add as dream company"]),
-        el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "dismiss_gap", gap: g.id }, "Dismissed"); } }, ["Dismiss"])
+        el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "dismiss_gap", gap: g.id }, "Dismissed"); } }, ["Dismiss"]),
+        el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "add_source", text: g.url || g.company, gap: g.id, dream: true }, "Added as a dream company. The next run sets it up."); } }, ["Add as dream company"])
       ]));
     });
     var recent = recentResults();
@@ -1021,7 +1023,7 @@
       if (rid) { boardEdit = null; delete drafts.board[s.id]; render(); }
     } }, [
       el("label", { for: "board-" + s.id, text: "Open " + s.name + "'s careers page, click any job, and paste that link here. It usually reveals the job board behind the page." }),
-      el("div", { class: "fields" }, [inp, el("button", { class: "b primary", type: "submit", disabled: !canWrite }, ["Save"]), el("button", { class: "b", type: "button", onclick: function () { boardEdit = null; render(); } }, ["Cancel"])])
+      el("div", { class: "fields" }, [inp, el("button", { class: "b", type: "button", onclick: function () { boardEdit = null; render(); } }, ["Cancel"]), el("button", { class: "b primary", type: "submit", disabled: !canWrite }, ["Save"])])
     ])]);
   }
 

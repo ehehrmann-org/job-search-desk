@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.10.2 (2026-10-12)
+- The next step for each job (Interested, Applied, Interviewing, Offer, Offer accepted, They replied) is always the rightmost button, in a soft clay color. Save and confirm buttons sit to the right of Cancel everywhere.
+
 ## 0.10.1 (2026-10-12)
 - The version, your plan and the last run moved to a footer at the bottom of the page.
 - Run now explains what it does when you point at it, before you click.
