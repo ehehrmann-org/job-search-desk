@@ -353,3 +353,31 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 /* Pasting a description inside a job card */
 .drawer.addjob { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 10px 0 0; background: none; }
 .drawer.addjob textarea { min-height: 140px; }
+
+/* Footer: version, plan and the last run, small and quiet */
+.pagefoot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding-top: 14px; margin-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.pagefoot .meta-line { font-size: 12px; }
+/* State pills on job cards: color and icon by stage */
+:root { --p-clay-bg: #f6e9e2; --p-clay: #a24a28; --p-amber-bg: #fbf0dc; --p-amber: #7a5300; --p-blue-bg: #e7eef6; --p-blue: #2d5a88;
+  --p-green-bg: #e3f1e8; --p-green: #22693f; --p-red-bg: #f8e4e1; --p-red: #a3352a; --p-gray-bg: #efede6; --p-gray: #5e5d58; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
+  --p-green-bg: #1f3428; --p-green: #8fd3a8; --p-red-bg: #3d2421; --p-red: #f0a197; --p-gray-bg: #3a3a37; --p-gray: #c2c0b6; } }
+:root[data-theme="dark"] { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
+  --p-green-bg: #1f3428; --p-green: #8fd3a8; --p-red-bg: #3d2421; --p-red: #f0a197; --p-gray-bg: #3a3a37; --p-gray: #c2c0b6; }
+.state { text-transform: none; letter-spacing: 0; }
+.pill2 { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-body); font-size: 12px; font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 999px; white-space: nowrap; }
+.pill2 .ic { width: 14px; height: 14px; }
+.p-clay { background: var(--p-clay-bg); color: var(--p-clay); } .p-amber { background: var(--p-amber-bg); color: var(--p-amber); }
+.p-blue { background: var(--p-blue-bg); color: var(--p-blue); } .p-green { background: var(--p-green-bg); color: var(--p-green); }
+.p-red { background: var(--p-red-bg); color: var(--p-red); } .p-gray { background: var(--p-gray-bg); color: var(--p-gray); }
+/* Card side: state at the top, buttons in the bottom right corner */
+.row .side { align-self: stretch; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.row .side > .btns, .row .side > .more { margin-top: auto; justify-self: auto; }
+.row .side > .more { margin-top: 0; }
+@media (max-width: 860px) { .row .side { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; } .row .side > .btns { margin-left: auto; justify-content: flex-end; } .row .side > .timer { flex: 1 1 100%; } }
+/* Title-only warning that opens the paste box */
+button.tag.act-q { cursor: pointer; text-decoration: underline; text-decoration-color: transparent; }
+button.tag.act-q:hover { text-decoration-color: currentColor; }
+/* A job card opened from the Resumes tab */
+.row.flash { outline: 2px solid var(--accent); outline-offset: 2px; transition: outline-color 1.5s ease; }
+.lrow.res .link { margin-top: 4px; }

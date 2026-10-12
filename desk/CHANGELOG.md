@@ -2,6 +2,14 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.10.1 (2026-10-12)
+- The version, your plan and the last run moved to a footer at the bottom of the page.
+- Run now explains what it does when you point at it, before you click.
+- A job scored from its title only shows one label that opens the paste box.
+- Each job's stage (New, Interested, Applied, Skipped, No response and the rest) shows as a colored label with an icon.
+- A job's buttons sit in the bottom right corner of its card.
+- On the Resumes tab, "Show the job" opens the job a tailored resume was made for.
+
 ## 0.10.0 (2026-10-12)
 - Your job page now uses the Claude app's colors and fonts, in light and dark.
 - An offer can be closed as Offer accepted or Offer declined; both move it to Closed.

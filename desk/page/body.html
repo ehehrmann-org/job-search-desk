@@ -1,7 +1,6 @@
 <div class="app">
   <header class="top">
-    <div class="brand">Job Search Desk<span class="ver" id="ver"></span></div>
-    <span class="meta-line" id="meta-line">Connecting…</span>
+    <div class="brand">Job Search Desk</div>
     <span id="run-host"></span>
     <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
   </header>
@@ -59,6 +58,7 @@
       <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
+  <footer class="pagefoot"><span class="ver" id="ver"></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -339,8 +339,10 @@
   }
   function runButton(label, key) {
     var st = runState(); if (!st.ok) return null;
-    return el("button", { class: "b runnow", "data-k": "runnow-" + key, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
+    var b = el("button", { class: "b runnow", "data-k": "runnow-" + key, "aria-describedby": "tip", disabled: st.running, onclick: function () { hideTip(); runNow(); } },
       [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+    explain(b, st.running ? "A short run is going. This page updates by itself when it's done." : "Don't want to wait for tomorrow morning? This reads your clicks, writes deep evaluations for jobs you marked Interested (up to " + st.deepCap + "), scores descriptions you pasted, and updates this page. Takes about 10 minutes. The job scan itself still runs each morning.");
+    return b;
   }
   // A newer version of the career tool, as the last run found it. Installing it changes the tool's own files,
   // which only Claude in a chat with her may do (she sees and approves it), so the button copies the request.
@@ -568,10 +570,8 @@
     if (p.jd === "missing" && p.status_hint !== "unscorable" && !p.pending) {
       var pastedReq = V.described[p.id];
       if (pastedReq && !D.done[pastedReq]) tags.appendChild(el("span", { class: "tag q" }, [ic("clock"), "Description saved: rescored in the next run"]));
-      else {
-        tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
-        if (canWrite) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "desc", "aria-expanded": String(drawer[p.id] === "desc"), onclick: function () { toggleDrawer(p.id, "desc"); } }, [ic("plus"), "Paste the description"]));
-      }
+      else if (canWrite) tags.appendChild(el("button", { class: "tag q act-q", "data-k": dk + "desc", "aria-expanded": String(drawer[p.id] === "desc"), title: "The description couldn't be read, so this job was scored from its title only", onclick: function () { toggleDrawer(p.id, "desc"); } }, [ic("warning-circle"), drawer[p.id] === "desc" ? "Scored from the title only · Hide" : "Scored from the title only · Paste the description"]));
+      else tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
     }
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
@@ -585,7 +585,7 @@
     row.appendChild(main);
 
     var side = el("div", { class: "side" });
-    side.appendChild(el("div", { class: "state", text: s === "withdrew" && e.lost_at === "offer" ? "Offer declined" : LABEL[s] }));
+    side.appendChild(statePill(s, e));
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
     var off = !canWrite || !!writing[p.id];
     function act(label, key, fn, extra, icon) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [icon ? ic(icon) : null, label]); }
@@ -634,6 +634,15 @@
     if (drawer[p.id] === "desc") row.appendChild(descDrawer(p));
     if (drawer[p.id] === "resume") row.appendChild(resumeDrawer(p, s));
     return row;
+  }
+
+  // The job's state as a colored pill with an icon.
+  var PILL = { new: ["clay", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
+    offer: ["green", "handshake"], accepted: ["green", "check-circle"], skipped: ["gray", "x"], rejected: ["red", "thumbs-down"], withdrew: ["amber", "sign-out"], noresp: ["gray", "hourglass-medium"] };
+  function statePill(s, e) {
+    var declined = s === "withdrew" && e && e.lost_at === "offer";
+    var k = declined ? ["amber", "x-circle"] : (PILL[s] || ["gray", "info"]);
+    return el("div", { class: "state" }, [el("span", { class: "pill2 p-" + k[0] }, [ic(k[1]), declined ? "Offer declined" : LABEL[s]])]);
   }
 
   function resumeTag(id, suffix) {
@@ -736,6 +745,20 @@
     ]);
   }
 
+  // Open the Triage stage that holds a job, scroll to its card and flash it.
+  var flashId = null;
+  function goToJob(id) {
+    var p = view(id);
+    if (!p || hidden(p)) { toast("That job isn't on your list: it didn't reach your bar, or its company is blocked."); return; }
+    var stage = stageOf(eff(id).status);
+    state.stage = stage; drawer = {};
+    if (stage === "closed") {
+      var pos = items().filter(function (x) { return stageOf(eff(x.id).status) === "closed"; }).length;
+      state.closedLimit = Math.max(state.closedLimit, pos);
+    }
+    flashId = id; setTab("triage");
+  }
+
   // ---------- Resumes ----------
   async function savePdf(r, msg) {
     if (!downloads) { msg.textContent = "Saving files isn't available in this view."; return; }
@@ -766,9 +789,10 @@
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
+      var jobLink = r.kind === "tailored" && D.postings[r.for_posting] ? el("button", { class: "link", "data-k": "res-job-" + k, onclick: function () { goToJob(r.for_posting); } }, [ic("arrow-up-right"), "Show the job"]) : null;
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
       return el("div", { class: "lrow res" }, [
-        el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
+        el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") }), jobLink]),
         el("div", { class: "m", text: mid }),
         el("div", { class: "btns" }, btns.concat([msg]))
       ]);
@@ -1003,6 +1027,18 @@
 
   // ---------- Stats ----------
   var tip = document.getElementById("tip");
+  // A tooltip under a button, on hover and on keyboard focus.
+  function hideTip() { tip.hidden = true; }
+  function explain(node, text) {
+    function show() {
+      tip.textContent = text; tip.hidden = false;
+      var r = node.getBoundingClientRect();
+      tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, r.right - tip.offsetWidth)) + "px";
+      tip.style.top = (r.bottom + 8 + tip.offsetHeight > window.innerHeight ? Math.max(8, r.top - tip.offsetHeight - 8) : r.bottom + 8) + "px";
+    }
+    node.addEventListener("mouseenter", show); node.addEventListener("focus", show);
+    node.addEventListener("mouseleave", hideTip); node.addEventListener("blur", hideTip);
+  }
   function hover(node, text) {
     node.setAttribute("role", "img"); node.setAttribute("aria-label", text);
     node.addEventListener("mousemove", function (e) {
@@ -1191,6 +1227,16 @@
       }
     } else stageShown = null;
     if (tour.on) placeTour(false);
+    if (flashId && state.tab === "triage") {
+      var fr = document.querySelector('.row[data-id="' + (window.CSS && CSS.escape ? CSS.escape(flashId) : flashId) + '"]');
+      flashId = null;
+      if (fr) {
+        k = null;
+        fr.classList.add("flash"); fr.setAttribute("tabindex", "-1"); fr.focus({ preventScroll: true });
+        fr.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        setTimeout(function () { fr.classList.remove("flash"); }, 2200);
+      }
+    }
     if (k) {
       var n = null;
       Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
