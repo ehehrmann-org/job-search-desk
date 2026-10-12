@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.12 (2026-10-12)
+- Stats: the scoring accuracy tile reads "You acted on 9 of 21 qualified postings."
+
 ## 0.11.11 (2026-10-12)
 - Stats: the three breakdowns under Closed jobs are separated by thin rules.
 
