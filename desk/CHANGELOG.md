@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.9 (2026-10-12)
+- Updates come from a public template, so checking for a new version no longer needs any extra access.
+- Setup: no GitHub invitation needed anymore, and the first steps say which Claude model to pick.
+
 ## 0.11.8 (2026-10-12)
 - Before the first morning run, the status line says "Waiting for the first morning run" instead of counting it as a problem.
 - Setup: answers are saved as you give them, so a pause loses at most one question; continue setup picks up where you stopped. Pro plans take the shorter path automatically.
