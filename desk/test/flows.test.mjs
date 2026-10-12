@@ -427,3 +427,21 @@ test('web-queries: a rotating window of the enabled searches, capped per day, of
   fs.appendFileSync(path.join(d, 'config', 'desk.yml'), '\nweb_search: false\n');
   assert.equal(json(d, 'daily.mjs', 'web-queries').queries.length, 0);
 });
+
+test('pull: daily limit requests set desk.yml within bounds; the web and sweep switches', () => {
+  const d = profile();
+  const dump = path.join(d, 'dump');
+  write(path.join(dump, 'requests', 'r1.json'), { kind: 'set_cap', key: 'web_cap', value: 12, at: '2026-10-12T10:00:00Z' });
+  write(path.join(dump, 'requests', 'r2.json'), { kind: 'set_cap', key: 'daily_cap', value: 0, at: '2026-10-12T10:00:01Z' });
+  write(path.join(dump, 'requests', 'r3.json'), { kind: 'set_cap', key: 'plan', value: 3, at: '2026-10-12T10:00:02Z' });
+  write(path.join(dump, 'requests', 'r4.json'), { kind: 'set_cap', key: 'deep_cap', value: 0, at: '2026-10-12T10:00:03Z' });
+  write(path.join(dump, 'source_switches', 'sweep.json'), { on: false, at: '2026-10-12T10:00:04Z' });
+  sh(d, 'page-sync.mjs', 'pull', dump);
+  const desk = read(path.join(d, 'config', 'desk.yml'));
+  assert.match(desk, /^web_cap: 12/m);
+  assert.match(desk, /^deep_cap: 0/m);
+  assert.doesNotMatch(desk, /^daily_cap: 0/m);
+  assert.doesNotMatch(desk, /^plan: 3/m);
+  assert.match(desk, /^board_sweep: false/m);
+  assert.match(read(path.join(d, 'data', 'page', 'done', 'r2.json')), /isn't allowed/);
+});

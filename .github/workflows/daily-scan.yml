@@ -42,7 +42,7 @@ jobs:
     # The template itself never scans; a friend's copy scans once setup has started.
     if: ${{ !github.event.repository.is_template }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,6 +64,20 @@ jobs:
         run: |
           set -o pipefail
           node scan.mjs --quiet 2>&1 | tee profile/data/last-scan.log
+      # The nightly sweep: public directories of about 15,000 companies on Greenhouse, Lever and
+      # Ashby, checked for her titles and locations (portals.yml title_filter, or title_filter_full).
+      # Only on the first scheduled run of the night (and when started by hand), off when desk.yml
+      # says board_sweep: false. A sweep cut short by the time limit continues the next night.
+      - name: Sweep public job boards
+        if: steps.ready.outputs.go == 'true' && (github.event.schedule == '13 3 * * *' || github.event_name == 'workflow_dispatch')
+        continue-on-error: true
+        timeout-minutes: 40
+        run: |
+          set -o pipefail
+          if grep -Eq '^board_sweep:[[:space:]]*false' profile/config/desk.yml 2>/dev/null; then echo "Sweep turned off."; exit 0; fi
+          FLAGS="--since 2 --ats greenhouse,lever,ashby"
+          if [ -f profile/data/cache/ats-full-checkpoint.json ]; then FLAGS="$FLAGS --resume"; fi
+          node scan-ats-full.mjs $FLAGS 2>&1 | tail -40 | tee profile/data/last-sweep.log
       - name: Save job descriptions
         if: always() && steps.ready.outputs.go == 'true'
         continue-on-error: true

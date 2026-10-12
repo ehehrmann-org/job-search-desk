@@ -114,6 +114,9 @@ function writePortals(obj) {
   fs.writeFileSync(P.portals, header + yaml.dump(obj, { lineWidth: 160, noRefs: true }));
 }
 // desk.yml is edited line by line so its comments survive.
+// The daily limits she can change on her page: [lowest, highest, plain name].
+const CAP_LIMITS = { web_cap: [0, 30, 'Web searches each morning'], daily_cap: [1, 100, 'Jobs scored each day'], deep_cap: [0, 10, 'Deep evaluations each day'] };
+
 function setDeskKey(key, value) {
   const raw = fs.existsSync(P.desk) ? fs.readFileSync(P.desk, 'utf8') : '';
   const line = `${key}: ${JSON.stringify(value)}`;
@@ -197,10 +200,10 @@ async function pull(dumpDir) {
           setDeskKey('gmail_alerts', !!ev.sw.on);
           applied[ev.sid] = ev.sw.at;
           summary.switches_applied.push({ id: 'gmail', on: !!ev.sw.on });
-        } else if (ev.sid === 'web') {
-          setDeskKey('web_search', !!ev.sw.on);
+        } else if (ev.sid === 'web' || ev.sid === 'sweep') {
+          setDeskKey(ev.sid === 'web' ? 'web_search' : 'board_sweep', !!ev.sw.on);
           applied[ev.sid] = ev.sw.at;
-          summary.switches_applied.push({ id: 'web', on: !!ev.sw.on });
+          summary.switches_applied.push({ id: ev.sid, on: !!ev.sw.on });
         } else {
           if (!portals) throw new Error('portals.yml could not be read');
           if (boardAt[ev.sid] && ev.at < boardAt[ev.sid]) { applied[ev.sid] = ev.sw.at; continue; }   // the link she pasted later turned it on
@@ -270,6 +273,14 @@ async function handle(rid, r, summary, ctx) {
       (summary.suggestions_failed ||= []).push(e.message);
     }
     return;
+  }
+  if (r.kind === 'set_cap') {
+    const lim = CAP_LIMITS[r.key];
+    const v = Number(r.value);
+    if (!lim || !Number.isInteger(v) || v < lim[0] || v > lim[1]) return done(rid, "That number isn't allowed");
+    setDeskKey(r.key, v);
+    summary.caps_set = [...(summary.caps_set || []), { key: r.key, value: v }];
+    return done(rid, `${lim[2]}: ${v} from the next run`);
   }
   if (r.kind === 'dismiss_gap') {
     const gaps = readJson(P.gaps, []);
@@ -495,7 +506,7 @@ async function push(args) {
     st.last_run_at = at;
     add('runs', runId(new Date(at)), {
       at, ok, problems, last_good_run: st.last_good_run, version: VERSION,
-      plan: desk.plan || null, daily_cap: desk.daily_cap || null, deep_cap: desk.deep_cap || null, help_email: desk.help_email || null,
+      plan: desk.plan || null, daily_cap: desk.daily_cap ?? null, deep_cap: desk.deep_cap ?? null, web_cap: Number.isInteger(desk.web_cap) ? desk.web_cap : 5, help_email: desk.help_email || null,
       update: updateInfo(args.updateFile),
       task_id: typeof desk.task_id === 'string' && /^trig_[A-Za-z0-9]+$/.test(desk.task_id) ? desk.task_id : null,
       repo: typeof desk.repo === 'string' && /^[\w.-]+\/[\w.-]+$/.test(desk.repo) ? desk.repo : null, quick: !!args.quick,
@@ -539,7 +550,7 @@ async function push(args) {
 function alertsAdded(since) {
   if (!fs.existsSync(P.history)) return 0;
   return fs.readFileSync(P.history, 'utf8').split('\n')
-    .map(l => l.split('\t')).filter(c => /^gmail:|^web/.test(c[2] || '') && c[5] === 'added' && (c[1] || '') >= since).length;
+    .map(l => l.split('\t')).filter(c => (/^gmail:|^web/.test(c[2] || '') || /-full$/.test(c[2] || '')) && c[5] === 'added' && (c[1] || '') >= since).length;
 }
 
 // A resume document as push writes it.
@@ -626,6 +637,7 @@ async function buildSources(counts) {
   const rows = [];
   const c = name => counts[slug(name)] || { found: 0, qual: 0, app: 0 };
   rows.push({ id: 'gmail', group: 'mail', name: 'Gmail job alerts', desc: 'LinkedIn, Indeed and other alert emails', how: 'Read every run', on: desk.gmail_alerts !== false, cost: false, found: 0, qual: 0, app: 0 });
+  rows.push({ id: 'sweep', group: 'mail', name: 'Nightly sweep of public job boards', desc: 'About 15,000 companies on Greenhouse, Lever and Ashby, checked for your titles and locations', how: 'Every night, free (no Claude usage)', on: desk.board_sweep !== false, cost: false, found: 0, qual: 0, app: 0 });
   const webList = (portals.search_queries || []).filter(q => q && q.enabled !== false && q.query);
   if (webList.length) {
     const perDay = Math.min(Number.isInteger(desk.web_cap) ? desk.web_cap : 5, webList.length);

@@ -278,3 +278,7 @@ profile/data/page/outbox/
 # Daily task scratch folders
 .work/
 .page-dump/
+
+# The nightly sweep caches company directories; only its checkpoint is kept, so a cut-short sweep continues
+profile/data/cache/*
+!profile/data/cache/ats-full-checkpoint.json

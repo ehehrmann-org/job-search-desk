@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.0 (2026-10-12)
+- Every night, a free sweep of about 15,000 companies' public job boards (Greenhouse, Lever, Ashby) looks for your titles and locations, on top of the companies you listed. It uses no Claude usage and has its own switch on Scan sources. Copies made before this version need Erik to add it.
+- Daily limits on Scan sources: set how many web searches, scored jobs and deep evaluations Claude does each morning, to use less of your plan or find more.
+
 ## 0.12.0 (2026-10-12)
 - Every morning run searches the web for your titles across Greenhouse, Lever, Ashby, Workable and other job boards, so it finds jobs at companies you never listed. Setup writes the searches for you; a few run each morning, in turn (5 on Pro, 10 on Max 5x, 15 on Max 20x).
 - Scan sources shows the web search next to Gmail alerts, with its own on and off switch.

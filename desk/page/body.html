@@ -960,6 +960,7 @@
       });
       if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Type a company or website in the field above and click Add, or skip a job with “Never show jobs from this company”." })]));
       v.appendChild(bl);
+      v.appendChild(limitsPanel());
       return;
     }
 
@@ -990,6 +991,52 @@
     }
     if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." + (canWrite && !addSrcOpen ? " Press Enter or click Add to add it." : "") : view.k === "dream" ? "No dream companies yet. Type a company name in the field above and click Add." : "Nothing here yet." })]));
     v.appendChild(l);
+    v.appendChild(limitsPanel());
+  }
+  // Daily limits: how much Claude does each morning. Changes go in as one request per number and apply from the next run.
+  var LIMITS = [
+    ["web_cap", "Web searches each morning", "Finds jobs at companies you haven't listed.", 0, 30],
+    ["daily_cap", "Jobs scored each day", "Jobs past the limit wait for the next day.", 1, 100],
+    ["deep_cap", "Deep evaluations each day", "For jobs you mark Interested.", 0, 10]
+  ];
+  var limitDraft = {};
+  function limitNow(key) {
+    var pending = null;
+    Object.keys(D.requests).forEach(function (rid) { var q = D.requests[rid]; if (q.kind === "set_cap" && q.key === key && !D.done[rid] && (!pending || String(q.at) > String(pending.at))) pending = q; });
+    var cur = D.run && Number.isInteger(D.run[key]) ? D.run[key] : null;
+    return { cur: cur, pending: pending ? pending.value : null };
+  }
+  function limitsPanel() {
+    var box = el("div", { class: "panel limits" }, [el("h2", { text: "Daily limits" }), el("p", { class: "sub", text: "How much Claude does each morning. Lower numbers use less of your Claude plan; higher ones find and check more jobs. Changes apply from the next run." })]);
+    var changed = false;
+    LIMITS.forEach(function (L) {
+      var st = limitNow(L[0]), base = st.pending !== null ? st.pending : st.cur;
+      if (base === null) return;
+      var val = limitDraft[L[0]] !== undefined ? limitDraft[L[0]] : base;
+      if (val !== base) changed = true;
+      function step(d) { var nv = Math.max(L[3], Math.min(L[4], val + d)); limitDraft[L[0]] = nv; render(); }
+      box.appendChild(el("div", { class: "limrow" }, [
+        el("div", null, [el("div", { class: "t", text: L[1] }), el("div", { class: "s", text: L[2] + (st.pending !== null && st.pending !== st.cur ? " Changes to " + st.pending + " in the next run." : "") })]),
+        el("div", { class: "stepper" }, [
+          el("button", { class: "b", "data-k": "lim-dn-" + L[0], "aria-label": "Fewer: " + L[1], disabled: !canWrite || val <= L[3], onclick: function () { step(-1); } }, [ic("minus")]),
+          el("span", { class: "lv", "aria-live": "polite", text: String(val) }),
+          el("button", { class: "b", "data-k": "lim-up-" + L[0], "aria-label": "More: " + L[1], disabled: !canWrite || val >= L[4], onclick: function () { step(1); } }, [ic("plus")])
+        ])
+      ]));
+    });
+    if (box.childNodes.length === 2) box.appendChild(el("p", { class: "s", text: "Shows after the next morning run." }));
+    if (changed) box.appendChild(el("div", { class: "btns" }, [
+      el("button", { class: "b", "data-k": "lim-cancel", onclick: function () { limitDraft = {}; render(); } }, ["Cancel"]),
+      el("button", { class: "b pref", "data-k": "lim-save", disabled: !canWrite, onclick: async function () {
+        var keys = Object.keys(limitDraft);
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i], st = limitNow(k), base = st.pending !== null ? st.pending : st.cur;
+          if (limitDraft[k] !== base) await saveRequest({ kind: "set_cap", key: k, value: limitDraft[k] }, null);
+        }
+        limitDraft = {}; toast("Saved. The new limits apply from the next run."); render();
+      } }, ["Save limits"])
+    ]));
+    return box;
   }
   var SRC_KINDS = [
     ["dream", "Dream company", "Always checked, and its jobs reach you even if they score low."],
@@ -1404,7 +1451,7 @@
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, never heard back on, or accepted an offer from, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
-    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, a morning web search across job boards for your titles, dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
+    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, a morning web search across job boards for your titles, dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
     { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page." }
   ];

@@ -130,6 +130,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 8. **Close the session.** Tell her, briefly:
    - She's live: her first jobs arrive tomorrow morning by about 7 on her job page, and every morning after that. The tour is always one click away from the status line at the bottom of the page.
    - The first days will score rough. Every Skip with a reason and every Interested teaches it.
+   - Besides her listed companies, it sweeps about 15,000 companies' public job boards every night for free, and does a few web searches each morning. The Daily limits panel on Scan sources turns the Claude part up or down if her plan runs short or she wants more.
    - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: in a new Claude chat, type "Open my Job Search Desk (<her REPO>) and continue setup". The prep list for it is in Erik's message.
    - "Change my scoring", "add a dream company" and "help" work anytime in a new Claude chat, starting with "Open my Job Search Desk (<her REPO>) and ...". The buttons on her page copy requests that already start that way.
 

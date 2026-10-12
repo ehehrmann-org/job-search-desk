@@ -122,7 +122,7 @@ async function todo(args) {
   }
   console.log(JSON.stringify({
     daily_cap: cap, to_score: today, waiting: Math.max(0, pending.length - cap), blocked, too_old: tooOld, unscorable: gaveUp, gone,
-    to_deep: toDeep.slice(0, Number(desk.deep_cap) || 1), dream_web_search: dreamSearch,
+    to_deep: toDeep.slice(0, Number.isInteger(desk.deep_cap) && desk.deep_cap >= 0 ? desk.deep_cap : 1), dream_web_search: dreamSearch,
   }, null, 2));
 }
 
