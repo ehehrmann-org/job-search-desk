@@ -24,9 +24,18 @@ export const safeId = id => typeof id === 'string' && SAFE_ID.test(id) && !RESER
 /** A plain object with no prototype, for maps keyed by untrusted ids. */
 export const dict = () => Object.create(null);
 
+/**
+ * Parse YAML with an error that names only the file, the reason and the line. js-yaml's own
+ * message quotes the lines around the error, and those reach the page as a problem detail.
+ */
+export function parseYaml(yaml, src, file) {
+  try { return yaml.load(src); }
+  catch (e) { throw new Error(`${path.basename(file)}: ${e.reason || 'not valid YAML'}${e.mark ? ` (line ${e.mark.line + 1})` : ''}`); }
+}
+
 /** Read YAML that must parse: a broken file throws instead of silently becoming {}. */
 export function readYamlStrict(yaml, file, fallback) {
   if (!fs.existsSync(file)) return fallback;
-  const v = yaml.load(fs.readFileSync(file, 'utf8'));
+  const v = parseYaml(yaml, fs.readFileSync(file, 'utf8'), file);
   return v ?? fallback;
 }

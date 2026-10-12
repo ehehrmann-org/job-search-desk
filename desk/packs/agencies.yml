@@ -66,7 +66,7 @@ tracked_companies:
     careers_url: https://connellypartners.bamboohr.com
     enabled: true
     pack: agencies
-  - name: North Strategic
+  - name: Laundry Service
     careers_url: https://apply.workable.com/north
     enabled: true
     pack: agencies
@@ -90,16 +90,8 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/vsapartners
     enabled: true
     pack: agencies
-  - name: 50,000feet
-    careers_url: https://apply.workable.com/50000feet
-    enabled: true
-    pack: agencies
   - name: iCrossing
     careers_url: https://apply.workable.com/icrossing
-    enabled: true
-    pack: agencies
-  - name: 20Twenty Design
-    careers_url: https://apply.workable.com/20twentydesign
     enabled: true
     pack: agencies
   - name: Able
@@ -134,10 +126,6 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/barkleyokrp
     enabled: true
     pack: agencies
-  - name: AvroKO
-    careers_url: https://recruiting.recruitee.com
-    enabled: true
-    pack: agencies
   - name: Rapt Studio
     careers_url: https://jobs.lever.co/RaptStudio
     enabled: true
@@ -158,7 +146,7 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/ideo
     enabled: true
     pack: agencies
-  - name: The Bureau
+  - name: Seer Interactive
     careers_url: https://jobs.lever.co/seerinteractive
     enabled: true
     pack: agencies

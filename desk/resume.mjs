@@ -8,7 +8,7 @@
  *   node desk/resume.mjs check <resumes/x.md>    numbers not found in cv.md (exit 1 if any)
  *
  * Markdown shape (same as cv.md): "# Name", a contact line, "## Section",
- * "### Company — Location", a bold title line, a dates line, "- " bullets.
+ * "### Company, Location", a bold title line, a dates line, "- " bullets.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,12 +54,14 @@ export function toText(md) {
 export function unsupportedNumbers(md, master) {
   const norm = s => s.toLowerCase().replace(/(\d),(?=\d{3}\b)/g, '$1').replace(/\$\s+/g, '$');
   const m = norm(master);
-  const nums = norm(md.replace(/<!--[\s\S]*?-->/g, '')).match(/\$?\d+(?:\.\d+)?\s?(?:%|k\b|m\b|x\b|\+)?/g) || [];
+  // Tokens keep their thousands commas so "2,050" is a count and only a bare "2019" is a year.
+  const nums = md.replace(/<!--[\s\S]*?-->/g, '').toLowerCase().replace(/\$\s+/g, '$')
+    .match(/\$?\d+(?:,\d{3}\b)*(?:\.\d+)?\s?(?:%|k\b|m\b|x\b|\+)?/g) || [];
   const years = /^(19|20)\d\d$/;
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // Whole numbers only: "35%" is not backed by "135%", and "2" is not backed by "2026".
   const inMaster = n => new RegExp(`(^|[^\\d.])${esc(n)}(?!\\d|\\.\\d)`).test(m);
-  return [...new Set(nums.map(n => n.trim()))].filter(n => !years.test(n) && /\d/.test(n) && !inMaster(n));
+  return [...new Set(nums.map(n => n.trim()))].filter(n => !years.test(n) && /\d/.test(n) && !inMaster(norm(n)));
 }
 
 async function launch() {

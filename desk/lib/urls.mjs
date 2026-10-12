@@ -7,6 +7,9 @@ import { normalizeUrl } from '../../url-key.mjs';
 import { readFrontMatter } from './frontmatter.mjs';
 
 const STRIP = [/^utm_/i, /^trk/i, /^trackingid$/i, /^refid$/i, /^gh_src$/i, /^lever-(source|origin)/i, /^fbclid$/i, /^gclid$/i, /^mc_[ce]id$/i, /^igshid$/i, /^_hs/i];
+// Names the scan's own dedup (scan.mjs DEDUP_STRIP_PARAMS) also ignores. They stay in the stored
+// link and only leave the comparison key, so a link the scan saved is not counted as new here.
+const KEY_STRIP = new Set(['source', 'src', 'ref', 'lang', 'locale', 'language', 'rltr']);
 
 /**
  * A clean, openable link for a posting, or null when the text is not a usable http(s) link.
@@ -40,7 +43,11 @@ export function canonicalUrl(raw) {
 /** Comparison key: '' means "no key", which never matches anything. */
 export function urlKey(raw) {
   const c = canonicalUrl(raw);
-  return normalizeUrl(c || String(raw ?? '').trim());
+  const key = normalizeUrl(c || String(raw ?? '').trim());
+  let u;
+  try { u = new URL(key); } catch { return key; }
+  for (const k of [...u.searchParams.keys()]) if (KEY_STRIP.has(k.toLowerCase())) u.searchParams.delete(k);
+  return u.toString();
 }
 
 /** Every posting link already known: scan history, the pipeline, saved descriptions. */

@@ -6,7 +6,8 @@
 #   bash desk/save.sh --all "<message>"   commits every change (after "update career tool")
 #
 # Prints "saved" on success. On failure prints why and exits 1; nothing is lost, the
-# commit stays local and the next save pushes it.
+# changes stay in this copy (as a local commit when only the push failed) and the next
+# save pushes them.
 set -u
 cd "$(dirname "$0")/.." || exit 1
 scope=profile
@@ -16,11 +17,13 @@ id=()
 if [ -z "$(git config user.email || true)" ]; then
   id=(-c user.name="job-search-desk-bot" -c user.email="actions@users.noreply.github.com")
 fi
-git add -A -- "$scope"
-git "${id[@]}" commit -qm "$msg" >/dev/null 2>&1 || true
+out=$(git add -A -- "$scope" 2>&1) || { echo "save failed: $(echo "$out" | tail -n 1)"; exit 1; }
+if ! git diff --cached --quiet; then
+  out=$(git ${id[@]+"${id[@]}"} commit -qm "$msg" 2>&1) || { echo "save failed: $(echo "$out" | tail -n 1)"; exit 1; }
+fi
 err=""
 for i in 1 2 3; do
-  if err=$(git "${id[@]}" pull -q --rebase origin main 2>&1) && err=$(git push -q origin HEAD:main 2>&1); then
+  if err=$(git ${id[@]+"${id[@]}"} pull -q --rebase --autostash origin main 2>&1) && err=$(git push -q origin HEAD:main 2>&1); then
     echo "saved"; exit 0
   fi
   git rebase --abort >/dev/null 2>&1 || true

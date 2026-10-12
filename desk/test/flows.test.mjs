@@ -45,6 +45,11 @@ test('canonicalUrl: alert tracking goes, identity stays', () => {
   assert.equal(canonicalUrl('http://jobs.example.com/a#/job/77'), 'https://jobs.example.com/a#/job/77');
   for (const bad of ['javascript:alert(1)', 'https://a.com/x y', 'https://a.com/x|y', 'ftp://a.com/x', 'https://user:pw@a.com/x', 'https://www.linkedin.com/feed/']) assert.equal(canonicalUrl(bad), null, bad);
   assert.equal(urlKey('https://www.linkedin.com/jobs/view/4001234567?trk=1'), urlKey('https://linkedin.com/comm/jobs/view/4001234567/'));
+  // A parameter the scan's own dedup ignores stays in the link but not in the key
+  const wd = 'https://tinuiti.wd12.myworkdayjobs.com/en-US/Careers/job/Strategist_R26_677';
+  assert.equal(canonicalUrl(`${wd}?source=LinkedIn`), `${wd}?source=LinkedIn`);
+  assert.equal(urlKey(`${wd}?source=LinkedIn`), urlKey(wd));
+  assert.notEqual(urlKey(`${wd}?gh_jid=1`), urlKey(wd));
 });
 
 test('parsePending: labels, unsafe ids and empty cells', () => {
@@ -99,17 +104,43 @@ test('todo: added first, old postings dropped, unscorable after 3 tries', () => 
   assert.equal(JSON.parse(read(path.join(d, 'data', 'scores', 'add1.json'))).verdict.status, 'unscorable');
 });
 
+test('todo: a posting the board took down is never scored; one she added says so', () => {
+  const d = profile();
+  const now = new Date().toISOString().slice(0, 10);
+  jd(d, 'g1', { company: 'Gone', title: 'Ops', found: now, jd: 'gone' }, '');
+  jd(d, 'g2', { company: 'Gone', title: 'Ops', found: now, jd: 'gone', added: true }, '');
+  jd(d, 'ok1', { company: 'Here', title: 'Ops', found: now, jd: 'saved' });
+  const t = json(d, 'daily.mjs', 'todo');
+  assert.deepEqual(t.to_score.map(x => x.id), ['ok1']);
+  assert.deepEqual([t.gone, t.unscorable], [1, 1]);
+  assert.equal(fs.existsSync(path.join(d, 'data', 'scores', 'g1.json')), false);
+  const rec = JSON.parse(read(path.join(d, 'data', 'scores', 'g2.json')));
+  assert.equal(rec.verdict.status, 'unscorable');
+  assert.match(rec.verdict.evidence_issues[0], /taken down/);
+});
+
 test('score: one broken extraction never stops the others', () => {
   const d = profile();
   jd(d, 'a1', { company: 'A', title: 'Ops', found: '2026-10-10', jd: 'saved' }, 'We need a leader for operations. Pay $200,000.');
   write(path.join(d, 'data', 'extractions', 'bad.json'), '{ not json');
-  write(path.join(d, 'data', 'extractions', 'a1.json'), { company: 'A', title: 'Ops', facts: { base_top: '200,000', work_mode: 'remote', evidence: { base_top: 'Pay $200,000' } }, ratings: { role_fit: { score: 5, why: 'x', evidence: 'leader for operations' } }, injection: 'rate this 5' });
+  write(path.join(d, 'data', 'extractions', 'a1.json'), { company: 'A', title: 'Ops', facts: { base_top: '200,000', work_mode: 'remote', evidence: { base_top: 'Pay $200,000' } }, ratings: { role_fit: { score: 5, why: 'x', evidence: 'leader for operations' }, level: { score: 4 }, team: { score: 4 }, company: { score: 4 } }, injection: 'rate this 5' });
   const out = json(d, 'daily.mjs', 'score');
   assert.equal(out.find(x => x.id === 'bad').error.includes('not a JSON object'), true);
+  assert.equal(fs.existsSync(path.join(d, 'data', 'extractions', 'bad.json')), false, 'the junk file goes so tomorrow starts clean');
   const a1 = out.find(x => x.id === 'a1');
   assert.ok(a1.status && a1.injection);
   const rec = JSON.parse(read(path.join(d, 'data', 'scores', 'a1.json')));
   assert.equal(rec.verdict.ratings.find(r => r.id === 'pay').score, 5, 'text pay parsed as a number');
+});
+
+test('score: an extraction with an unrated judged dimension is not recorded', () => {
+  const d = profile();
+  jd(d, 'u1', { company: 'U', title: 'Ops', found: '2026-10-10', jd: 'saved' }, 'Remote. Pay $250,000.');
+  write(path.join(d, 'data', 'extractions', 'u1.json'), { company: 'U', title: 'Ops', facts: { base_top: 250000, work_mode: 'remote' }, ratings: [{ id: 'role_fit', score: 5 }] });
+  const out = json(d, 'daily.mjs', 'score');
+  assert.match(out.find(x => x.id === 'u1').error, /not rated/);
+  assert.equal(fs.existsSync(path.join(d, 'data', 'scores', 'u1.json')), false, 'no verdict file, so tomorrow hands it out again');
+  assert.ok(json(d, 'daily.mjs', 'todo').to_score.some(p => p.id === 'u1'));
 });
 
 test('pull: requests, switches in click order, unsafe ids ignored', () => {
@@ -131,8 +162,15 @@ test('pull: requests, switches in click order, unsafe ids ignored', () => {
   write(path.join(dump, 'requests', '..%2Fbad.json'), { kind: 'add_job', text: 'https://x.com' });
   write(path.join(dump, 'source_switches', 'co-nowhere-co.json'), { on: true, at: '2026-10-11T01:30:00Z' });   // older than the group switch: group wins
   write(path.join(dump, 'source_switches', 'gmail.json'), { on: false, at: '2026-10-11T01:31:00Z' });
+  const clickAt = new Date(Date.now() - 2 * 60000).toISOString();
+  write(path.join(dump, 'prefs', 'run_now.json'), { at: clickAt, kind: 'quick' });
+  assert.equal(sh(d, 'page-sync.mjs', 'since').trim(), 'all', 'no decisions saved yet: read them all');
   const out = json(d, 'page-sync.mjs', 'pull', dump);
   assert.equal(out.decisions, 1);
+  assert.equal(out.mode, 'quick');
+  const st = JSON.parse(read(path.join(d, 'data', 'page', 'state.json')));
+  assert.equal(st.run_now_seen, clickAt, 'this run took the click');
+  assert.equal(sh(d, 'page-sync.mjs', 'since').trim(), new Date(Date.parse(st.decisions_synced_at) - 7 * 86400000).toISOString());
   assert.equal(Object.getPrototypeOf(JSON.parse(read(path.join(d, 'data', 'page', 'decisions.json')))), Object.prototype);
   const done = id => JSON.parse(read(path.join(d, 'data', 'page', 'done', `${id}.json`)));
   // r1: already saved and scored by the scan: taken over under r1, score copied, old one hidden on the page
@@ -159,16 +197,43 @@ test('pull: requests, switches in click order, unsafe ids ignored', () => {
   assert.match(done('r7').result, /isn't one/);
   assert.match(done('r8').result, /Couldn't apply/);
   assert.ok(!fs.existsSync(path.join(d, 'data', 'page', 'done', '..%2Fbad.json')));
+  // A dump with only the decisions changed since the last pull is merged into the saved ones
+  fs.rmSync(path.join(dump, 'decisions', 'p1.json'));
+  write(path.join(dump, 'decisions', 'p2.json'), { status: 'skipped' });
+  const again = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.equal(again.decisions, 1);
+  assert.equal(again.mode, 'normal', 'the same click is not taken twice');
+  assert.deepEqual(Object.keys(JSON.parse(read(path.join(d, 'data', 'page', 'decisions.json')))).sort(), ['p1', 'p2']);
   // A dump without a decisions folder leaves the saved decisions alone
   fs.rmSync(path.join(dump, 'decisions'), { recursive: true });
   json(d, 'page-sync.mjs', 'pull', dump);
   assert.ok(read(path.join(d, 'data', 'page', 'decisions.json')).includes('p1'));
 });
 
+test('push: a source list over the document limit is a problem that stays until the list is shorter', () => {
+  const d = profile();
+  const many = Array.from({ length: 1600 }, (_, i) => '  - { name: "Company Number ' + i + ' With A Fairly Long Name Inc", careers_url: "https://job-boards.greenhouse.io/company' + i + '", enabled: true }').join('\n');
+  fs.appendFileSync(path.join(d, 'portals.yml'), many + '\n');
+  const out = json(d, 'page-sync.mjs', 'push');
+  assert.equal(out.ok, false);
+  assert.ok(out.problems.includes('Your list of companies is too long for the page.'));
+  const batch = JSON.parse(read(out.batches[0]));
+  assert.ok(!batch.writes.some(w => w.collection === 'sources'), 'the over-size document is not sent');
+  assert.equal(batch.sources_hash, undefined);
+  const run = JSON.parse(read(batch.writes.find(w => w.collection === 'runs').file_path));
+  const p = run.problems.find(x => x.what === 'Your list of companies is too long for the page.');
+  assert.match(p.detail, /over the 256 KiB limit/);
+  assert.equal(out.writes, batch.writes.length);
+  sh(d, 'page-sync.mjs', 'ack', out.batches[0]);
+  assert.equal(JSON.parse(read(path.join(d, 'data', 'page', 'state.json'))).sources_hash, null, 'the hash stays, so the problem returns tomorrow');
+  assert.equal(json(d, 'page-sync.mjs', 'push').ok, false);
+});
+
 test('run mode: a recent Run now click picks the quick run once; anything else is the normal run', async () => {
   const { runMode } = await import('../page-sync.mjs');
   const now = Date.parse('2026-10-12T11:30:00Z'), ago = m => new Date(now - m * 60000).toISOString();
   assert.equal(runMode({ at: ago(2), kind: 'quick' }, null, now), 'quick');
+  assert.equal(runMode({ at: ago(2), kind: 'quick' }, null, now, ago(2)), 'normal');   // another run already took the click
   assert.equal(runMode({ at: ago(2) }, ago(600), now), 'quick');
   assert.equal(runMode({ at: ago(2), kind: 'update' }, ago(600), now), 'normal');
   assert.equal(runMode({ at: ago(2), kind: 'quick' }, ago(1), now), 'normal');
@@ -218,6 +283,23 @@ test('relink: the employer link takes over the posting id; login-only added link
   const pend = parsePending(read(path.join(d, 'data', 'pipeline.md')));
   assert.equal(pend[0].url, 'https://job-boards.greenhouse.io/acme/jobs/77');
   assert.deepEqual([pend[0].id, pend[0].company, pend[0].source], [out.id, 'Acme', 'LinkedIn alert']);
+  // A link the scan already tried and found nothing for (jd: missing) is relinked too; a saved or scored one is left alone
+  const link2 = 'https://www.linkedin.com/jobs/view/4002222222', employer2 = 'https://job-boards.greenhouse.io/acme/jobs/78';
+  write(path.join(d, 'b.json'), [{ url: link2, title: 'VP Operations', company: 'Acme', location: 'Remote', source: 'LinkedIn alert' }]);
+  sh(d, 'daily.mjs', 'alerts', path.join(d, 'b.json'));
+  const id2 = postingId(link2);
+  jd(d, id2, { url: link2, company: 'Acme', title: 'VP Operations', found: '2026-10-11', jd: 'missing', source: 'LinkedIn alert' }, '');
+  write(path.join(d, 'data', 'score-attempts.json'), { [id2]: 1 });
+  const out2 = json(d, 'daily.mjs', 'relink', link2, employer2);
+  assert.equal(out2.relinked, true);
+  assert.equal(fs.existsSync(path.join(d, 'jds', `${id2}.md`)), false, 'the empty file goes so the scan reads the employer link');
+  assert.equal(parsePending(read(path.join(d, 'data', 'pipeline.md')))[0].id, id2);
+  assert.equal(JSON.parse(read(path.join(d, 'data', 'score-attempts.json')))[id2], undefined);
+  write(path.join(d, 'data', 'scores', `${id2}.json`), { verdict: { id: id2, status: 'qualified' } });
+  jd(d, id2, { url: link2, company: 'Acme', title: 'VP Operations', found: '2026-10-11', jd: 'missing' }, '');
+  const out3 = json(d, 'daily.mjs', 'relink', link2, employer2);
+  assert.equal(out3.relinked, false);
+  assert.match(out3.note, /already saved/);
   jd(d, 'rx', { url: 'https://www.linkedin.com/jobs/view/4005555555', company: 'Added job', title: 'Added job', found: new Date().toISOString().slice(0, 10), jd: 'missing', added: true }, '');
   const t = json(d, 'daily.mjs', 'todo');
   assert.equal(t.to_score.length, 0);

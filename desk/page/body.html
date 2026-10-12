@@ -61,7 +61,7 @@
   </section>
 </div>
 <div class="tip" id="tip" hidden></div>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
@@ -83,15 +83,14 @@
 
   // ---------- Data (filled by the database) ----------
   // R is her real data; D is what the page shows: R, or the sample data while the tour runs.
-  var R = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, prefs: {}, run: null, sources: null, suggestions: null };
+  var R = { postings: Object.create(null), decisions: Object.create(null), deep: Object.create(null), requests: Object.create(null), done: Object.create(null), resumes: Object.create(null), switches: Object.create(null), rescores: Object.create(null), prefs: Object.create(null), run: null, sources: null, suggestions: null };
   var D = R;
   var tour = { on: false, step: 0, prevTab: null, offered: false };
-  var db = null, downloads = null, mcp = null, canWrite = true, loaded = false, runBusy = false;
+  var db = null, downloads = null, mcp = null, canWrite = true, writeConfirmed = false, loaded = false, runBusy = false;
 
   // ---------- View state (per viewer, this browser only) ----------
   var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE };
   try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
-  var h0 = (location.hash || "").slice(1); if (TABS.indexOf(h0) > -1) state.tab = h0;
   var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
   // Unsent typing and picks survive the page redrawing when new data arrives.
   var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "" };
@@ -122,7 +121,7 @@
     return n;
   }
   var toastT;
-  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3600); }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); t.textContent = ""; }, Math.min(12000, Math.max(3600, 55 * String(msg).length))); }
   function num(v) { if (v === null || v === undefined || v === "") return null; var n = Number(v); return isFinite(n) ? n : null; }
   function one(v) { var n = num(v); return n === null ? "–" : n.toFixed(1); }
   function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
@@ -133,7 +132,7 @@
   function daysSince(iso) { if (!iso) return null; var t = toDate(iso).getTime(); return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / DAY)); }
   function niceDate(iso) { if (!iso) return ""; var d = String(iso).length === 10 ? new Date(iso + "T12:00:00") : new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
   function longDate(iso) { var d = new Date(String(iso).slice(0, 10) + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
-  function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (daysSince(iso) === 0 ? "today, " : niceDate(iso) + ", ") + s; }
+  function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (d.toDateString() === new Date().toDateString() ? "today, " : niceDate(iso) + ", ") + s; }
   function ago(iso, verb) { var n = daysSince(iso); if (n === null) return ""; return verb + " " + (n === 0 ? "today" : n === 1 ? "1 day ago" : n + " days ago"); }
   function stageOf(status) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].has.indexOf(status) > -1) return STAGES[i].k; return "review"; }
   function cmpStr(a, b) { a = a || ""; b = b || ""; return a < b ? -1 : a > b ? 1 : 0; }
@@ -144,12 +143,20 @@
     catch (e) { toast("Couldn't copy. Select the text and copy it yourself."); }
   }
   function errText(e) {
-    var s = String((e && (e.code || e.message)) || "").toLowerCase();
-    if (/permission|denied|forbidden|unauth|consent/.test(s)) return "this page isn't allowed to save right now. Open it in Claude while signed in and try again.";
-    if (/network|unavailable|timeout|offline|fetch/.test(s)) return "the connection dropped. Try again in a moment.";
-    if (/quota|limit|too large|exhausted/.test(s)) return "the page's storage is full. Copy the message for Erik from the status button.";
+    var c = e && e.code;
+    if (c === "revoked") return "this page lost its connection to your tracker. Reload the page.";
+    if (c === "invalid_argument" || c === "transform_error") return writeConfirmed ? "something went wrong. Try again; if it keeps happening, tell Erik." : "this page is view-only for you; your clicks aren't saved.";
+    if (c === "not_granted") return "this page isn't allowed to save right now. Open it in Claude while signed in and try again.";
+    if (c === "resource_exhausted" || c === "rate_limited") return "the page is busy. Wait a moment and try again.";
+    if (c === "quota_exceeded") return "the page's storage is full. Copy the message for Erik from the status button.";
+    if (c === "declined") return "you said no to the save.";
+    if (c === "unavailable") return "the connection dropped. Try again in a moment.";
+    var s = String((e && e.message) || "").toLowerCase();
+    if (/network|timeout|offline|fetch/.test(s)) return "the connection dropped. Try again in a moment.";
     return "something went wrong. Try again; if it keeps happening, tell Erik.";
   }
+  // A write refused for a viewer the runtime never confirmed as a writer: the page goes read-only.
+  function lostWrite(e) { var c = e && e.code; if (c === "revoked" || (!writeConfirmed && (c === "invalid_argument" || c === "transform_error"))) canWrite = false; }
   function newId() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function normCo(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
   function resumeName(id) { if (id === "other") return "Something else"; var r = D.resumes[id]; return r ? r.name : id; }
@@ -162,11 +169,11 @@
 
   // ---------- Per-render indexes ----------
   function buildIndex() {
-    var ix = { latest: {}, replaced: {}, blocked: {}, group: {}, board: {}, pendingAdds: 0, sugg: {} };
+    var ix = { latest: Object.create(null), replaced: Object.create(null), blocked: Object.create(null), group: Object.create(null), board: Object.create(null), pendingAdds: 0, sugg: Object.create(null) };
     Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (r && r.posting_id && (!ix.latest[r.posting_id] || cmpStr(r.at, ix.latest[r.posting_id].at) > 0)) ix.latest[r.posting_id] = r; });
     Object.keys(D.done).forEach(function (k) { var d = D.done[k]; if (d && d.replaces) ix.replaced[d.replaces] = true; });
     ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system, website: !!b.website }; });
-    var snapAt = D.sources ? D.sources.at || "" : "";
+    var snapAt = D.sources ? D.sources.switches_as_of || D.sources.at || "" : "";
     Object.keys(D.requests).map(function (rid) { return [rid, D.requests[rid]]; })
       .sort(function (a, b) { return cmpStr(a[1].at, b[1].at); })
       .forEach(function (pair) {
@@ -190,7 +197,7 @@
   // Postings hidden from Triage and Stats unless she already acted on them.
   function hidden(p) {
     if (D.decisions[p.id]) return false;
-    if (V.blocked[normCo(p.company)]) return true;
+    if (!p.added_by_user && V.blocked[normCo(p.company)]) return true;
     if (V.replaced[p.id]) return true;
     return V.latest[p.id] && p.status_hint !== "qualified" && !p.dream && !p.added_by_user;
   }
@@ -253,6 +260,7 @@
     D.decisions[id] = next; render();
     try { await persist("decisions/" + id, next); saved(msg); return true; }
     catch (e) {
+      lostWrite(e);
       if (before) D.decisions[id] = before; else delete D.decisions[id];
       render(); toast("Not saved: " + errText(e)); return false;
     }
@@ -264,7 +272,7 @@
     var doc = Object.assign({ at: new Date().toISOString() }, body);
     D.requests[id] = doc; render();
     try { await persist("requests/" + id, doc); saved(msg); return id; }
-    catch (e) { delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
+    catch (e) { lostWrite(e); delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
   }
 
   // ---------- Header, status button, help ----------
@@ -308,22 +316,29 @@
     // The click is saved first: the run reads it to know which kind of run to do.
     var doc = { at: new Date().toISOString(), kind: "quick" };
     try { await db.doc("prefs/run_now").set(doc); }
-    catch (e) { runBusy = false; render(); toast("Not started: " + errText(e)); return; }
+    catch (e) { lostWrite(e); runBusy = false; render(); toast("Not started: " + errText(e)); return; }
     try {
       await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
       R.prefs = Object.assign({}, R.prefs, { run_now: doc });
       toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
-      try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
       var code = e && e.code;
-      toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
-        : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
-        : "Not started: " + ((e && e.message) || "the run couldn't be reached") + ". Type “run my desk now” in Claude instead.");
+      // server_unavailable and upstream_error are ambiguous: the trigger may already have fired. Keep the saved click
+      // as it is (no failed flag) so a run that did start stays a quick run, and show Running until a run document arrives.
+      if (code === "server_unavailable" || code === "upstream_error") {
+        R.prefs = Object.assign({}, R.prefs, { run_now: doc });
+        toast("It may have started. This page updates by itself when it's done. If nothing changes in 45 minutes, click Run now again.");
+      } else {
+        try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
+        toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
+          : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
+          : "Not started: the run couldn't be reached. Type “run my desk now” in Claude instead.");
+      }
     } finally { runBusy = false; render(); }
   }
-  function runButton(label) {
+  function runButton(label, key) {
     var st = runState(); if (!st.ok) return null;
-    return el("button", { class: "b runnow", "data-k": "runnow-" + label.length, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
+    return el("button", { class: "b runnow", "data-k": "runnow-" + key, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
       [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
   }
   // A newer version of the career tool, as the last run found it. Installing it changes the tool's own files,
@@ -344,7 +359,7 @@
   }
 
   function renderHeader() {
-    var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now"); if (rb) rh.appendChild(rb);
+    var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now", "head"); if (rb) rh.appendChild(rb);
     var r = D.run;
     var meta = [];
     if (r && r.plan) meta.push(r.plan + (r.daily_cap ? ", up to " + r.daily_cap + " scored a day" : ""));
@@ -378,9 +393,9 @@
         ]));
       });
       kids.push(ul);
-      kids.push(el("p", { class: "sub", text: "Copy this message and email it to " + to + ". It holds no job or profile details." }));
+      kids.push(el("p", { class: "sub", text: "Copy this message and email it to " + to + ". It holds only what you see below: the problems, the error text behind them and the run times." }));
     } else {
-      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds no job or profile details." }));
+      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds only what you see below." }));
     }
     kids.push(el("pre", { class: "msg", text: msg }));
     if (runState().ok) kids.push(el("p", { class: "sub", text: "Run now, next to this button, does the part of the morning run you'd otherwise wait for: it reads your clicks, writes deep evaluations for jobs you marked Interested and updates this page, in about 10 minutes. New jobs still arrive with the morning run." }));
@@ -389,7 +404,7 @@
       el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
     ]));
     hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
-      el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title", onkeydown: function (e) { if (e.key === "Escape") closeHelp(); } }, kids)
+      el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title" }, kids)
     ]));
   }
 
@@ -415,12 +430,12 @@
     var shown = all.filter(function (p) { return stageOf(eff(p.id).status) === state.stage; });
     if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (num(b.score) || 0) - (num(a.score) || 0) || cmpStr(b.found, a.found) || cmpStr(a.id, b.id); });
     else shown.sort(function (a, b) { return cmpStr((D.decisions[b.id] || {}).at, (D.decisions[a.id] || {}).at) || cmpStr(a.id, b.id); });
-    var EMPTY = { review: loaded ? "Nothing new to review. Come back tomorrow." : "Loading your postings…", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
+    var EMPTY = { review: !loaded ? "Loading your postings…" : !db ? "Not connected. Open the page in Claude while signed in." : "Nothing new to review. Come back tomorrow.", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
     if (state.stage === "interested") {
       var waitingDeep = shown.filter(function (p) { return !D.deep[p.id]; }).length, rs = runState();
       if (waitingDeep && rs.ok) list.appendChild(el("div", { class: "note runnote" }, [
         el("span", { text: (waitingDeep === 1 ? "1 job is" : waitingDeep + " jobs are") + " waiting for a deep evaluation. The morning run writes them, or start one now (up to " + rs.deepCap + " per run, about 10 minutes)." }),
-        runButton("Run now")]));
+        runButton("Run now", "note")]));
     }
     if (!shown.length) list.appendChild(el("div", { class: "empty", text: EMPTY[state.stage] }));
     var limit = state.stage === "closed" ? state.closedLimit : Infinity;
@@ -496,14 +511,14 @@
     var e = eff(p.id), s = e.status, dec = e.d, deep = D.deep[p.id];
     var row = el("article", { class: "row", "data-id": p.id, "aria-label": p.title + " at " + p.company });
     var sc = num(p.score), thr = num(p.threshold);
-    if (p.pending || sc === null) row.appendChild(el("div", { class: "score na" }, ["–"]));
+    if (p.pending || sc === null) row.appendChild(el("div", { class: "score na", role: "img", "aria-label": "No score yet" }, ["–"]));
     else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
 
     var head = el("div", { class: "head" }, [
       isLink(p.url) ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
       el("span", { class: "co", text: p.company })
     ]);
-    if (p.dream) head.appendChild(el("span", { class: "star", text: "★ Dream company" }));
+    if (p.dream) head.appendChild(el("span", { class: "star" }, [el("span", { "aria-hidden": "true", text: "★ " }), "Dream company"]));
     var meta = el("div", { class: "meta" });
     var when = s === "new" ? ago(p.found, p.source === "Added by you" ? "Added" : "Found")
       : s === "noresp" ? "No response since " + niceDate(e.since)
@@ -524,7 +539,7 @@
       if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
       else if (!deep) tags.appendChild(el("span", { class: "tag", text: "Resume pick comes with the deep evaluation" }));
     }
-    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", title: "Resume you sent" }, [ic("paper-plane-tilt"), resumeName(dec.sent)]));
+    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag" }, [ic("paper-plane-tilt"), "Resume sent: " + resumeName(dec.sent)]));
     if (s === "skipped" && dec.reasons && dec.reasons.length) tags.appendChild(el("span", { class: "tag", text: "Skipped: " + dec.reasons.join(", ") }));
     var main = el("div", { class: "main" }, [head, meta, tags]);
     row.appendChild(main);
@@ -581,7 +596,7 @@
 
   function resumeTag(id, suffix) {
     var r = D.resumes[id];
-    if (!r) return el("span", { class: "tag", title: "Suggested resume" }, [ic("file-text"), id + (suffix || "")]);
+    if (!r) return el("span", { class: "tag" }, [ic("file-text"), "Suggested resume: " + id + (suffix || "")]);
     return el("button", { class: "tag act", title: "Suggested resume. Shows it on the Resumes tab", "aria-label": "Suggested resume: " + r.name + (suffix || ""), onclick: function () { setTab("resumes"); } }, [ic("file-text"), r.name + (suffix || "")]);
   }
 
@@ -616,7 +631,7 @@
       chips,
       p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", disabled: off, onclick: async function () {
+        el("button", { class: "b primary", "data-k": "d-" + p.id + "-skipgo", disabled: off, onclick: async function () {
           var reasons = REASONS.filter(function (k) { return dr.reasons[k]; });
           var blockIt = !!dr.block && p.company && !p.pending;
           var ok = await saveDecision(p.id, { status: "skipped", reasons: reasons }, blockIt ? null : "Moved to Closed as Skipped");
@@ -648,7 +663,7 @@
       el("p", { text: "Which resume did you send? Stats compare how each one does." }),
       opts,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", disabled: off, onclick: async function () {
+        el("button", { class: "b primary", "data-k": "d-" + p.id + "-appgo", disabled: off, onclick: async function () {
           var choice = drafts.res[p.id];
           var ok = isApplied ? await saveDecision(p.id, { sent: choice }, "Saved")
             : await saveDecision(p.id, { status: "applied", sent: choice }, "Moved to Applied. The 21-day response window starts today.");
@@ -668,7 +683,11 @@
       var blob = await res.blob();
       var out = await downloads.save({ filename: String(r.name || "resume").replace(/[^\w\- ]+/g, "").trim() + ".pdf", data: blob });
       msg.textContent = out && out.status === "saved" ? "Saved" : "Sent to your downloads";
-    } catch (e) { msg.textContent = "Not saved: " + errText(e); }
+    } catch (e) {
+      if (e && e.code === "declined") { msg.textContent = ""; return; }
+      if (e && e.code === "rate_limited") { msg.textContent = "Not saved: a save prompt is already open. Answer it, then try again."; return; }
+      msg.textContent = "Not saved: " + errText(e);
+    }
   }
   function renderResumes() {
     var v = document.getElementById("view-resumes"); v.textContent = "";
@@ -685,7 +704,7 @@
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
-      var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + " postings · sent with " + stat[k].sent + " applications";
+      var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
       return el("div", { class: "lrow" }, [
         el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
         el("div", { class: "m", text: mid }),
@@ -714,7 +733,7 @@
   var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false, srcBusy = false, swBusy = {};
   try { srcTab = localStorage.getItem("jsd-src-tab"); } catch (e) {}
   function srcOn(s) {
-    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.at || "" : "";
+    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.switches_as_of || D.sources.at || "" : "";
     var grp = V.group[s.group];
     var own = sw && (!snapAt || cmpStr(sw.at, snapAt) > 0) ? sw : null;
     if (grp && (!own || cmpStr(grp.at, own.at) > 0)) return !!grp.on;
@@ -763,6 +782,7 @@
 
     // Sub-tabs: one view at a time
     var bar = el("div", { class: "segtabs", role: "tablist", "aria-label": "Source groups" });
+    bar.addEventListener("keydown", tabKeys);
     views.forEach(function (x) {
       bar.appendChild(el("button", { class: "stab", role: "tab", "data-k": "stab-" + x.k, "aria-selected": String(srcTab === x.k), onclick: function () { srcTab = x.k; srcQuery = ""; boardEdit = null; lastVerdict = ""; try { localStorage.setItem("jsd-src-tab", srcTab); } catch (e) {} render(); } },
         [x.label, el("span", { class: "stabn", text: x.count })]));
@@ -831,7 +851,7 @@
     if (quiet.length) {
       var qo = !!quietOpen[view.k];
       l.appendChild(el("button", { class: "lrow quiettoggle", "data-k": "quiet-" + view.k, "aria-expanded": String(qo), onclick: function () { quietOpen[view.k] = !qo; render(); } }, [
-        el("span", { class: "t", text: (qo ? "▾ " : "▸ ") + "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days" })
+        el("span", { class: "t" }, [el("span", { "aria-hidden": "true", text: qo ? "▾ " : "▸ " }), "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days"])
       ]));
       if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
     }
@@ -901,7 +921,7 @@
         var doc = { on: !on, at: new Date().toISOString() };
         swBusy[s.id] = true; D.switches[s.id] = doc; render();
         try { await persist("source_switches/" + s.id, doc); saved(s.name + (on ? " turned off. The next run skips it." : " turned on. The next run includes it.")); }
-        catch (e) { if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
+        catch (e) { lostWrite(e); if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
         finally { swBusy[s.id] = false; render(); }
       } })]);
     var row = el("div", { class: "lrow src" }, [t, y, ctrl]);
@@ -1046,6 +1066,25 @@
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
+  // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
+  function tabKeys(e) {
+    if (tour.on || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    var tabs = Array.prototype.filter.call(e.currentTarget.querySelectorAll('[role="tab"]'), function (b) { return !b.disabled; });
+    var i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    var n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    n.focus(); n.click();
+  }
+  document.querySelector(".tabs").addEventListener("keydown", tabKeys);
+  // The status popup: Escape closes it from anywhere, and focus stays inside it while it is open.
+  document.addEventListener("keydown", function (e) { if (helpOpen && e.key === "Escape") { helpOpen = false; focusNext = "help-btn"; render(); } });
+  document.addEventListener("focusin", function (e) {
+    if (!helpOpen) return;
+    var panel = document.querySelector(".panel.dlg"), t = e.target;
+    if (!panel || (t && t.closest && t.closest(".panel.dlg"))) return;
+    var x = panel.querySelector(".dlg-x"); if (x) x.focus();
+  });
   function showTab() {
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === state.tab)); });
     TABS.forEach(function (t) { document.getElementById("view-" + t).hidden = t !== state.tab; });
@@ -1058,7 +1097,7 @@
       host.appendChild(el("div", { class: "note rerr" }, [el("span", { text: "Part of this page couldn't be shown. Reload the page; if it stays, copy the message for Erik from the status button." })]));
     }
   }
-  var raf = 0;
+  var raf = 0, stageShown = null;
   function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
   function draw() {
     // Keep focus and the text cursor where they were when new data redraws the page.
@@ -1077,10 +1116,23 @@
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
     showTab();
+    if (state.tab === "triage") {
+      if (state.stage !== stageShown) {
+        stageShown = state.stage;
+        var sb = document.getElementById("steps"), on = sb && sb.querySelector('[aria-pressed="true"]');
+        if (on) {
+          var sr = sb.getBoundingClientRect(), br = on.getBoundingClientRect();
+          if (br.left < sr.left) sb.scrollLeft += br.left - sr.left;
+          else if (br.right > sr.right) sb.scrollLeft += br.right - sr.right;
+        }
+      }
+    } else stageShown = null;
     if (tour.on) placeTour(false);
     if (k) {
       var n = null;
       Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
+      // The focused control is gone (a decision moved its card): focus the stage button, or the tab.
+      if (!n) n = (state.tab === "triage" ? document.querySelector('[data-k="stage-' + state.stage + '"]') : null) || document.getElementById("tab-" + state.tab);
       if (n && n !== document.activeElement) {
         try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
         if (sel && typeof n.setSelectionRange === "function") { try { n.setSelectionRange(sel[0], sel[1]); } catch (e) {} }
@@ -1149,7 +1201,7 @@
   }
 
   var TOUR = [
-    { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. The daily scan runs at 6:45am every morning." },
+    { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning around 6:45." },
     { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
@@ -1162,7 +1214,7 @@
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
-    { tab: "sources", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
+    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
     { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
@@ -1185,7 +1237,7 @@
   window.__jsdTourTargets = function () { return TOUR.map(function (x) { return x.target || null; }); };
   function startTour() {
     if (tour.on) return;
-    tour.on = true; tour.step = 0; tour.prevTab = state.tab;
+    tour.on = true; tour.step = 0; tour.prevTab = state.tab; tour.prevSrc = srcTab; tour.prevQuery = srcQuery;
     D = makeDemo(); drawer = {}; helpOpen = false; addOpen = false;
     tourEls = {
       spot: el("div", { class: "tour-spot", "aria-hidden": "true" }),
@@ -1210,6 +1262,7 @@
     var st = TOUR[n];
     if (st.tab) state.tab = st.tab;
     if (st.stage) state.stage = st.stage;
+    if (st.src) { srcTab = st.src; srcQuery = ""; addSrcOpen = false; boardEdit = null; }
     drawer = {};
     if (st.open) drawer.s1 = st.open;
     var last = n === TOUR.length - 1;
@@ -1272,6 +1325,7 @@
     if (!tour.on) return;
     tour.on = false; D = R; drawer = {};
     state.tab = tour.prevTab || "triage"; state.stage = "review";
+    srcTab = tour.prevSrc; srcQuery = tour.prevQuery || "";
     window.removeEventListener("resize", tourReflow); window.removeEventListener("scroll", tourReflow, true);
     document.removeEventListener("keydown", tourKeys);
     if (tourEls) { tourEls.spot.remove(); tourEls.card.remove(); tourEls = null; }
@@ -1279,7 +1333,7 @@
     try { localStorage.setItem("jsd-tour-done", "1"); } catch (e) {}
     if (db && canWrite && !(R.prefs && R.prefs.tour)) {
       try { await db.doc("prefs/tour").set({ done: true, at: new Date().toISOString() }); toast("Tour finished. Your own jobs show from now on."); }
-      catch (e) { toast("Tour finished. Your click wasn't saved: " + errText(e)); }
+      catch (e) { lostWrite(e); toast("Tour finished. Your click wasn't saved: " + errText(e)); render(); }
     } else toast("Tour finished.");
   }
   function offerTour() {
@@ -1290,13 +1344,13 @@
   }
 
   // ---------- Connect ----------
-  function collect(target, snap) { var m = {}; snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); R[target] = m; render(); }
+  function collect(target, snap) { var m = Object.create(null); snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); R[target] = m; render(); }
   (async function () {
     try { db = await claude.use("db"); } catch (e) { db = null; }
     if (!db) { loaded = true; canWrite = false; render(); toast("This view can't reach your tracker. Open the page in Claude while signed in."); return; }
     try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; }
     claude.use("mcp").then(function (m) { mcp = m; render(); }, function () { mcp = null; });
-    try { var u = await claude.use("user"); var cw = u && u.can ? u.can("data.write") : null; if (cw === false) canWrite = false; } catch (e) {}
+    try { var u = await claude.use("user"); var cw = u && u.can ? await u.can("data.write") : null; if (cw === false) canWrite = false; else if (cw === true) writeConfirmed = true; } catch (e) {}
     var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1, prefs: 1 };
     function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); offerTour(); } }
     function onErr(name, what) { return function () { ready(name); toast("Lost the live connection to " + what + ". Reload the page."); }; }

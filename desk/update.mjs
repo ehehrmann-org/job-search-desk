@@ -28,7 +28,7 @@ function fetchTemplate() {
   fs.rmSync(WORK, { recursive: true, force: true });
   fs.mkdirSync(path.dirname(WORK), { recursive: true });
   try {
-    execFileSync('git', ['clone', '--depth', '1', '--quiet', process.env.DESK_TEMPLATE_URL || `https://github.com/${tpl}.git`, WORK], { stdio: ['ignore', 'ignore', 'pipe'] });
+    execFileSync('git', ['clone', '--depth', '1', '--quiet', process.env.DESK_TEMPLATE_URL || `https://github.com/${tpl}.git`, WORK], { stdio: ['ignore', 'ignore', 'pipe'], env: { ...process.env, GIT_TERMINAL_PROMPT: '0' } });
   } catch (e) {
     throw new Error(`could not download the template ${tpl} (it may be private to this account): ${String(e.stderr || e.message).trim().split('\n')[0]}`);
   }

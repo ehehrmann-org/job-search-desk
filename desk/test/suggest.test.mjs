@@ -48,3 +48,41 @@ test('iso week', () => {
   assert.equal(isoWeek(new Date('2026-10-11T12:00:00')), '2026-W41');
   assert.equal(isoWeek(new Date('2026-01-01T12:00:00')), '2026-W01');
 });
+
+test('size skips only read as too big against a job she went for', () => {
+  const noActed = [20, 30, 40].map((n, i) => rec('z' + i, 3.8, 'qualified', skip('Company too big or small'), { employees: n }));
+  assert.ok(!analyze(cfg, noActed).some(x => x.id.startsWith('size')));
+  const withActed = [rec('a', 4.6, 'qualified', applied, { employees: 200 }),
+    ...[300, 400, 500].map((n, i) => rec('z' + i, 3.8, 'qualified', skip('Company too big or small'), { employees: n }))];
+  const s = analyze(cfg, withActed).find(x => x.id === 'size-max');
+  assert.equal(s.patch.value.max, 299);
+});
+
+test('a job she marked interested and then skipped counts as a skip only', () => {
+  const flipped = { status: 'skipped', reasons: ['Wrong function'], dates: { interested: '2026-10-01', closed: '2026-10-10' } };
+  const recs = [rec('a', 4.6, 'qualified', applied), rec('f', 4.0, 'qualified', flipped),
+    ...[3.6, 3.7, 3.8, 3.9, 4.0, 3.6].map((sc, i) => rec('s' + i, sc, 'qualified', skip('Wrong function')))];
+  const s = analyze(cfg, recs).find(x => x.id === 'threshold-up');
+  assert.ok(s);
+  assert.ok(s.why.includes('skipped 7 of the last 8'), s.why);
+  assert.ok(s.why.includes('scored 4.6 or higher'), s.why);
+});
+
+test('office-day skips only count above the days she accepted', () => {
+  const loose = { ...cfg, dealbreakers: { ...cfg.dealbreakers, location: { max_office_days: 5 } } };
+  const went = rec('a', 4.6, 'qualified', applied, { office_days: 3 });
+  const same = [went, ...[3, 3, 4].map((d, i) => rec('o' + i, 3.8, 'qualified', skip('Location'), { office_days: d }))];
+  assert.ok(!analyze(loose, same).some(x => x.id === 'office-days'));
+  const more = [went, ...[4, 4, 5].map((d, i) => rec('o' + i, 3.8, 'qualified', skip('Location'), { office_days: d }))];
+  const s = analyze(loose, more).find(x => x.id === 'office-days');
+  assert.equal(s.patch.value.max_office_days, 3);
+  assert.ok(s.why.includes('asked for 3 or fewer'), s.why);
+});
+
+test('lowering the bar needs 3 applications under it', () => {
+  const two = [rec('b1', 3.0, 'below_bar', applied), rec('b2', 3.1, 'below_bar', applied)];
+  assert.ok(!analyze(cfg, two).some(x => x.id === 'threshold-down'));
+  const three = [...two, rec('b3', 3.2, 'below_bar', applied)];
+  const s = analyze(cfg, three).find(x => x.id === 'threshold-down');
+  assert.equal(s.patch.value, 3.0);
+});

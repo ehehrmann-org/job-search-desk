@@ -42,7 +42,7 @@ export function isoWeek(d = new Date()) {
 }
 
 function loadRecords() {
-  const scores = fs.existsSync(P.scores) ? fs.readdirSync(P.scores).filter(f => f.endsWith('.json')).map(f => readJson(path.join(P.scores, f), null)).filter(Boolean) : [];
+  const scores = fs.existsSync(P.scores) ? fs.readdirSync(P.scores).filter(f => f.endsWith('.json')).map(f => readJson(path.join(P.scores, f), null)).filter(r => r?.verdict?.id) : [];
   const decisions = readJson(P.decisions, {});
   const since = new Date(Date.now() - WINDOW_DAYS * 86400000).toISOString().slice(0, 10);
   return scores.map(r => ({ ...r, id: r.verdict.id, decision: decisions[r.verdict.id] || null })).map(r => {
@@ -52,7 +52,8 @@ function loadRecords() {
   });
 }
 
-const acted = r => r.decision && (r.decision.dates?.interested || r.decision.dates?.applied);
+// The page keeps dates.interested when a job is skipped later, so the status decides.
+const acted = r => r.decision && r.decision.status !== 'skipped' && !!(r.decision.dates?.interested || r.decision.dates?.applied);
 const skipped = (r, reason) => r.decision?.status === 'skipped' && (!reason || (r.decision.reasons || []).includes(reason));
 
 /** Candidate suggestions, best first. Each carries plain-language text and a machine patch. */
@@ -77,7 +78,7 @@ export function analyze(cfg, recs) {
         patch: { op: 'set', path: ['threshold'], value: t } });
   }
   const belowApplied = recent.filter(r => r.verdict.status === 'below_bar' && r.decision?.dates?.applied);
-  if (belowApplied.length >= 2) {
+  if (belowApplied.length >= MIN_EVIDENCE) {
     const t = Math.floor(Math.min(...belowApplied.map(r => r.verdict.score)) * 10) / 10;
     if (t < cfg.threshold)
       out.push({ id: 'threshold-down', title: `Lower your bar from ${cfg.threshold.toFixed(1)} to ${t.toFixed(1)}`,
@@ -113,14 +114,15 @@ export function analyze(cfg, recs) {
   const sizes = recent.filter(r => skipped(r, 'Company too big or small') && r.facts?.employees).map(r => r.facts.employees);
   if (sizes.length >= MIN_EVIDENCE) {
     const actedSizes = recent.filter(r => acted(r) && r.facts?.employees).map(r => r.facts.employees);
-    const big = sizes.filter(s => !actedSizes.length || s > Math.max(...actedSizes));
+    // Without a job she went for, a size skip says nothing about which way (too big or too small).
+    const big = sizes.filter(s => actedSizes.length && s > Math.max(...actedSizes));
     const small = sizes.filter(s => actedSizes.length && s < Math.min(...actedSizes));
     const cur = cfg.dealbreakers.company_size || {};
     if (big.length >= MIN_EVIDENCE) {
       const max = Math.min(...big) - 1;
       if (cur.max == null || max < cur.max)
         out.push({ id: 'size-max', title: `Skip companies over ${max.toLocaleString('en-US')} people`,
-          why: `You skipped ${big.length} jobs at companies of ${Math.min(...big).toLocaleString('en-US')} people or more for their size.` + (actedSizes.length ? ` The largest company you acted on has about ${Math.max(...actedSizes).toLocaleString('en-US')}.` : ''),
+          why: `You skipped ${big.length} jobs at companies of ${Math.min(...big).toLocaleString('en-US')} people or more for their size. The largest company you acted on has about ${Math.max(...actedSizes).toLocaleString('en-US')}.`,
           change: `Companies over ${max.toLocaleString('en-US')} people are skipped before scoring, unless they're dream companies or a listed exception.`,
           patch: { op: 'set', path: ['dealbreakers', 'company_size'], value: { ...cur, max } } });
     } else if (small.length >= MIN_EVIDENCE) {
@@ -134,12 +136,13 @@ export function analyze(cfg, recs) {
   }
 
   // 5. Office days from "Location" skips.
-  const days = recent.filter(r => skipped(r, 'Location') && r.facts?.office_days > 0).map(r => r.facts.office_days);
+  const actedDays = recent.filter(r => acted(r) && r.facts?.office_days > 0).map(r => r.facts.office_days);
+  const days = recent.filter(r => skipped(r, 'Location') && r.facts?.office_days > 0 && (!actedDays.length || r.facts.office_days > Math.max(...actedDays))).map(r => r.facts.office_days);
   if (days.length >= MIN_EVIDENCE && cfg.dealbreakers.location) {
     const max = Math.min(...days) - 1;
     if (max >= 0 && (cfg.dealbreakers.location.max_office_days == null || max < cfg.dealbreakers.location.max_office_days))
       out.push({ id: 'office-days', title: max === 0 ? 'Only show remote jobs' : `Skip jobs with more than ${max} office day${max === 1 ? '' : 's'} a week`,
-        why: `You skipped ${days.length} jobs for location that asked for ${Math.min(...days)} or more office days a week.`,
+        why: `You skipped ${days.length} jobs for location that asked for ${Math.min(...days)} or more office days a week.` + (actedDays.length ? ` The jobs you went for asked for ${Math.max(...actedDays)} or fewer.` : ''),
         change: max === 0 ? 'Hybrid and office jobs are skipped before scoring.' : `Jobs asking for more than ${max} office days a week are skipped before scoring.`,
         patch: { op: 'set', path: ['dealbreakers', 'location'], value: { ...cfg.dealbreakers.location, max_office_days: max } } });
   }
@@ -248,6 +251,8 @@ export function rescoreOpen() {
     const x = readJson(path.join(P.extractions, `${id}.json`), null);
     if (!x) continue;
     x.id = id;
+    x.company ||= rec.company || rec.verdict.company;
+    x.title ||= rec.title || rec.verdict.title;
     const v = scorePosting(x, cfg, { dream: isDream(x.company, dreams) });
     if (v.status !== rec.verdict.status || v.score !== rec.verdict.score) {
       changed.push({ id, from: `${rec.verdict.status} ${rec.verdict.score ?? ''}`.trim(), to: `${v.status} ${v.score ?? ''}`.trim() });

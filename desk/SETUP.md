@@ -9,7 +9,7 @@ You are setting up the Job Search Desk for one person. Read this whole file befo
 - **One question at a time.** Use the multiple-choice question tool whenever the answers fit 2 to 4 options; she can always type her own. Accept "not sure" for any preference question and record it (step 4 says where).
 - **Never enter a password, never create an account for her, never click Submit on her behalf.** Tell her exactly what to click and wait.
 - **Checklist.** Show the progress checklist (`node desk/setup.mjs status`, shown as a plain list, not a code block) at the very start, after every finished step, and when she says "continue setup". Never mid-step.
-- **Checkpoints.** A step is finished only when `node desk/setup.mjs done <n>` passes. If it lists problems, fix them with her, then run it again. After each finished step: `bash desk/save.sh "setup: step <n>"`. If it prints `save failed`, say so plainly and offer the message for Erik; the work is kept locally and the next save retries.
+- **Checkpoints.** A step is finished only when `node desk/setup.mjs done <n>` passes. If it lists problems, fix them with her, then run it again. After each finished step: `bash desk/save.sh "setup: step <n>"`. If it prints `save failed`, say so plainly and offer the message for Erik; the work stays in this session, so try the save again before the session ends.
 - **Errors.** When anything fails, say in one or two plain sentences what happened and what happens next, then offer: "Want a message for Erik? I'll write it; you send it." The message: "Hi Erik, setup stopped at step <n> (<title>). What happened: <one line>. Error: <exact text, shortened>. Time: <now>. Tool version: <desk/VERSION>." Nothing about her jobs or profile. Typing "help" anytime gives the same message.
 - **Continue setup.** On "continue setup" (or a fresh session): run `npm install --ignore-scripts --no-audit --no-fund` (quietly), then `status`, say where she left off, and start the next unfinished step from its beginning.
 - **Short on time.** If she or Erik says the session has about an hour, take the fast path: skip step 5 point 6 (the preview), step 6 point 2 (extra suggestions) and step 8 point 2 (first jobs), and in step 7 propose at most 10 companies. Session 1 then takes about 75 minutes. Everything skipped happens on its own later (the morning run scores the first jobs) or in session 2.
@@ -55,7 +55,7 @@ For Pro and Not sure, say once: setup is long, so Claude may pause for a usage l
 **Location:** … | **Email:** … | **LinkedIn:** …
 ## Summary
 ## Experience
-### Company — City, ST
+### Company, City, ST
 **Title**
 Mon YYYY – Mon YYYY
 - bullet
@@ -97,7 +97,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 2. Suggest 3 to 5 more like the employers in her best job, each with one line on why. She accepts or declines each.
 3. For each accepted company, while she watches: find its careers page and the job board behind it (web search; open the careers page; job links usually point to the board). Check it with `node desk/setup.mjs board <link>`. Readable: add to `portals.yml` `tracked_companies` as `{ name, careers_url: <board link>, enabled: true, dream: true }`. Not readable after a real look: add `{ name, careers_url: <careers page>, enabled: true, dream: true, scan_method: websearch, scan_query: "<name> careers <main title word>" }`, and tell her it gets a weekly web search instead of the daily scan.
 4. Close with: "Dream companies are always checked and their jobs always reach you, even below your bar. Your deal-breakers still apply to them."
-5. `node desk/setup.mjs done 6`, then the session break.
+5. `node desk/setup.mjs done 6`.
 
 ## Step 7. Job sources (about 10 minutes)
 
@@ -115,11 +115,11 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 ## Step 8. Go live (about 15 minutes)
 
 1. **Her job page.** `node desk/page/build.mjs`, then publish `desk/page/dist/job-search-desk.html` with the Artifact tool: icon `briefcase`, capabilities `{"db": {}, "user": {}, "downloads": true, "assets": {}, "mcp": {"servers": [{"server": "Claude Code Remote", "tools": ["fire_trigger"]}]}}` (the last one lets the page's Run now button start her daily run). Save its link to `desk.yml` `page_url`.
-2. **First jobs.** `git pull -q --rebase origin main`. If the first scan has finished (`profile/jds/` has postings), score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
-3. **First fill.** `node desk/page-sync.mjs push`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`.
+2. **First jobs.** `bash desk/save.sh "setup: page"`. If the first scan has finished (`profile/jds/` has postings), score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
+3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the page's status button says the first run hasn't happened yet; that is expected, and the morning run replaces it.
 4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to open the status button, click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
-5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a scheduled task named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its id to `desk.yml` `task_id`.
-6. **Task settings (she does this).** Walk her to the task's settings: remove every connection (Gmail gets added back in step 9), and check that automatic approval is on. Wait until she confirms both.
+5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`. The task itself only runs scripts, reads her page and starts the scoring helpers, so it runs on Sonnet: if the tool that creates it asks for a model, pick Sonnet. If it doesn't ask, the task takes this session's model, and point 6 corrects it. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
+6. **Task settings (she does this).** Walk her to the task's settings: remove every connection (Gmail gets added back in step 9), check that automatic approval is on, and check that the model is Sonnet (change it there if it isn't). Wait until she confirms all three.
 7. Save, then `node desk/setup.mjs done 8`.
 8. **Close the session.** Tell her, briefly:
    - She's live: new jobs arrive every morning around 6:45 on her job page. The tour is always one click away from the status button.
@@ -150,17 +150,17 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 ## Step 11. Your resumes (about 15 minutes)
 
-1. `git pull -q --rebase origin main` for the latest scored jobs. Propose 1 to 3 role tracks from her target roles. Add a second track only when its postings reward different things (read the scored postings in `profile/data/scores/` and `profile/jds/` to check).
+1. `git pull -q --rebase --autostash origin main` for the latest scored jobs. Propose 1 to 3 role tracks from her target roles. Add a second track only when its postings reward different things (read the scored postings in `profile/data/scores/` and `profile/jds/` to check).
 2. For each track, draft a resume from `profile/cv.md` only, as `profile/resumes/<track-id>.md` in the same shape: a summary written for the track, the bullets that matter most for it first, wording mirrored from real postings in her scan, at most 2 pages. Roles that ended more than 15 years ago collapse into one line under "Earlier experience".
 3. `node desk/resume.mjs build profile/resumes/<track-id>.md`. It refuses any number not in the master resume: fix the draft, or confirm the fact with her and add it to the master first.
 4. Show each in chat: the summary and the top 3 bullets per role, and send the PDF as a file. She edits in plain words; rebuild after each change until she approves.
 5. Add each to `profile/resumes/index.yml`: `{ id, name, kind: default, updated, pdf: <id>.pdf, text_file: <id>.txt, summary: <one line on what it leads with> }`.
-6. **On her page.** Upload each resume PDF as an asset of her job page (Artifact publish with `url` = `desk.yml` `page_url`, `asset: true`, `file_paths`). Save each asset id to its `index.yml` entry as `asset_id`. Then `node desk/page-sync.mjs push --no-run`, ArtifactData `batch` per printed file, `node desk/page-sync.mjs ack <file>`.
+6. **On her page.** Upload each resume PDF as an asset of her job page (Artifact publish with `url` = `desk.yml` `page_url`, `asset: true`, `file_paths`). Save each asset id to its `index.yml` entry as `asset_id`. Then `node desk/page-sync.mjs push --no-run`, ArtifactData `batch` per printed file, `node desk/page-sync.mjs ack <file>`. If a PDF upload failed and the resume was already pushed, upload it, add the asset_id, and use the resume update step in desk/CLAUDE-DESK.md; push skips resumes already on the page.
 7. `node desk/setup.mjs done 11`
 
 ## Step 12. Test the scoring (about 10 minutes)
 
-1. `git pull -q --rebase origin main`, then `node desk/setup.mjs sample` picks 8 scored postings from her real jobs (high, middle and low, across her title families), shuffled. Leave out jobs she already decided on her page; their decisions already teach the scoring. If it answers `short: true`, score more first (`daily.mjs todo --cap 20`, the same way as step 8 point 2). Still short: find live postings for her titles with web search, save each one's text as `profile/jds/s<n>.md` with the same front matter the scan writes (`id: "s<n>"`, `url`, `company`, `title`, `found`, `jd: saved`), score them the same way, and use 5 to 8 in all.
+1. `git pull -q --rebase --autostash origin main`, then `node desk/setup.mjs sample` picks 8 scored postings from her real jobs (high, middle and low, across her title families), shuffled. Leave out jobs she already decided on her page; their decisions already teach the scoring. If it answers `short: true`, score more first (`daily.mjs todo --cap 20`, the same way as step 8 point 2). Still short: find live postings for her titles with web search, save each one's text as `profile/jds/s<n>.md` with the same front matter the scan writes (`id: "s<n>"`, `url`, `company`, `title`, `found`, `jd: saved`), score them the same way, and use 5 to 8 in all.
 2. Show them blind, 4 per question round: title, company, location, pay, and a 2-line summary of the job. No score. For each she picks Would apply, Wouldn't, or Not sure, and may add a reason (pay, size, location, industry, function, seniority).
 3. Record them all in `profile/config/scoring-cases.yml`: `{ name: "<company>, <title>", decision: apply | skip | unsure, reasons: [...], input: <the posting's extraction from profile/data/extractions/<id>.json> }`.
 4. Reveal: `node desk/test-scoring.mjs`. Tell her the agreement in plain words ("We agreed on 6 of 8"), and show each disagreement with its score and the line that drove it.

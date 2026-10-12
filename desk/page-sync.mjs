@@ -5,10 +5,14 @@
  *
  *   node desk/page-sync.mjs pull <dump dir>
  *       <dump dir> holds the page's collections as the ArtifactData tool saves them
- *       with out_dir: decisions/, requests/, requests_done/, source_switches/.
- *       Mirrors decisions to data/page/decisions.json, applies source switches and
+ *       with out_dir: decisions/, requests/, requests_done/, source_switches/, prefs/.
+ *       Merges decisions into data/page/decisions.json, applies source switches and
  *       requests (added jobs, blocks, job board links, suggestions), and prints what
  *       still needs Claude (source lookups, added jobs to check) as JSON.
+ *
+ *   node desk/page-sync.mjs since
+ *       Prints the time to read decisions from (a week before the last pull that saw
+ *       them), or "all" when every decision is needed.
  *
  *   node desk/page-sync.mjs done <request id> "<result>" [--posting <id>]
  *       Records that a request was handled; pushed as requests_done/<id>.
@@ -105,28 +109,37 @@ function setDeskKey(key, value) {
 
 // ------------------------------------------------------------------ pull
 
-// Which run this is: "quick" when she clicked Run now in the last 20 minutes
-// and no run has finished since; otherwise "normal" (the scheduled morning run).
-export function runMode(rn, lastRunAt, now = Date.now()) {
+// Which run this is: "quick" when she clicked Run now in the last 20 minutes, no run has
+// finished since and no other run already took that click; otherwise "normal" (the scheduled morning run).
+export function runMode(rn, lastRunAt, now = Date.now(), seenAt = null) {
   if (!rn || typeof rn !== 'object' || rn.failed) return 'normal';
   const kind = rn.kind === undefined ? 'quick' : rn.kind;
   const at = Date.parse(rn.at);
   if (kind !== 'quick' || !Number.isFinite(at) || at > now + 60000 || now - at > 20 * 60000) return 'normal';
+  if (seenAt && seenAt === rn.at) return 'normal';   // a run already took this click
   const last = Date.parse(lastRunAt || '');
   return Number.isFinite(last) && last >= at ? 'normal' : kind;
 }
 
 async function pull(dumpDir) {
   if (!dumpDir || !fs.existsSync(dumpDir)) throw new Error(`dump folder not found: ${dumpDir}`);
+  const st0 = state();
+  st0.pulled_at = nowIso();   // when this run read her switches; the sources document carries it, and the page treats older switches as applied
   const decisions = readDir(path.join(dumpDir, 'decisions'));
   const requests = readDir(path.join(dumpDir, 'requests')) || dict();
   const doneRemote = readDir(path.join(dumpDir, 'requests_done')) || dict();
   const switches = readDir(path.join(dumpDir, 'source_switches')) || dict();
   const prefs = readDir(path.join(dumpDir, 'prefs')) || dict();
   // No decisions folder means the list wasn't saved, not that every decision is gone.
-  if (decisions) writeJson(P.decisions, decisions);
+  if (decisions) {
+    writeJson(P.decisions, Object.assign(dict(), readJson(P.decisions, {}), decisions));
+    st0.decisions_synced_at = nowIso();   // `since` reads decisions changed from a week before this
+  }
+  const mode = runMode(prefs.run_now, st0.last_run_at, Date.now(), st0.run_now_seen);
+  if (mode === 'quick') st0.run_now_seen = prefs.run_now.at;   // this run takes the click; another session that reads the same click runs normal
+  writeJson(P.state, st0);
 
-  const summary = { mode: runMode(prefs.run_now, readJson(P.state, {}).last_run_at), decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
+  const summary = { mode, decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
   const doneLocal = new Set(fs.existsSync(P.done) ? fs.readdirSync(P.done).map(f => f.replace(/\.json$/, '')) : []);
   const seen = seenKeys(DATA);
   const jdByKey = new Map();
@@ -256,12 +269,13 @@ function addJob(rid, r, summary, { seen, jdByKey }) {
   const extra = { added: true, source: 'Added by you', applied: !!r.applied };
   const day = String(r.at || nowIso()).slice(0, 10);
   const key = url ? urlKey(url) : '';
-  const entry = { id: rid, ...(url ? { url, on_job_site: /linkedin\.com|indeed\.com/.test(url) } : {}) };
+  const soon = summary.mode === 'quick' ? 'Scoring in the next morning run' : 'Scoring in this run';   // a quick run skips scoring
+  const entry = { id: rid, ...(url ? { url } : {}) };
   if (key && !seen.has(key)) entry.missed_by_scan = true;
 
   if (textOnly) {
     writeJd(rid, { url: url || '', company: 'Added job', title: 'Added job', found: day, jd: 'saved', ...extra }, raw);
-    done(rid, 'Scoring in this run', rid);
+    done(rid, soon, rid);
     summary.jobs_queued.push({ ...entry, how: 'pasted text saved; score it this run' });
     return;
   }
@@ -275,13 +289,13 @@ function addJob(rid, r, summary, { seen, jdByKey }) {
     const sc = readJson(path.join(P.scores, `${known}.json`), null);
     if (ex) writeJson(path.join(P.extractions, `${rid}.json`), { ...ex, id: rid });
     if (sc?.verdict && sc.verdict.status !== 'unscorable') writeJson(path.join(P.scores, `${rid}.json`), { ...sc, verdict: { ...sc.verdict, id: rid } });
-    done(rid, sc ? 'Added' : 'Scoring in this run', rid, known);
+    done(rid, sc ? 'Added' : soon, rid, known);
     summary.jobs_queued.push({ ...entry, how: sc ? 'already scored; copied' : 'description already saved; score it this run' });
     return;
   }
   const res = queueLink(url, rid);
   done(rid, 'Scoring tomorrow, after the scan reads the posting', rid, res.replaces);
-  summary.jobs_queued.push({ ...entry, how: 'link queued; the next scan saves the description' });
+  summary.jobs_queued.push({ ...entry, on_job_site: /linkedin\.com|indeed\.com/.test(url), how: 'link queued; the next scan saves the description' });
 }
 
 function writeJd(id, meta, body) {
@@ -318,10 +332,22 @@ async function push(args) {
   st.pushed ||= {};
   const pushed = k => new Set(st.pushed[k] || []);
   const writes = [];
-  const add = (collection, doc_id, body) => writes.push({ collection, doc_id, body });
   const problems = [];
   const seenProblem = new Set();
   const problem = p => { if (p.what && !seenProblem.has(p.what)) { seenProblem.add(p.what); problems.push(p); } };
+  // A document over the page's limit becomes a problem she can see (and the run document carries), never a silent skip.
+  const add = (collection, doc_id, body) => {
+    const json = JSON.stringify(body);
+    const size = Buffer.byteLength(json, 'utf8');
+    if (size > DOC_MAX) {
+      const detail = `${collection}/${doc_id} is ${size} bytes, over the 256 KiB limit`;
+      problem(collection === 'sources'
+        ? { what: 'Your list of companies is too long for the page.', fix: 'Ask Claude to take companies you do not need off your list, or copy the message for Erik.', detail, since: at }
+        : { what: 'One item is too big to put on the page.', fix: 'Copy the message for Erik.', detail, since: at });
+      return;
+    }
+    writes.push({ collection, doc_id, json, size });
+  };
   for (const line of args.problems || []) {
     const [what, fix, ...detail] = String(line).split('|');
     problem({ what: text(what, 200), fix: text(fix, 300), ...(detail.length ? { detail: text(detail.join('|'), 500) } : {}), since: at });
@@ -375,6 +401,7 @@ async function push(args) {
   try {
     const { rows, gaps, blocked } = await buildSources(sourceCounts(allJds(), scores, decisions, since30));
     snap = sourcesDoc(rows, gaps, at, blocked);
+    snap.body.switches_as_of = st.pulled_at || at;   // outside the hash: a moved stamp alone must not re-push an unchanged list
     if (snap.hash !== st.sources_hash) add('sources', snap.id, snap.body);
   } catch (e) {
     problem({ what: 'Your list of sources has a problem.', fix: 'Copy the message for Erik.', detail: text(e.message, 300), since: at });
@@ -396,6 +423,13 @@ async function push(args) {
     catch (e) { problem({ what: 'Your scoring settings have a problem.', fix: 'Type "change my scoring" in Claude and say it shows an error.', detail: text(e.message, 300), since: at }); }
     const todayIso = at.slice(0, 10);
     const scoredToday = scores.filter(s => (s.scored_at || '').startsWith(todayIso) && s.verdict.status !== 'unscorable');
+    // The funnel counts what the scan and alerts let through since the search started, like passed_filters; hand-added jobs never passed the filters.
+    const sysScores = scores.filter(s => {
+      if (s.verdict.status === 'unscorable') return false;
+      const jd = jdMeta(s.verdict.id);
+      if (jd.added === 'true' || jd.added === true) return false;
+      return String(jd.found || (s.scored_at || '')).slice(0, 10) >= st.search_start;
+    });
     const ok = problems.length === 0;
     if (ok) st.last_good_run = at;
     st.last_run_at = at;
@@ -410,8 +444,8 @@ async function push(args) {
         open_today: lastScan ? Number(lastScan[4]) || 0 : 0,
         passed_filters: scanRuns.filter(r => r[0].slice(0, 10) >= st.search_start).reduce((s, r) => s + (Number(r[13]) || 0), 0)
           + alertsAdded(st.search_start),
-        scored: scores.filter(s => s.verdict.status !== 'unscorable').length,
-        qualified: scores.filter(s => s.verdict.status === 'qualified').length,
+        scored: sysScores.length,
+        qualified: sysScores.filter(s => s.verdict.status === 'qualified').length,
       },
       today: { scored: scoredToday.length, qualified: scoredToday.filter(s => s.verdict.status === 'qualified').length },
     });
@@ -424,13 +458,10 @@ async function push(args) {
   let cur = [], bytes = 0;
   for (const w of writes) {
     const file = path.join(P.outbox, 'docs', `${w.collection}__${w.doc_id.replace(/[^A-Za-z0-9_~-]/g, '_')}.json`);
-    const json = JSON.stringify(w.body);
-    const size = Buffer.byteLength(json, 'utf8');
-    if (size > DOC_MAX) { console.error(`skipped ${w.collection}/${w.doc_id}: over 250 KiB`); continue; }
-    fs.writeFileSync(file, json);
-    if (cur.length >= BATCH_MAX || bytes + size > BATCH_BYTES) { batches.push(cur); cur = []; bytes = 0; }
+    fs.writeFileSync(file, w.json);
+    if (cur.length >= BATCH_MAX || bytes + w.size > BATCH_BYTES) { batches.push(cur); cur = []; bytes = 0; }
     cur.push({ op: 'set', collection: w.collection, doc_id: w.doc_id, file_path: file });
-    bytes += size;
+    bytes += w.size;
   }
   if (cur.length) batches.push(cur);
   const files = batches.map((b, i) => {
@@ -511,6 +542,10 @@ if (isMain(import.meta.url)) {
   const flag = name => { const out = []; rest.forEach((a, i) => { if (a === name && rest[i + 1] != null) out.push(rest[i + 1]); }); return out; };
   const main = {
     pull: () => pull(rest[0]),
+    since: () => {
+      const t = Date.parse(state().decisions_synced_at || '');
+      console.log(!fs.existsSync(P.decisions) || !Number.isFinite(t) ? 'all' : new Date(t - 7 * 86400000).toISOString());
+    },
     push: () => {
       const fromFile = flag('--problems-file').flatMap(f => fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').map(l => l.trim()).filter(Boolean) : []);
       return push({ problems: [...flag('--problem'), ...fromFile], noRun: rest.includes('--no-run'), quick: rest.includes('--quick'), updateFile: flag('--update-file')[0] || null });
@@ -523,6 +558,6 @@ if (isMain(import.meta.url)) {
       console.log(`recorded ${rest[0]}`);
     },
   }[cmd];
-  if (!main) { console.error('usage: page-sync.mjs pull <dump dir> | push [--problem "what|fix|detail"] [--problems-file f] [--no-run] [--quick] [--update-file <update.mjs check output>] | ack <batch file> | done <request id> "<result>" [--posting <id>]'); process.exit(2); }
+  if (!main) { console.error('usage: page-sync.mjs pull <dump dir> | since | push [--problem "what|fix|detail"] [--problems-file f] [--no-run] [--quick] [--update-file <update.mjs check output>] | ack <batch file> | done <request id> "<result>" [--posting <id>]'); process.exit(2); }
   Promise.resolve().then(main).catch(e => { console.error(`page-sync: ${e.message}`); process.exit(1); });
 }

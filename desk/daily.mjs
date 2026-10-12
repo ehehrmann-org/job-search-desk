@@ -9,6 +9,7 @@
  *       Order: jobs the user added, dream companies, then newest first. Postings found
  *       more than 14 days ago and never scored are dropped (counted as too_old). A
  *       posting handed out 3 times without a usable extraction is recorded as unscorable.
+ *       --cap 0 hands out nothing and records no attempt (used by a quick run to read to_deep only).
  *
  *   node desk/daily.mjs alerts <file.json>
  *       <file.json> is an array of jobs read from alert emails or web search:
@@ -20,6 +21,8 @@
  *   node desk/daily.mjs relink <job site link> <employer link>
  *       A LinkedIn or Indeed posting was found on the employer's own job board: queue the
  *       employer link under the same posting id (and source), so the scan reads that instead.
+ *       A file the scan already wrote with `jd: missing` is removed so the scan reads the
+ *       employer link; a saved or scored posting is left alone.
  *
  *   node desk/daily.mjs score
  *       Scores every data/extractions/<id>.json that has no data/scores/<id>.json yet,
@@ -69,12 +72,16 @@ async function todo(args) {
   const lists = loadBlocklist(DATA);
   const attempts = readJson(P.attempts, {});
   const cutoff = new Date(Date.now() - MAX_AGE_DAYS * 86400000).toISOString().slice(0, 10);
-  let blocked = 0, tooOld = 0, gaveUp = 0;
+  let blocked = 0, tooOld = 0, gaveUp = 0, gone = 0;
   const pending = [];
   for (const id of ids(P.jds, '.md')) {
     if (scored.has(id)) continue;
     const m = meta(id);
     const p = { id, jd_file: `jds/${id}.md`, company: m.company || '', title: m.title || '', url: m.url || '', jd: m.jd || 'missing', added: isTrue(m.added), dream: isDream(m.company, dreams), found: String(m.found || '') };
+    if (p.jd === 'gone') {
+      if (p.added) { unscorable(id, m, 'the job posting was taken down before it could be read'); gaveUp++; } else gone++;
+      continue;
+    }
     if (!p.added && blockedBy(lists, p.company, p.url)) { blocked++; continue; }
     if (p.added && p.jd === 'missing' && (!m.title || m.title === 'Added job')) { unscorable(id, m, 'the link needs a login; paste the job text instead'); gaveUp++; continue; }
     if ((attempts[id] || 0) >= MAX_ATTEMPTS) { unscorable(id, m, `no usable extraction after ${MAX_ATTEMPTS} tries`); gaveUp++; continue; }
@@ -104,7 +111,7 @@ async function todo(args) {
       .map(c => ({ name: c.name, query: c.scan_query || `${c.name} careers` }));
   }
   console.log(JSON.stringify({
-    daily_cap: cap, to_score: today, waiting: Math.max(0, pending.length - cap), blocked, too_old: tooOld, unscorable: gaveUp,
+    daily_cap: cap, to_score: today, waiting: Math.max(0, pending.length - cap), blocked, too_old: tooOld, unscorable: gaveUp, gone,
     to_deep: toDeep.slice(0, Number(desk.deep_cap) || 1), dream_web_search: dreamSearch,
   }, null, 2));
 }
@@ -167,7 +174,16 @@ function relink(from, to) {
   const line = parsePending(md).find(p => urlKey(p.url) === key);
   if (!line) throw new Error(`not on the Pending list: ${from}`);
   const id = line.id || postingId(line.url);
-  if (fs.existsSync(path.join(P.jds, `${id}.md`))) { console.log(JSON.stringify({ relinked: false, note: 'its description was already saved' })); return; }
+  const jdFile = path.join(P.jds, `${id}.md`);
+  if (fs.existsSync(jdFile)) {
+    const saved = meta(id).jd !== 'missing' || fs.existsSync(path.join(P.scores, `${id}.json`));
+    if (saved) { console.log(JSON.stringify({ relinked: false, note: 'its description is already saved' })); return; }
+    // The scan wrote an empty file for a link it can't read: drop it so the next scan reads the employer link under the same id.
+    fs.rmSync(jdFile, { force: true });
+    fs.rmSync(path.join(P.extractions, `${id}.json`), { force: true });
+    const attempts = readJson(P.attempts, {});
+    if (attempts[id]) { delete attempts[id]; writeJson(P.attempts, attempts); }
+  }
   const cells = [line.company, line.title, line.location].map(sanitizeMarkdownField);
   addPending([`- [ ] ${url} | ${cells.join(' | ')} | id: ${id}${line.source ? ` | source: ${sanitizeMarkdownField(line.source)}` : ''}`]);
   console.log(JSON.stringify({ relinked: true, id, url }));
@@ -183,7 +199,7 @@ function score() {
     if (scored.has(id)) continue;
     try {
       const x = readJson(path.join(P.extractions, `${id}.json`), null);
-      if (!x || typeof x !== 'object' || Array.isArray(x)) { out.push({ id, error: 'extraction is not a JSON object; it is handed out again tomorrow' }); continue; }
+      if (!x || typeof x !== 'object' || Array.isArray(x)) { try { fs.unlinkSync(path.join(P.extractions, `${id}.json`)); } catch {} out.push({ id, error: 'extraction is not a JSON object; it is handed out again tomorrow' }); continue; }
       x.id = id;
       const jdFile = path.join(P.jds, `${id}.md`);
       const jd = fs.existsSync(jdFile) ? readFrontMatter(jdFile) : { meta: {}, body: '' };
@@ -191,6 +207,8 @@ function score() {
       if (!x.company && jd.meta.company) x.company = jd.meta.company;
       if (!x.title && jd.meta.title) x.title = jd.meta.title;
       const v = scorePosting(x, cfg, { dream: isDream(x.company, dreams), jdText: body && body.trim() ? body : null });
+      const unrated = v.ratings.filter(r => r.source === 'judged' && r.score == null).map(r => r.name);
+      if (unrated.length) { out.push({ id, error: `${unrated.join(', ')} not rated; it is handed out again tomorrow` }); continue; }
       writeJson(path.join(P.scores, `${id}.json`), {
         verdict: v, facts: cleanFacts(x.facts), company: x.company || null, title: x.title || null,
         suggested_resume: typeof x.suggested_resume === 'string' ? x.suggested_resume : null, scored_at: new Date().toISOString(),

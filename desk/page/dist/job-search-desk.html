@@ -1,7 +1,7 @@
 <title>Job Search Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" media="print" id="gf" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Job Search Desk, live page. Design locked as mockup version 9 (2026-10-10). */
 :root {
@@ -10,11 +10,11 @@
   --surface-2: #eef0f2;
   --fg: #15181c;
   --fg-2: #4b525b;
-  --muted: #7d848d;
+  --muted: #656c75;
   --line: #dde1e5;
   --accent: #1f5fa8;
   --accent-soft: #e3edf8;
-  --star: #b7791f;
+  --star: #9a6416;
   --s-interview: #1baf7a;
   --s-rejected: #d03b3b;
   --s-noresp: #8a9098;
@@ -51,6 +51,8 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tab:focus-visible { outline-offset: -2px; }
+.step:focus-visible { outline-offset: -3px; }
 .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
 .s { font-size: 12.5px; color: var(--muted); }
 
@@ -148,7 +150,7 @@ button.tag { cursor: pointer; }
 .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: var(--r); padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; font-size: 13px; }
 .note span { flex: 1 1 260px; }
 .pill { display: inline-block; font-size: 11.5px; padding: 1px 7px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-ink); margin-left: 6px; font-weight: 400; vertical-align: 1px; }
-.sw { position: relative; width: 40px; height: 24px; border-radius: 999px; border: 0; background: var(--s-pending); flex: none; padding: 0; }
+.sw { position: relative; width: 40px; height: 24px; border-radius: 999px; border: 0; background: var(--muted); flex: none; padding: 0; }
 .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); transition: transform .15s ease; }
 .sw[aria-checked="true"] { background: var(--accent); }
 .sw[aria-checked="true"]::after { transform: translateX(16px); }
@@ -188,6 +190,7 @@ button.tag { cursor: pointer; }
 .foot { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12.5px; padding: 6px 9px; border-radius: 6px; max-width: 260px; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: calc(100% - 32px); }
+.toast:not(.show) { opacity: 0; pointer-events: none; }
 
 @media (max-width: 760px) {
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -196,6 +199,9 @@ button.tag { cursor: pointer; }
   .ctrl, .lrow .btns { justify-content: flex-start; }
 }
 @media (max-width: 600px) {
+  .tabs { flex-wrap: wrap; }
+  button.tag { min-height: 32px; padding: 5px 10px; }
+  .link { min-height: 32px; padding: 5px 0; }
   .row { grid-template-columns: 44px minmax(0, 1fr); }
   .side, .wide { grid-column: 1 / -1; }
   .state, .timer { text-align: left; }
@@ -323,7 +329,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
   .state, .timer { text-align: left; }
   .btns, .more { justify-content: flex-start; }
 }
-@media (max-width: 400px) { .btns.one .b { padding: 8px 9px; gap: 5px; } }
+@media (max-width: 414px) { .btns.one { flex-wrap: wrap; } .btns.one .b { padding: 8px 9px; gap: 5px; } }
 /* Button groups hug their buttons, so highlights and focus match what's visible */
 .side > .btns, .side > .more { justify-self: end; }
 @media (max-width: 860px) { .side > .btns, .side > .more { justify-self: start; } }
@@ -333,9 +339,12 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .panel.update { border-color: var(--accent); gap: 8px; }
 .panel.update .uphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .upnotes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg-2); display: grid; gap: 3px; }
+/* Touch phones zoom in on a field whose text is smaller than 16px; keep fields at 16px there */
+@media (hover: none) and (pointer: coarse) { input, textarea, select { font-size: 16px; } }
 </style>
 
 <script>
+(function(){var l=document.getElementById('gf');if(!l)return;var on=function(){l.media='all'};if(l.sheet){on();}else{l.addEventListener('load',on,{once:true});}})();
 // Phosphor Icons (regular weight), MIT license (see desk/page/PHOSPHOR-LICENSE.txt), https://phosphoricons.com. Generated from @phosphor-icons/core 2.1.1.
 var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z\"/>","file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
 </script>
@@ -402,7 +411,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   </section>
 </div>
 <div class="tip" id="tip" hidden></div>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
@@ -424,15 +433,14 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
 
   // ---------- Data (filled by the database) ----------
   // R is her real data; D is what the page shows: R, or the sample data while the tour runs.
-  var R = { postings: {}, decisions: {}, deep: {}, requests: {}, done: {}, resumes: {}, switches: {}, rescores: {}, prefs: {}, run: null, sources: null, suggestions: null };
+  var R = { postings: Object.create(null), decisions: Object.create(null), deep: Object.create(null), requests: Object.create(null), done: Object.create(null), resumes: Object.create(null), switches: Object.create(null), rescores: Object.create(null), prefs: Object.create(null), run: null, sources: null, suggestions: null };
   var D = R;
   var tour = { on: false, step: 0, prevTab: null, offered: false };
-  var db = null, downloads = null, mcp = null, canWrite = true, loaded = false, runBusy = false;
+  var db = null, downloads = null, mcp = null, canWrite = true, writeConfirmed = false, loaded = false, runBusy = false;
 
   // ---------- View state (per viewer, this browser only) ----------
   var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE };
   try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
-  var h0 = (location.hash || "").slice(1); if (TABS.indexOf(h0) > -1) state.tab = h0;
   var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
   // Unsent typing and picks survive the page redrawing when new data arrives.
   var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "" };
@@ -463,7 +471,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     return n;
   }
   var toastT;
-  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 3600); }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); t.textContent = ""; }, Math.min(12000, Math.max(3600, 55 * String(msg).length))); }
   function num(v) { if (v === null || v === undefined || v === "") return null; var n = Number(v); return isFinite(n) ? n : null; }
   function one(v) { var n = num(v); return n === null ? "–" : n.toFixed(1); }
   function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
@@ -474,7 +482,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   function daysSince(iso) { if (!iso) return null; var t = toDate(iso).getTime(); return isNaN(t) ? null : Math.max(0, Math.floor((Date.now() - t) / DAY)); }
   function niceDate(iso) { if (!iso) return ""; var d = String(iso).length === 10 ? new Date(iso + "T12:00:00") : new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
   function longDate(iso) { var d = new Date(String(iso).slice(0, 10) + "T12:00:00"); return isNaN(d) ? "" : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
-  function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (daysSince(iso) === 0 ? "today, " : niceDate(iso) + ", ") + s; }
+  function niceTime(iso) { var d = new Date(iso); if (isNaN(d)) return ""; var s = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); return (d.toDateString() === new Date().toDateString() ? "today, " : niceDate(iso) + ", ") + s; }
   function ago(iso, verb) { var n = daysSince(iso); if (n === null) return ""; return verb + " " + (n === 0 ? "today" : n === 1 ? "1 day ago" : n + " days ago"); }
   function stageOf(status) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].has.indexOf(status) > -1) return STAGES[i].k; return "review"; }
   function cmpStr(a, b) { a = a || ""; b = b || ""; return a < b ? -1 : a > b ? 1 : 0; }
@@ -485,12 +493,20 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     catch (e) { toast("Couldn't copy. Select the text and copy it yourself."); }
   }
   function errText(e) {
-    var s = String((e && (e.code || e.message)) || "").toLowerCase();
-    if (/permission|denied|forbidden|unauth|consent/.test(s)) return "this page isn't allowed to save right now. Open it in Claude while signed in and try again.";
-    if (/network|unavailable|timeout|offline|fetch/.test(s)) return "the connection dropped. Try again in a moment.";
-    if (/quota|limit|too large|exhausted/.test(s)) return "the page's storage is full. Copy the message for Erik from the status button.";
+    var c = e && e.code;
+    if (c === "revoked") return "this page lost its connection to your tracker. Reload the page.";
+    if (c === "invalid_argument" || c === "transform_error") return writeConfirmed ? "something went wrong. Try again; if it keeps happening, tell Erik." : "this page is view-only for you; your clicks aren't saved.";
+    if (c === "not_granted") return "this page isn't allowed to save right now. Open it in Claude while signed in and try again.";
+    if (c === "resource_exhausted" || c === "rate_limited") return "the page is busy. Wait a moment and try again.";
+    if (c === "quota_exceeded") return "the page's storage is full. Copy the message for Erik from the status button.";
+    if (c === "declined") return "you said no to the save.";
+    if (c === "unavailable") return "the connection dropped. Try again in a moment.";
+    var s = String((e && e.message) || "").toLowerCase();
+    if (/network|timeout|offline|fetch/.test(s)) return "the connection dropped. Try again in a moment.";
     return "something went wrong. Try again; if it keeps happening, tell Erik.";
   }
+  // A write refused for a viewer the runtime never confirmed as a writer: the page goes read-only.
+  function lostWrite(e) { var c = e && e.code; if (c === "revoked" || (!writeConfirmed && (c === "invalid_argument" || c === "transform_error"))) canWrite = false; }
   function newId() { return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function normCo(s) { return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
   function resumeName(id) { if (id === "other") return "Something else"; var r = D.resumes[id]; return r ? r.name : id; }
@@ -503,11 +519,11 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
 
   // ---------- Per-render indexes ----------
   function buildIndex() {
-    var ix = { latest: {}, replaced: {}, blocked: {}, group: {}, board: {}, pendingAdds: 0, sugg: {} };
+    var ix = { latest: Object.create(null), replaced: Object.create(null), blocked: Object.create(null), group: Object.create(null), board: Object.create(null), pendingAdds: 0, sugg: Object.create(null) };
     Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (r && r.posting_id && (!ix.latest[r.posting_id] || cmpStr(r.at, ix.latest[r.posting_id].at) > 0)) ix.latest[r.posting_id] = r; });
     Object.keys(D.done).forEach(function (k) { var d = D.done[k]; if (d && d.replaces) ix.replaced[d.replaces] = true; });
     ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system, website: !!b.website }; });
-    var snapAt = D.sources ? D.sources.at || "" : "";
+    var snapAt = D.sources ? D.sources.switches_as_of || D.sources.at || "" : "";
     Object.keys(D.requests).map(function (rid) { return [rid, D.requests[rid]]; })
       .sort(function (a, b) { return cmpStr(a[1].at, b[1].at); })
       .forEach(function (pair) {
@@ -531,7 +547,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   // Postings hidden from Triage and Stats unless she already acted on them.
   function hidden(p) {
     if (D.decisions[p.id]) return false;
-    if (V.blocked[normCo(p.company)]) return true;
+    if (!p.added_by_user && V.blocked[normCo(p.company)]) return true;
     if (V.replaced[p.id]) return true;
     return V.latest[p.id] && p.status_hint !== "qualified" && !p.dream && !p.added_by_user;
   }
@@ -594,6 +610,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     D.decisions[id] = next; render();
     try { await persist("decisions/" + id, next); saved(msg); return true; }
     catch (e) {
+      lostWrite(e);
       if (before) D.decisions[id] = before; else delete D.decisions[id];
       render(); toast("Not saved: " + errText(e)); return false;
     }
@@ -605,7 +622,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var doc = Object.assign({ at: new Date().toISOString() }, body);
     D.requests[id] = doc; render();
     try { await persist("requests/" + id, doc); saved(msg); return id; }
-    catch (e) { delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
+    catch (e) { lostWrite(e); delete D.requests[id]; render(); toast("Not saved: " + errText(e)); return null; }
   }
 
   // ---------- Header, status button, help ----------
@@ -649,22 +666,29 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     // The click is saved first: the run reads it to know which kind of run to do.
     var doc = { at: new Date().toISOString(), kind: "quick" };
     try { await db.doc("prefs/run_now").set(doc); }
-    catch (e) { runBusy = false; render(); toast("Not started: " + errText(e)); return; }
+    catch (e) { lostWrite(e); runBusy = false; render(); toast("Not started: " + errText(e)); return; }
     try {
       await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
       R.prefs = Object.assign({}, R.prefs, { run_now: doc });
       toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
-      try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
       var code = e && e.code;
-      toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
-        : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
-        : "Not started: " + ((e && e.message) || "the run couldn't be reached") + ". Type “run my desk now” in Claude instead.");
+      // server_unavailable and upstream_error are ambiguous: the trigger may already have fired. Keep the saved click
+      // as it is (no failed flag) so a run that did start stays a quick run, and show Running until a run document arrives.
+      if (code === "server_unavailable" || code === "upstream_error") {
+        R.prefs = Object.assign({}, R.prefs, { run_now: doc });
+        toast("It may have started. This page updates by itself when it's done. If nothing changes in 45 minutes, click Run now again.");
+      } else {
+        try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
+        toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
+          : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
+          : "Not started: the run couldn't be reached. Type “run my desk now” in Claude instead.");
+      }
     } finally { runBusy = false; render(); }
   }
-  function runButton(label) {
+  function runButton(label, key) {
     var st = runState(); if (!st.ok) return null;
-    return el("button", { class: "b runnow", "data-k": "runnow-" + label.length, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
+    return el("button", { class: "b runnow", "data-k": "runnow-" + key, disabled: st.running, title: "Reads your clicks, writes deep evaluations for jobs you marked Interested, and updates this page. Skips the job scan.", onclick: function () { runNow(); } },
       [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
   }
   // A newer version of the career tool, as the last run found it. Installing it changes the tool's own files,
@@ -685,7 +709,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   }
 
   function renderHeader() {
-    var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now"); if (rb) rh.appendChild(rb);
+    var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now", "head"); if (rb) rh.appendChild(rb);
     var r = D.run;
     var meta = [];
     if (r && r.plan) meta.push(r.plan + (r.daily_cap ? ", up to " + r.daily_cap + " scored a day" : ""));
@@ -719,9 +743,9 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
         ]));
       });
       kids.push(ul);
-      kids.push(el("p", { class: "sub", text: "Copy this message and email it to " + to + ". It holds no job or profile details." }));
+      kids.push(el("p", { class: "sub", text: "Copy this message and email it to " + to + ". It holds only what you see below: the problems, the error text behind them and the run times." }));
     } else {
-      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds no job or profile details." }));
+      kids.push(el("p", { class: "sub", text: "The last run finished " + (r ? niceTime(r.at) : "") + " with no problems. If something still looks wrong, copy this status report and email it to " + to + ". It holds only what you see below." }));
     }
     kids.push(el("pre", { class: "msg", text: msg }));
     if (runState().ok) kids.push(el("p", { class: "sub", text: "Run now, next to this button, does the part of the morning run you'd otherwise wait for: it reads your clicks, writes deep evaluations for jobs you marked Interested and updates this page, in about 10 minutes. New jobs still arrive with the morning run." }));
@@ -730,7 +754,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       el("button", { class: "b", "data-k": "help-tour", onclick: function () { helpOpen = false; startTour(); } }, [ic("compass"), "Take the tour again"])
     ]));
     hh.appendChild(el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) closeHelp(); } }, [
-      el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title", onkeydown: function (e) { if (e.key === "Escape") closeHelp(); } }, kids)
+      el("div", { class: "panel help dlg" + (probs.length ? " bad" : ""), role: "dialog", "aria-modal": "true", "aria-labelledby": "help-title" }, kids)
     ]));
   }
 
@@ -756,12 +780,12 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var shown = all.filter(function (p) { return stageOf(eff(p.id).status) === state.stage; });
     if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (num(b.score) || 0) - (num(a.score) || 0) || cmpStr(b.found, a.found) || cmpStr(a.id, b.id); });
     else shown.sort(function (a, b) { return cmpStr((D.decisions[b.id] || {}).at, (D.decisions[a.id] || {}).at) || cmpStr(a.id, b.id); });
-    var EMPTY = { review: loaded ? "Nothing new to review. Come back tomorrow." : "Loading your postings…", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
+    var EMPTY = { review: !loaded ? "Loading your postings…" : !db ? "Not connected. Open the page in Claude while signed in." : "Nothing new to review. Come back tomorrow.", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
     if (state.stage === "interested") {
       var waitingDeep = shown.filter(function (p) { return !D.deep[p.id]; }).length, rs = runState();
       if (waitingDeep && rs.ok) list.appendChild(el("div", { class: "note runnote" }, [
         el("span", { text: (waitingDeep === 1 ? "1 job is" : waitingDeep + " jobs are") + " waiting for a deep evaluation. The morning run writes them, or start one now (up to " + rs.deepCap + " per run, about 10 minutes)." }),
-        runButton("Run now")]));
+        runButton("Run now", "note")]));
     }
     if (!shown.length) list.appendChild(el("div", { class: "empty", text: EMPTY[state.stage] }));
     var limit = state.stage === "closed" ? state.closedLimit : Infinity;
@@ -837,14 +861,14 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var e = eff(p.id), s = e.status, dec = e.d, deep = D.deep[p.id];
     var row = el("article", { class: "row", "data-id": p.id, "aria-label": p.title + " at " + p.company });
     var sc = num(p.score), thr = num(p.threshold);
-    if (p.pending || sc === null) row.appendChild(el("div", { class: "score na" }, ["–"]));
+    if (p.pending || sc === null) row.appendChild(el("div", { class: "score na", role: "img", "aria-label": "No score yet" }, ["–"]));
     else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
 
     var head = el("div", { class: "head" }, [
       isLink(p.url) ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
       el("span", { class: "co", text: p.company })
     ]);
-    if (p.dream) head.appendChild(el("span", { class: "star", text: "★ Dream company" }));
+    if (p.dream) head.appendChild(el("span", { class: "star" }, [el("span", { "aria-hidden": "true", text: "★ " }), "Dream company"]));
     var meta = el("div", { class: "meta" });
     var when = s === "new" ? ago(p.found, p.source === "Added by you" ? "Added" : "Found")
       : s === "noresp" ? "No response since " + niceDate(e.since)
@@ -865,7 +889,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       if (deep && deep.resume && deep.resume.id) tags.appendChild(resumeTag(deep.resume.id, deep.resume.fits === false ? " (closest)" : ""));
       else if (!deep) tags.appendChild(el("span", { class: "tag", text: "Resume pick comes with the deep evaluation" }));
     }
-    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag", title: "Resume you sent" }, [ic("paper-plane-tilt"), resumeName(dec.sent)]));
+    if (dec.sent && stageOf(s) !== "review" && s !== "interested") tags.appendChild(el("span", { class: "tag" }, [ic("paper-plane-tilt"), "Resume sent: " + resumeName(dec.sent)]));
     if (s === "skipped" && dec.reasons && dec.reasons.length) tags.appendChild(el("span", { class: "tag", text: "Skipped: " + dec.reasons.join(", ") }));
     var main = el("div", { class: "main" }, [head, meta, tags]);
     row.appendChild(main);
@@ -922,7 +946,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
 
   function resumeTag(id, suffix) {
     var r = D.resumes[id];
-    if (!r) return el("span", { class: "tag", title: "Suggested resume" }, [ic("file-text"), id + (suffix || "")]);
+    if (!r) return el("span", { class: "tag" }, [ic("file-text"), "Suggested resume: " + id + (suffix || "")]);
     return el("button", { class: "tag act", title: "Suggested resume. Shows it on the Resumes tab", "aria-label": "Suggested resume: " + r.name + (suffix || ""), onclick: function () { setTab("resumes"); } }, [ic("file-text"), r.name + (suffix || "")]);
   }
 
@@ -957,7 +981,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       chips,
       p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", disabled: off, onclick: async function () {
+        el("button", { class: "b primary", "data-k": "d-" + p.id + "-skipgo", disabled: off, onclick: async function () {
           var reasons = REASONS.filter(function (k) { return dr.reasons[k]; });
           var blockIt = !!dr.block && p.company && !p.pending;
           var ok = await saveDecision(p.id, { status: "skipped", reasons: reasons }, blockIt ? null : "Moved to Closed as Skipped");
@@ -989,7 +1013,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       el("p", { text: "Which resume did you send? Stats compare how each one does." }),
       opts,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b primary", disabled: off, onclick: async function () {
+        el("button", { class: "b primary", "data-k": "d-" + p.id + "-appgo", disabled: off, onclick: async function () {
           var choice = drafts.res[p.id];
           var ok = isApplied ? await saveDecision(p.id, { sent: choice }, "Saved")
             : await saveDecision(p.id, { status: "applied", sent: choice }, "Moved to Applied. The 21-day response window starts today.");
@@ -1009,7 +1033,11 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       var blob = await res.blob();
       var out = await downloads.save({ filename: String(r.name || "resume").replace(/[^\w\- ]+/g, "").trim() + ".pdf", data: blob });
       msg.textContent = out && out.status === "saved" ? "Saved" : "Sent to your downloads";
-    } catch (e) { msg.textContent = "Not saved: " + errText(e); }
+    } catch (e) {
+      if (e && e.code === "declined") { msg.textContent = ""; return; }
+      if (e && e.code === "rate_limited") { msg.textContent = "Not saved: a save prompt is already open. Answer it, then try again."; return; }
+      msg.textContent = "Not saved: " + errText(e);
+    }
   }
   function renderResumes() {
     var v = document.getElementById("view-resumes"); v.textContent = "";
@@ -1026,7 +1054,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
-      var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + " postings · sent with " + stat[k].sent + " applications";
+      var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
       return el("div", { class: "lrow" }, [
         el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
         el("div", { class: "m", text: mid }),
@@ -1055,7 +1083,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false, srcBusy = false, swBusy = {};
   try { srcTab = localStorage.getItem("jsd-src-tab"); } catch (e) {}
   function srcOn(s) {
-    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.at || "" : "";
+    var sw = D.switches[s.id], snapAt = D.sources ? D.sources.switches_as_of || D.sources.at || "" : "";
     var grp = V.group[s.group];
     var own = sw && (!snapAt || cmpStr(sw.at, snapAt) > 0) ? sw : null;
     if (grp && (!own || cmpStr(grp.at, own.at) > 0)) return !!grp.on;
@@ -1104,6 +1132,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
 
     // Sub-tabs: one view at a time
     var bar = el("div", { class: "segtabs", role: "tablist", "aria-label": "Source groups" });
+    bar.addEventListener("keydown", tabKeys);
     views.forEach(function (x) {
       bar.appendChild(el("button", { class: "stab", role: "tab", "data-k": "stab-" + x.k, "aria-selected": String(srcTab === x.k), onclick: function () { srcTab = x.k; srcQuery = ""; boardEdit = null; lastVerdict = ""; try { localStorage.setItem("jsd-src-tab", srcTab); } catch (e) {} render(); } },
         [x.label, el("span", { class: "stabn", text: x.count })]));
@@ -1172,7 +1201,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     if (quiet.length) {
       var qo = !!quietOpen[view.k];
       l.appendChild(el("button", { class: "lrow quiettoggle", "data-k": "quiet-" + view.k, "aria-expanded": String(qo), onclick: function () { quietOpen[view.k] = !qo; render(); } }, [
-        el("span", { class: "t", text: (qo ? "▾ " : "▸ ") + "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days" })
+        el("span", { class: "t" }, [el("span", { "aria-hidden": "true", text: qo ? "▾ " : "▸ " }), "Quiet: " + quiet.length + (quiet.length === 1 ? " company" : " companies") + " with nothing found in 30 days"])
       ]));
       if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
     }
@@ -1242,7 +1271,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
         var doc = { on: !on, at: new Date().toISOString() };
         swBusy[s.id] = true; D.switches[s.id] = doc; render();
         try { await persist("source_switches/" + s.id, doc); saved(s.name + (on ? " turned off. The next run skips it." : " turned on. The next run includes it.")); }
-        catch (e) { if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
+        catch (e) { lostWrite(e); if (before) D.switches[s.id] = before; else delete D.switches[s.id]; toast("Not saved: " + errText(e)); }
         finally { swBusy[s.id] = false; render(); }
       } })]);
     var row = el("div", { class: "lrow src" }, [t, y, ctrl]);
@@ -1387,6 +1416,25 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
+  // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
+  function tabKeys(e) {
+    if (tour.on || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    var tabs = Array.prototype.filter.call(e.currentTarget.querySelectorAll('[role="tab"]'), function (b) { return !b.disabled; });
+    var i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    var n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    n.focus(); n.click();
+  }
+  document.querySelector(".tabs").addEventListener("keydown", tabKeys);
+  // The status popup: Escape closes it from anywhere, and focus stays inside it while it is open.
+  document.addEventListener("keydown", function (e) { if (helpOpen && e.key === "Escape") { helpOpen = false; focusNext = "help-btn"; render(); } });
+  document.addEventListener("focusin", function (e) {
+    if (!helpOpen) return;
+    var panel = document.querySelector(".panel.dlg"), t = e.target;
+    if (!panel || (t && t.closest && t.closest(".panel.dlg"))) return;
+    var x = panel.querySelector(".dlg-x"); if (x) x.focus();
+  });
   function showTab() {
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === state.tab)); });
     TABS.forEach(function (t) { document.getElementById("view-" + t).hidden = t !== state.tab; });
@@ -1399,7 +1447,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       host.appendChild(el("div", { class: "note rerr" }, [el("span", { text: "Part of this page couldn't be shown. Reload the page; if it stays, copy the message for Erik from the status button." })]));
     }
   }
-  var raf = 0;
+  var raf = 0, stageShown = null;
   function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
   function draw() {
     // Keep focus and the text cursor where they were when new data redraws the page.
@@ -1418,10 +1466,23 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
     showTab();
+    if (state.tab === "triage") {
+      if (state.stage !== stageShown) {
+        stageShown = state.stage;
+        var sb = document.getElementById("steps"), on = sb && sb.querySelector('[aria-pressed="true"]');
+        if (on) {
+          var sr = sb.getBoundingClientRect(), br = on.getBoundingClientRect();
+          if (br.left < sr.left) sb.scrollLeft += br.left - sr.left;
+          else if (br.right > sr.right) sb.scrollLeft += br.right - sr.right;
+        }
+      }
+    } else stageShown = null;
     if (tour.on) placeTour(false);
     if (k) {
       var n = null;
       Array.prototype.some.call(document.querySelectorAll("[data-k]"), function (x) { if (x.getAttribute("data-k") === k) { n = x; return true; } return false; });
+      // The focused control is gone (a decision moved its card): focus the stage button, or the tab.
+      if (!n) n = (state.tab === "triage" ? document.querySelector('[data-k="stage-' + state.stage + '"]') : null) || document.getElementById("tab-" + state.tab);
       if (n && n !== document.activeElement) {
         try { n.focus({ preventScroll: true }); } catch (e) { n.focus(); }
         if (sel && typeof n.setSelectionRange === "function") { try { n.setSelectionRange(sel[0], sel[1]); } catch (e) {} }
@@ -1490,7 +1551,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   }
 
   var TOUR = [
-    { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. The daily scan runs at 6:45am every morning." },
+    { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning around 6:45." },
     { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
@@ -1503,7 +1564,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
-    { tab: "sources", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
+    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
     { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status button." }
   ];
@@ -1526,7 +1587,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   window.__jsdTourTargets = function () { return TOUR.map(function (x) { return x.target || null; }); };
   function startTour() {
     if (tour.on) return;
-    tour.on = true; tour.step = 0; tour.prevTab = state.tab;
+    tour.on = true; tour.step = 0; tour.prevTab = state.tab; tour.prevSrc = srcTab; tour.prevQuery = srcQuery;
     D = makeDemo(); drawer = {}; helpOpen = false; addOpen = false;
     tourEls = {
       spot: el("div", { class: "tour-spot", "aria-hidden": "true" }),
@@ -1551,6 +1612,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     var st = TOUR[n];
     if (st.tab) state.tab = st.tab;
     if (st.stage) state.stage = st.stage;
+    if (st.src) { srcTab = st.src; srcQuery = ""; addSrcOpen = false; boardEdit = null; }
     drawer = {};
     if (st.open) drawer.s1 = st.open;
     var last = n === TOUR.length - 1;
@@ -1613,6 +1675,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     if (!tour.on) return;
     tour.on = false; D = R; drawer = {};
     state.tab = tour.prevTab || "triage"; state.stage = "review";
+    srcTab = tour.prevSrc; srcQuery = tour.prevQuery || "";
     window.removeEventListener("resize", tourReflow); window.removeEventListener("scroll", tourReflow, true);
     document.removeEventListener("keydown", tourKeys);
     if (tourEls) { tourEls.spot.remove(); tourEls.card.remove(); tourEls = null; }
@@ -1620,7 +1683,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     try { localStorage.setItem("jsd-tour-done", "1"); } catch (e) {}
     if (db && canWrite && !(R.prefs && R.prefs.tour)) {
       try { await db.doc("prefs/tour").set({ done: true, at: new Date().toISOString() }); toast("Tour finished. Your own jobs show from now on."); }
-      catch (e) { toast("Tour finished. Your click wasn't saved: " + errText(e)); }
+      catch (e) { lostWrite(e); toast("Tour finished. Your click wasn't saved: " + errText(e)); render(); }
     } else toast("Tour finished.");
   }
   function offerTour() {
@@ -1631,13 +1694,13 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   }
 
   // ---------- Connect ----------
-  function collect(target, snap) { var m = {}; snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); R[target] = m; render(); }
+  function collect(target, snap) { var m = Object.create(null); snap.docs.forEach(function (d) { m[d.id] = Object.assign({}, d.data(), { id: d.id }); }); R[target] = m; render(); }
   (async function () {
     try { db = await claude.use("db"); } catch (e) { db = null; }
     if (!db) { loaded = true; canWrite = false; render(); toast("This view can't reach your tracker. Open the page in Claude while signed in."); return; }
     try { downloads = await claude.use("downloads"); } catch (e) { downloads = null; }
     claude.use("mcp").then(function (m) { mcp = m; render(); }, function () { mcp = null; });
-    try { var u = await claude.use("user"); var cw = u && u.can ? u.can("data.write") : null; if (cw === false) canWrite = false; } catch (e) {}
+    try { var u = await claude.use("user"); var cw = u && u.can ? await u.can("data.write") : null; if (cw === false) canWrite = false; else if (cw === true) writeConfirmed = true; } catch (e) {}
     var waiting = { postings: 1, decisions: 1, runs: 1, requests: 1, requests_done: 1, sources: 1, prefs: 1 };
     function ready(name) { if (!waiting[name]) return; delete waiting[name]; if (!Object.keys(waiting).length && !loaded) { loaded = true; render(); offerTour(); } }
     function onErr(name, what) { return function () { ready(name); toast("Lost the live connection to " + what + ". Reload the page."); }; }

@@ -1,3 +1,3 @@
-# Setup step 10 adds 1 to 3 default resumes here; tailored ones are added later.
+# Setup step 11 adds 1 to 3 default resumes here; tailored ones are added later.
 # { id, name, kind: default | tailored, for_posting, updated, pdf, text_file, asset_id, summary }
 resumes: []

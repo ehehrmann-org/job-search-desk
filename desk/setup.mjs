@@ -19,6 +19,7 @@ import { loadScoringConfig, validateScoringConfig, scorePosting } from './lib/sc
 
 import { ROOT, DATA, isMain } from './lib/env.mjs';
 import { loadDreamCompanies, isDream } from './lib/scoring.mjs';
+import { loadBlocklist, blockedBy } from './lib/blocklist.mjs';
 const STATE = path.join(DATA, '.setup-state.json');
 const f = (...p) => path.join(DATA, ...p);
 
@@ -53,6 +54,9 @@ const CHECKS = {
     const out = [];
     if (!['Pro', 'Max 5x', 'Max 20x', 'Not sure'].includes(d.plan)) out.push('plan is not set to Pro, Max 5x, Max 20x or Not sure');
     if (!(Number(d.daily_cap) > 0)) out.push('daily_cap is missing');
+    const DEEP = { 'Pro': 1, 'Max 5x': 2, 'Max 20x': 3, 'Not sure': 1 };
+    if (!(Number(d.deep_cap) > 0)) out.push('deep_cap is missing (step 3 sets it from the plan)');
+    else if (DEEP[d.plan] && Number(d.deep_cap) < DEEP[d.plan]) out.push(`deep_cap is ${d.deep_cap}, but the step 3 table gives ${DEEP[d.plan]} for ${d.plan}`);
     return out;
   },
   4: () => {
@@ -66,7 +70,9 @@ const CHECKS = {
     const portals = readYaml(f('portals.yml'), {});
     if (!portals?.title_filter?.positive?.length) out.push('portals.yml has no job titles to look for');
     if (!(portals?.location_filter?.allow || []).length) out.push('portals.yml has no locations to allow (location_filter.allow)');
-    if (!readYaml(f('config', 'desk.yml'), {}).current_employer) out.push('desk.yml has no current_employer (use "none" if not employed)');
+    const emp = readYaml(f('config', 'desk.yml'), {}).current_employer;
+    if (!emp) out.push('desk.yml has no current_employer (use "none" if not employed)');
+    else if (emp !== 'none' && !blockedBy(loadBlocklist(DATA), emp, '')) out.push(`the current employer (${emp}) has no row in profile/data/blacklist.md, so its jobs would still show`);
     return out;
   },
   5: () => {
@@ -139,6 +145,7 @@ const CHECKS = {
     const out = [];
     if (!d.page_url) out.push('the job page link is not recorded (page_url)');
     if (!d.task_id) out.push('the daily task is not recorded (task_id)');
+    else if (!/^trig_[A-Za-z0-9]+$/.test(String(d.task_id))) out.push('task_id does not look like a cloud scheduled task id (those start with trig_); a local or session task cannot be started from the job page, so create the daily run as a cloud scheduled task and record that id');
     if (!d.page_consent) out.push('the tour on the job page was not finished with the permission allowed (page_consent)');
     if (d.gmail_alerts !== false && !d.gmail_checked) out.push('gmail_alerts must stay false until step 9 connects Gmail, or the morning run reports a Gmail problem');
     return out;

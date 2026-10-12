@@ -24,18 +24,19 @@
  *       bucket: must               # must = 3x, important = 2x, nice = 1x
  *       question: "..."
  *       anchors: { "5": "...", "3": "...", "1": "..." }
- *       min: 2                     # optional: a rating below this is a deal-breaker
+ *       min: 2                     # optional: a rating (or a fact's band score) below this is a deal-breaker; a missing fact never gates
  *     - id: size                   # computed from a fact, no model judgment
  *       name: Company size
  *       bucket: important
  *       fact: employees            # employees | base_top | base_bottom | office_days
  *       bands: [ { min: 25, max: 75, score: 5 }, ... ]
- *       unknown: 3                 # score when the fact is missing (raises a check flag)
+ *       unknown: 3                 # score when the fact is missing or outside every band (raises a check flag)
  *   history: []                    # dated log of rubric changes
  */
 
 import fs from 'node:fs';
 import * as yaml from 'js-yaml';
+import { parseYaml } from './env.mjs';
 
 export const BUCKET_WEIGHTS = Object.freeze({ must: 3, important: 2, nice: 1 });
 export const FACT_KEYS = Object.freeze(['employees', 'base_top', 'base_bottom', 'office_days']);
@@ -44,7 +45,7 @@ const DEFAULT_CANDIDACY = { gate_career_track: true, skill_penalty: 0.15, skill_
 // ---------------------------------------------------------------- config
 
 export function loadScoringConfig(file) {
-  const cfg = yaml.load(fs.readFileSync(file, 'utf8'));
+  const cfg = parseYaml(yaml, fs.readFileSync(file, 'utf8'), file);
   const errors = validateScoringConfig(cfg);
   if (errors.length) throw new Error(`${file} has problems:\n  - ${errors.join('\n  - ')}`);
   return normalizeConfig(cfg);
@@ -55,6 +56,32 @@ export function validateScoringConfig(cfg) {
   if (!cfg || typeof cfg !== 'object') return ['file is empty or not YAML'];
   if (typeof cfg.threshold !== 'number' || cfg.threshold < 0 || cfg.threshold > 5)
     errors.push('threshold must be a number from 0 to 5');
+  // A number typed as text ("350 people", 200K) or a comma inside flow style ({ base: 180,000 } reads as 180)
+  // would quietly turn a deal-breaker or band off, so every number is checked here.
+  const num = v => v == null || typeof v === 'number';
+  const block = v => v == null || (typeof v === 'object' && !Array.isArray(v));
+  const db = cfg.dealbreakers;
+  if (!block(db)) errors.push('dealbreakers must be a block of settings');
+  else if (db) {
+    if (!block(db.comp_floor)) errors.push('dealbreakers.comp_floor must be a block with base, like { base: 150000 }');
+    else if (db.comp_floor) {
+      if (db.comp_floor.base != null && (typeof db.comp_floor.base !== 'number' || db.comp_floor.base < 1000))
+        errors.push('dealbreakers.comp_floor.base must be a yearly amount in dollars written as a plain number, like 150000 (no commas, no K)');
+      if (!num(db.comp_floor.variable_share)) errors.push('dealbreakers.comp_floor.variable_share must be a number like 0.75');
+    }
+    if (!block(db.company_size)) errors.push('dealbreakers.company_size must be a block, like { min: 50, max: 350 }');
+    else if (db.company_size && (!num(db.company_size.min) || !num(db.company_size.max)))
+      errors.push('dealbreakers.company_size min and max must be plain numbers, like 350 (not "350 people")');
+    if (!block(db.location)) errors.push('dealbreakers.location must be a block, like { remote_ok: true, max_office_days: 3 }');
+    else if (db.location) {
+      if (!num(db.location.max_office_days)) errors.push('dealbreakers.location.max_office_days must be a plain number of days, like 3');
+      if (db.location.remote_ok != null && typeof db.location.remote_ok !== 'boolean') errors.push('dealbreakers.location.remote_ok must be true or false');
+    }
+  }
+  const cand = cfg.candidacy;
+  if (!block(cand)) errors.push('candidacy must be a block of settings');
+  else if (cand && (!num(cand.skill_penalty) || !num(cand.skill_cap)))
+    errors.push('candidacy.skill_penalty and skill_cap must be numbers, like 0.15 and 0.30');
   const dims = cfg.dimensions;
   if (!Array.isArray(dims) || dims.length === 0) errors.push('dimensions: at least one is required');
   else {
@@ -66,11 +93,15 @@ export function validateScoringConfig(cfg) {
       if (ids.has(d?.id)) errors.push(`${at}: duplicate id`);
       ids.add(d?.id);
       if (!d?.name) errors.push(`${at}: name is required`);
-      if (!(d?.bucket in BUCKET_WEIGHTS)) errors.push(`${at}: bucket must be must, important or nice`);
+      if (!Object.hasOwn(BUCKET_WEIGHTS, d?.bucket)) errors.push(`${at}: bucket must be must, important or nice`);
       if (d?.fact != null) {
         if (!FACT_KEYS.includes(d.fact)) errors.push(`${at}: fact must be one of ${FACT_KEYS.join(', ')}`);
         if (!Array.isArray(d.bands) || !d.bands.length) errors.push(`${at}: a fact dimension needs bands`);
-        else for (const b of d.bands) if (typeof b.score !== 'number') errors.push(`${at}: every band needs a score`);
+        else for (const b of d.bands) {
+          if (typeof b?.score !== 'number') errors.push(`${at}: every band needs a score`);
+          if (!num(b?.min) || !num(b?.max)) errors.push(`${at}: band min and max must be plain numbers, like 200000 (no commas, no K)`);
+        }
+        if (!num(d.unknown)) errors.push(`${at}: unknown must be a number from 0 to 5`);
       } else {
         if (!d?.anchors || d.anchors['5'] == null || d.anchors['1'] == null)
           errors.push(`${at}: anchors need at least "5" and "1"`);
@@ -102,6 +133,8 @@ function normalizeConfig(cfg) {
 
 const norm = s => String(s ?? '').toLowerCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
   .replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+// For matching a listed rule, industry or carve-out: punctuation and spacing differences do not count.
+const key = s => norm(s).replace(/[^a-z0-9]+/g, ' ').trim();
 
 export function normalizeCompany(name) {
   return norm(name).replace(/\b(inc|llc|ltd|co|corp|corporation|company|group|the)\b\.?/g, '')
@@ -186,14 +219,12 @@ export function scorePosting(x, cfg, opts = {}) {
 
   if (db.comp_floor?.base != null) {
     let top = facts.base_top, basis = 'posted top of the range';
-    if (facts.pay_includes_variable && top != null) {
-      if (facts.base_top_stated != null) { top = facts.base_top_stated; basis = 'stated base'; }
-      else {
-        const share = db.comp_floor.variable_share ?? 0.75;
-        top = Math.round(top * share);
-        basis = `estimated base (${Math.round(share * 100)}% of a range that includes bonus)`;
-        out.checks.push('Base pay was estimated from a range that includes bonus. Confirm the real base.');
-      }
+    if (facts.base_top_stated != null) { top = facts.base_top_stated; basis = 'stated base'; }
+    else if (facts.pay_includes_variable && top != null) {
+      const share = db.comp_floor.variable_share ?? 0.75;
+      top = Math.round(top * share);
+      basis = `estimated base (${Math.round(share * 100)}% of a range that includes bonus)`;
+      out.checks.push('Base pay was estimated from a range that includes bonus. Confirm the real base.');
     }
     if (top != null && top < db.comp_floor.base)
       out.dealbreakers.push(`pay: ${basis} $${top.toLocaleString('en-US')} is under your $${db.comp_floor.base.toLocaleString('en-US')} minimum`);
@@ -203,11 +234,11 @@ export function scorePosting(x, cfg, opts = {}) {
   if (db.company_size) {
     const n = facts.employees;
     const { min, max } = db.company_size;
+    const carve = !!facts.carve_out && (db.company_size.carve_outs || []).some(c => key(c) === key(facts.carve_out));
     if (n == null) out.checks.push('Company size unknown. Check LinkedIn before trusting this score.');
-    else if (max != null && n > max && !facts.carve_out) out.dealbreakers.push(`company size: ${n} people, over your ${max} maximum`);
+    else if (max != null && n > max && !carve) out.dealbreakers.push(`company size: ${n} people, over your ${max} maximum`);
     else if (min != null && n < min) out.dealbreakers.push(`company size: ${n} people, under your ${min} minimum`);
-    if (facts.carve_out && !(db.company_size.carve_outs || []).some(c => norm(c) === norm(facts.carve_out)))
-      out.evidence_issues.push(`carve_out "${facts.carve_out}" is not one listed in scoring.yml`);
+    if (facts.carve_out && !carve) out.evidence_issues.push(`carve_out "${facts.carve_out}" is not one listed in scoring.yml`);
   }
 
   if (db.location) {
@@ -217,20 +248,21 @@ export function scorePosting(x, cfg, opts = {}) {
     if (mode === 'remote' && L.remote_ok === false) out.dealbreakers.push('location: fully remote, and you want an office');
     if (mode !== 'remote' && days != null && L.max_office_days != null && days > L.max_office_days)
       out.dealbreakers.push(`location: ${days} office days a week, over your ${L.max_office_days}`);
-    if (mode !== 'remote' && mode !== 'unknown' && facts.area_ok === false)
+    const hasAreas = !!(L.areas_ok?.length || L.areas_no?.length);
+    if (hasAreas && mode !== 'remote' && mode !== 'unknown' && facts.area_ok === false)
       out.dealbreakers.push(`location: ${facts.area || 'office'} is outside your areas`);
     if (mode === 'unknown') out.checks.push('Work arrangement unclear (remote, hybrid or on-site).');
   }
 
   if (facts.industry_excluded) {
-    const hit = db.excluded_industries.find(i => norm(i) === norm(facts.industry_excluded));
+    const hit = db.excluded_industries.find(i => key(i) === key(facts.industry_excluded));
     if (hit) out.dealbreakers.push(`industry: ${hit}`);
     else out.evidence_issues.push(`industry_excluded "${facts.industry_excluded}" is not one listed in scoring.yml`);
   }
 
   for (const h of Array.isArray(x.dealbreakers_hit) ? x.dealbreakers_hit : []) {
     if (!h || typeof h !== 'object') continue;
-    const rule = db.other.find(r => norm(r) === norm(h.rule));
+    const rule = db.other.find(r => key(r) === key(h.rule));
     if (!rule) { out.evidence_issues.push(`dealbreakers_hit "${h.rule}" is not one listed in scoring.yml`); continue; }
     checkQuote(`deal-breaker "${rule}"`, h.evidence);
     out.dealbreakers.push(rule);
@@ -252,30 +284,43 @@ export function scorePosting(x, cfg, opts = {}) {
   for (const d of cfg.dimensions) {
     const weight = BUCKET_WEIGHTS[d.bucket];
     if (d.fact) {
-      let v = d.fact === 'office_days' && facts.work_mode === 'remote' ? 0 : facts[d.fact];
+      // Same reading of the work mode as the location deal-breaker: remote is 0 days, on-site without a number is 5.
+      const v = d.fact === 'office_days'
+        ? (facts.work_mode === 'remote' ? 0 : (facts.office_days ?? (facts.work_mode === 'onsite' ? 5 : null)))
+        : facts[d.fact];
+      const assumed = d.fact === 'office_days' && facts.work_mode === 'onsite' && facts.office_days == null;
       let score = v == null ? null : bandScore(v, d.bands);
+      const stated = score != null;
+      const label = v == null ? null
+        : d.fact === 'office_days' ? (v === 0 ? 'Remote' : `${v} office days a week${assumed ? ' (on-site, days not stated)' : ''}`)
+        : d.fact === 'employees' ? `About ${v} people`
+        : `$${Number(v).toLocaleString('en-US')} posted`;
       let why;
-      if (score == null) {
+      if (score == null && v != null) {
+        score = d.unknown ?? 3;
+        why = `${d.name}: ${label} has no score band; scored ${score} as a placeholder`;
+        out.checks.push(`${why}.`);
+      } else if (score == null) {
         score = d.unknown ?? 3;
         why = `${d.name}: not stated, scored neutral`;
         const topic = { base_top: 'pay', base_bottom: 'pay', employees: 'company size', office_days: 'work arrangement' }[d.fact];
         if (!out.checks.some(c => c.toLowerCase().includes(topic)))
           out.checks.push(`${d.name} not stated; scored ${score} as a placeholder.`);
-      } else why = d.fact === 'office_days' ? (v === 0 ? 'Remote' : `${v} office days a week`)
-        : d.fact === 'employees' ? `About ${v} people`
-        : `$${Number(v).toLocaleString('en-US')} posted`;
+      } else why = label;
       out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score, why, source: 'fact' });
+      if (d.min != null && stated && score < d.min) out.dealbreakers.push(`${d.name} scored ${score}, under the ${d.min} minimum`);
       continue;
     }
     const r = x.ratings && Object.hasOwn(x.ratings, d.id) ? x.ratings[d.id] : null;
-    if (!r || typeof r.score !== 'number' || r.score < 0 || r.score > 5) {
+    const rs = r && typeof r === 'object' ? toNumber(r.score) : null;
+    if (rs == null || rs < 0 || rs > 5) {
       out.evidence_issues.push(`${d.id}: no rating from 0 to 5`);
       out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score: null, why: 'Not rated', source: 'judged' });
       continue;
     }
     checkQuote(d.id, r.evidence);
-    out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score: r.score, why: r.why || '', source: 'judged' });
-    if (d.min != null && r.score < d.min) out.dealbreakers.push(`${d.name} rated ${r.score}, under the ${d.min} minimum`);
+    out.ratings.push({ id: d.id, name: d.name, bucket: d.bucket, weight, score: rs, why: r.why || '', source: 'judged' });
+    if (d.min != null && rs < d.min) out.dealbreakers.push(`${d.name} rated ${rs}, under the ${d.min} minimum`);
   }
 
   if (out.dealbreakers.length) { out.status = 'dealbreaker'; return out; }
@@ -299,7 +344,7 @@ export function scorePosting(x, cfg, opts = {}) {
 /** Company names marked `dream: true` in portals.yml's tracked_companies. */
 export function loadDreamCompanies(portalsFile) {
   if (!fs.existsSync(portalsFile)) return [];
-  const p = yaml.load(fs.readFileSync(portalsFile, 'utf8')) || {};
+  const p = parseYaml(yaml, fs.readFileSync(portalsFile, 'utf8'), portalsFile) || {};
   return (p.tracked_companies || []).filter(c => c?.dream === true).map(c => c.name);
 }
 
@@ -332,10 +377,12 @@ export function buildExtractionBrief(cfg, resumes = []) {
   if (db.company_size?.carve_outs?.length)
     lines.push(`- carve_out: one of ${db.company_size.carve_outs.map(c => `"${c}"`).join(', ')} when it applies, else null.`);
   lines.push('- work_mode: "remote", "hybrid", "onsite" or "unknown". office_days: days a week in the office, or null.');
-  if (db.location) {
+  if (db.location && (db.location.areas_ok?.length || db.location.areas_no?.length)) {
     lines.push('- area: where the office is. area_ok: true, false or null.');
     if (db.location.areas_ok?.length) lines.push(`  area_ok is true only for: ${db.location.areas_ok.join('; ')}.`);
     if (db.location.areas_no?.length) lines.push(`  area_ok is false for: ${db.location.areas_no.join('; ')}.`);
+  } else if (db.location) {
+    lines.push('- area: where the office is. area_ok: null (no commute areas are set).');
   }
   lines.push('- industry: a few words.');
   if (db.excluded_industries.length)

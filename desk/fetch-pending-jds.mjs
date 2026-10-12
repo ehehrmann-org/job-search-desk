@@ -15,7 +15,7 @@
  *   title: "..."
  *   location: "..."
  *   found: "2026-10-11"
- *   jd: saved | missing
+ *   jd: saved | missing | gone
  *   ---
  *   <job description text>
  *
@@ -24,13 +24,15 @@
  * files are never refetched. "missing" means the board has no public API upstream
  * can read (Greenhouse, Lever, Ashby, Workday and SmartRecruiters are covered), or a
  * covered board failed 3 days running; the scoring task then scores from the title
- * and company alone and says so.
+ * and company alone and says so. "gone" means a covered board answered that the
+ * posting was taken down; the scoring task never scores it.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fetchJdViaKnownApi } from '../browser-extract.mjs';
-import { resolveAtsApi, JD_TEXT_API_ATS } from '../liveness-api.mjs';
+import { resolveAtsApi, checkLivenessViaApi, JD_TEXT_API_ATS } from '../liveness-api.mjs';
+import { DEFAULT_USER_AGENT } from '../user-agent.mjs';
 import { DATA, isMain, safeId } from './lib/env.mjs';
 import { urlKey } from './lib/urls.mjs';
 
@@ -66,6 +68,19 @@ export function parsePending(markdown) {
 const yamlLine = (k, v) => `${k}: ${JSON.stringify(String(v ?? ''))}`;
 const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
 
+/** True when the board says the posting was taken down (a closed posting is not a failure to retry). */
+async function isGone(url, ats) {
+  let live = null;
+  try { live = await checkLivenessViaApi(url); } catch { live = null; }
+  if (live?.result === 'expired') return true;
+  // Lever's API 404 is not proof (liveness-api.mjs), so its public page decides.
+  if (live || ats !== 'lever') return false;
+  try {
+    const res = await fetch(url, { method: 'GET', redirect: 'manual', headers: { 'user-agent': DEFAULT_USER_AGENT }, signal: AbortSignal.timeout(10_000) });
+    return res.status === 404 || res.status === 410;
+  } catch { return false; }
+}
+
 async function main(args) {
   if (!fs.existsSync(PIPELINE)) { console.log('fetch-pending-jds: no pipeline.md'); return; }
   const limitAt = args.indexOf('--limit');
@@ -76,37 +91,43 @@ async function main(args) {
   // Top line wins: the same link or id further down (an older line) is skipped.
   const seen = new Set();
   const first = k => (k && seen.has(k) ? false : (k && seen.add(k), true));
-  const todo = parsePending(fs.readFileSync(PIPELINE, 'utf8'))
+  const pending = parsePending(fs.readFileSync(PIPELINE, 'utf8'))
     .map(p => ({ ...p, id: p.id || postingId(p.url) }))
     .filter(p => { const a = first(`id:${p.id}`), b = first(`url:${urlKey(p.url)}`); return a && b; })
-    .filter(p => !fs.existsSync(path.join(JDS, `${p.id}.md`)))
-    .filter(p => retries[p.id]?.last !== today)
-    .slice(0, limit);
+    .filter(p => !fs.existsSync(path.join(JDS, `${p.id}.md`)));
+  const todo = pending.filter(p => retries[p.id]?.last !== today).slice(0, limit);
 
-  let saved = 0, missing = 0, later = 0;
+  let saved = 0, missing = 0, noFeed = 0, takenDown = 0, later = 0;
   const queue = [...todo];
   async function worker() {
     for (let p = queue.shift(); p; p = queue.shift()) {
       let result = null;
       try { result = await fetchJdViaKnownApi(p.url, 20_000, 15_000); } catch { result = null; }
       const ok = !!(result && typeof result.text === 'string' && result.text.trim().length > 200);
-      let covered = false;
-      try { const r = resolveAtsApi(p.url); covered = !!(r && JD_TEXT_API_ATS.has(r.ats)); } catch { covered = false; }
+      let covered = false, ats = null;
+      try { const r = resolveAtsApi(p.url); covered = !!(r && JD_TEXT_API_ATS.has(r.ats)); if (covered) ats = r.ats; } catch { covered = false; }
+      let gone = false;
       if (!ok && covered) {
-        const r = retries[p.id] = { tries: (retries[p.id]?.tries || 0) + 1, last: today };
-        if (r.tries < MAX_TRIES) { later++; continue; }
+        gone = await isGone(p.url, ats);
+        if (!gone) {
+          const r = retries[p.id] = { tries: (retries[p.id]?.tries || 0) + 1, last: today };
+          if (r.tries < MAX_TRIES) { later++; continue; }
+        }
       }
       delete retries[p.id];
-      ok ? saved++ : missing++;
+      if (ok) saved++; else if (gone) takenDown++; else if (covered) missing++; else noFeed++;
       const head = ['---', yamlLine('id', p.id), yamlLine('url', p.url), yamlLine('company', p.company), yamlLine('title', p.title),
-        yamlLine('location', p.location), yamlLine('posted', p.posted), yamlLine('found', today), `jd: ${ok ? 'saved' : 'missing'}`,
+        yamlLine('location', p.location), yamlLine('posted', p.posted), yamlLine('found', today), `jd: ${ok ? 'saved' : gone ? 'gone' : 'missing'}`,
         ...(p.source ? [yamlLine('source', p.source)] : []), ...(p.source === 'Added by you' ? ['added: true'] : []), '---', ''];
       fs.writeFileSync(path.join(JDS, `${p.id}.md`), head.join('\n') + (ok ? result.text.trim() + '\n' : ''));
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  // A retry entry only matters while its line is still on the Pending list and unsaved.
+  const alive = new Set(pending.map(p => p.id));
+  for (const id of Object.keys(retries)) if (!alive.has(id)) delete retries[id];
   if (Object.keys(retries).length || fs.existsSync(RETRIES)) fs.writeFileSync(RETRIES, JSON.stringify(retries, null, 2) + '\n');
-  console.log(`fetch-pending-jds: ${todo.length} new postings, ${saved} descriptions saved, ${missing} missing, ${later} to retry tomorrow`);
+  console.log(`fetch-pending-jds: ${todo.length} new postings, ${saved} descriptions saved, ${noFeed} on boards with no description feed (LinkedIn and similar, nothing failed), ${missing} unreadable after ${MAX_TRIES} tries, ${takenDown} taken down, ${later} to retry tomorrow`);
 }
 
 if (isMain(import.meta.url)) main(process.argv.slice(2)).catch(e => { console.error(`fetch-pending-jds: ${e.message}`); process.exit(1); });
