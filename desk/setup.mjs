@@ -27,10 +27,10 @@ export const STEPS = [
   { n: 1, title: 'Your private copy', min: 10, session: 1 },
   { n: 2, title: 'Connect Claude to your copy', min: 10, session: 1 },
   { n: 3, title: 'Your Claude plan', min: 3, session: 1 },
-  { n: 4, title: 'Your profile', min: 25, session: 1 },
+  { n: 4, title: 'Your profile', min: 40, session: 1 },
   { n: 5, title: 'How jobs get scored', min: 15, session: 1 },
   { n: 6, title: 'Dream companies', min: 10, session: 1 },
-  { n: 7, title: 'Job sources', min: 10, session: 1 },
+  { n: 7, title: 'Job sources', min: 20, session: 1 },
   { n: 8, title: 'Go live', min: 15, session: 1 },
   { n: 9, title: 'Gmail and job alerts', min: 15, session: 2 },
   { n: 10, title: 'Your achievements', min: 20, session: 2 },
@@ -111,7 +111,9 @@ const CHECKS = {
     const bank = exists(f('interview-prep', 'story-bank.md')) ? fs.readFileSync(f('interview-prep', 'story-bank.md'), 'utf8') : '';
     const stories = (bank.match(/^#{2,3} \S/gm) || []).length;
     const out = [];
-    if (bullets < 8) out.push(`the master resume has ${bullets} bullets; aim for 8 to 12 approved achievement bullets`);
+    const base = readState().cv_bullets_step4;
+    if (Number.isInteger(base) && bullets - base < 4) out.push(`the master resume has ${bullets - base} new bullets since step 4; aim for 8 to 12 approved achievement bullets`);
+    else if (bullets < 8) out.push(`the master resume has ${bullets} bullets; aim for 8 to 12 approved achievement bullets`);
     if (stories < 3) out.push(`interview-prep/story-bank.md has ${stories} stories (one "## " heading each); write at least 3, one per theme`);
     return out;
   },
@@ -199,6 +201,8 @@ function done(n, note) {
   if (problems.length) { console.log(`Step ${n} is not finished:\n  - ${problems.join('\n  - ')}`); process.exitCode = 1; return; }
   const s = readState();
   s.steps[n] = { ...(s.steps[n] || {}), done: new Date().toISOString(), ...(note ? { note } : {}) };
+  // Step 10 counts the achievement bullets added after the master resume was first written.
+  if (n === 4 && !Number.isInteger(s.cv_bullets_step4)) s.cv_bullets_step4 = (fs.readFileSync(f('cv.md'), 'utf8').match(/^\s*[-*] .+/gm) || []).length;
   writeState(s);
   status();
 }

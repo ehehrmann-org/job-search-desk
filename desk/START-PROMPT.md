@@ -17,4 +17,6 @@ Step 2, connect Claude to my copy:
 If anything doesn't match what I see, ask me to describe my screen, and adjust. If we get stuck, write a short message for Erik saying where we got stuck.
 ---
 
+Prep for Session 1: your latest resume (PDF or Word), your LinkedIn profile saved as a PDF (on LinkedIn: your profile, More, Save to PDF), which Claude plan you have, and the lowest base pay you'd accept plus the number that would make you say yes fast. Plan about 2 hours.
+
 Prep for Session 2 (any time before): your last 2 or 3 performance reviews, any promotion or award emails, 1 or 2 project decks or reports you're proud of, and your LinkedIn recommendations (screenshots are fine).

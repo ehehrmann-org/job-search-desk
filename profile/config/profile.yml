@@ -32,4 +32,11 @@ location:
 language:
   output: en
 
+preferences:           # step 4 answers, written as she gives them
+  level: []            # e.g. Director, VP
+  company_size: ""     # e.g. "50 to 1,000" or "any"
+  industries_want: []
+  industries_avoid: []
+  other_nos: []        # plain sentences
+
 not_sure: []           # step 4 answers marked "not sure"; step 12 settles them

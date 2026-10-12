@@ -11,9 +11,12 @@ You are setting up the Job Search Desk for one person. Read this whole file befo
 - **Checklist.** Show the progress checklist (`node desk/setup.mjs status`, shown as a plain list, not a code block) at the very start, after every finished step, and when she says "continue setup". Never mid-step.
 - **Checkpoints.** A step is finished only when `node desk/setup.mjs done <n>` passes. If it lists problems, fix them with her, then run it again. After each finished step: `bash desk/save.sh "setup: step <n>"`. If it prints `save failed`, say so plainly and offer the message for Erik; the work stays in this session, so try the save again before the session ends.
 - **Errors.** When anything fails, say in one or two plain sentences what happened and what happens next, then offer: "Want a message for Erik? I'll write it; you send it." The message: "Hi Erik, setup stopped at step <n> (<title>). What happened: <one line>. Error: <exact text, shortened>. Time: <now>. Tool version: <desk/VERSION>." Nothing about her jobs or profile. Typing "help" anytime gives the same message.
-- **Continue setup.** On "continue setup" (or a fresh session): run `npm install --ignore-scripts --no-audit --no-fund` (quietly), then `status`, say where she left off, and start the next unfinished step from its beginning.
-- **Short on time.** If she or Erik says the session has about an hour, take the fast path: skip step 5 point 6 (the preview), step 6 point 2 (extra suggestions) and step 8 point 2 (first jobs), and in step 7 propose at most 10 companies. Session 1 then takes about 75 minutes. Everything skipped happens on its own later (the morning run scores the first jobs) or in session 2.
-- **Two sessions.** Session 1 (steps 1 to 8, about 95 minutes) ends with her live: her job page exists and the daily run starts the next morning. Session 2 (steps 9 to 12, about an hour, any day) adds job alert emails, achievements, resumes and a scoring check on her real jobs. Step 8 closes session 1.
+- **Continue setup.** On "continue setup" (or a fresh session): run `npm install --ignore-scripts --no-audit --no-fund` (quietly), then `status`, say where she left off, and pick up the next unfinished step where her files show it stopped: an answer already in her files is not asked again.
+- **Write as you go.** Write each answer to its file as soon as she gives it, and save after each part of a step (`bash desk/save.sh "setup: step <n> part"`), so a usage limit or a closed window loses at most one question.
+- **Files she attaches.** If attaching a file doesn't work in this session, ask her to paste the text instead (for LinkedIn: her profile's About and Experience sections).
+- **Her job page in a new session.** Before uploading a file to her job page or publishing it, read it first (Artifact `read` on `desk.yml` `page_url`); the Artifact tool refuses a write to a page this conversation hasn't read.
+- **Short on time, or on Pro.** On the Pro plan or "Not sure" (step 3), and whenever she or Erik says the session has about an hour, take the fast path: skip step 5 point 6 (the preview), step 6 point 2 (extra suggestions) and step 8 point 2 (first jobs), and in step 7 propose at most 10 companies. Session 1 then takes about 90 minutes. Everything skipped happens on its own later (the morning run scores the first jobs) or in session 2.
+- **Two sessions.** Session 1 (steps 1 to 8, about 2 hours, of which steps 3 to 8 run here) ends with her live: her job page exists and the daily run starts the next morning. Session 2 (steps 9 to 12, about an hour, any day) adds job alert emails, achievements, resumes and a scoring check on her real jobs. Step 8 closes session 1.
 
 Working folder: the root of her private copy. Every command runs there with `CAREER_OPS_DATA_DIR=profile`.
 
@@ -35,7 +38,7 @@ Then greet her, show the checklist, and start step 3.
 
 ## Step 3. Your Claude plan (about 3 minutes)
 
-Ask which Claude plan she has: Pro, Max 5x, Max 20x, Not sure. Write `profile/config/desk.yml`:
+Ask which Claude plan she has: Pro, Max 5x, Max 20x, Not sure. Write `plan` (her answer) and the three caps below to `profile/config/desk.yml`:
 
 | Plan | daily_cap | deep_cap | site_cap |
 |---|---|---|---|
@@ -47,9 +50,9 @@ Ask which Claude plan she has: Pro, Max 5x, Max 20x, Not sure. Write `profile/co
 (`site_cap`: how many company websites the morning run looks up a day, so company names on her page link to their sites.)
 
 Also set `help_email` from `desk/HELP-CONTACT` if that file exists.
-For Pro and Not sure, say once: setup is long, so Claude may pause for a usage limit partway through. Nothing is lost; she can come back later and type "continue setup". After the first week the cap can go up if usage allows.
+For Pro and Not sure, say once: setup is long, so Claude may pause for a usage limit partway through; nothing is lost, and she can come back later and type "continue setup". After the first week the caps can go up if usage allows.
 
-## Step 4. Your profile (about 25 minutes)
+## Step 4. Your profile (about 40 minutes)
 
 **4a. The master resume.** Ask her to attach her latest resume (PDF or Word) and her LinkedIn profile as a PDF (on LinkedIn: her profile, More, Save to PDF). Read both. If she brought performance reviews or promotion announcements, read those too. Write `profile/cv.md`, merging everything into one master that holds every fact, in this shape:
 ```
@@ -64,19 +67,19 @@ Mon YYYY – Mon YYYY
 ## Education
 ## Skills
 ```
-Where the two disagree (dates, titles, a role on one but not the other), ask her one conflict at a time. Then read back in 4 to 6 lines what you picked up: roles and years, the through-line, education. Ask if anything is missing.
+Where the two disagree (dates, titles, a role on one but not the other), ask her one conflict at a time. Fill `profile.yml` `candidate` (full name, email, phone, city, LinkedIn) from the resume. Then read back in 4 to 6 lines what you picked up: roles and years, the through-line, education. Ask if anything is missing, then save.
 
 If her resume is out of date (a recent employer or role is missing) or she has no resume at all, don't stop: build the master from her LinkedIn PDF and whatever else she brought. For each role with no description, ask two questions, one at a time: what she was responsible for, and how big it was (team, budget, volume, clients). Write what she says, in her words, as one or two bullets for that role; never add numbers she didn't give. Step 10 in session 2 fills in the rest. No LinkedIn PDF either: ask for her roles (employer, title, years) one at a time and do the same.
 
 **4b. The interview.** One question at a time, in this order. Record each answer as you go.
 1. **Target roles.** Ask what roles she wants next. Propose a title family from her own history: the titles she has held, their synonyms, and one level up (for example Creative Operations, Creative Production, Studio Operations, Creative Technology). She keeps, drops or adds. Write them to `profile.yml` `target_roles.primary` and to `portals.yml` `title_filter.positive` (short phrases a job title would contain).
 2. **Best job and worst job.** The one open question: "Think of the best job you've had. What made it the best? And the worst one: what made it the worst?" Write both to `narrative.best_job` and `narrative.worst_job`. This drives step 5.
-3. **Level.** Individual contributor, manager, director, VP or head of, C-level. One or two.
+3. **Level.** Individual contributor, manager, director, VP or head of, C-level. One or two. Write `preferences.level`.
 4. **Pay.** Her minimum base pay (walk-away) and the number that makes her say yes fast. Write both to `compensation`.
 5. **Location.** Home city and time zone; remote, hybrid or office; most office days a week she'd accept; which areas are an easy commute and which are not. Write `profile.yml` `location` (`timezone` as a name like `America/Chicago`; step 8 schedules the daily run with it), and `portals.yml` `location_filter`: `always_allow: [Remote]`, `allow` with her city, nearby cities, her state name and abbreviation, `United States`, `USA`, and `block_hard` with countries she can't work in (default: Canada, Mexico, United Kingdom, UK, India, Philippines, Brazil, Germany, Poland, unless she says otherwise).
-6. **Company size.** Smallest and largest she'd consider, or "any".
-7. **Industries.** Ones she wants, ones she won't touch.
-8. **Other no's.** Anything else that rules a job out (travel over 50%, weekend shifts, a commission-only pay plan). Plain sentences.
+6. **Company size.** Smallest and largest she'd consider, or "any". Write `preferences.company_size`.
+7. **Industries.** Ones she wants, ones she won't touch. Write `preferences.industries_want` and `industries_avoid`.
+8. **Other no's.** Anything else that rules a job out (travel over 50%, weekend shifts, a commission-only pay plan). Plain sentences, to `preferences.other_nos`.
 9. **Current employer.** Write `desk.yml` `current_employer` ("none" if not employed) and add a row to `profile/data/blacklist.md` (copy the header from `desk/lib/blocklist.mjs` `BLACKLIST_HEADER`) so its jobs never show.
 
 Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 settles them.
@@ -97,11 +100,11 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 1. Ask for the companies she'd most like to work at: names or careers links, any number.
 2. Suggest 3 to 5 more like the employers in her best job, each with one line on why. She accepts or declines each.
-3. For each accepted company, while she watches: find its careers page and the job board behind it (web search; open the careers page; job links usually point to the board). Check it with `node desk/setup.mjs board <link>`. Readable: add to `portals.yml` `tracked_companies` as `{ name, careers_url: <board link>, website: <its home page, when seen>, enabled: true, dream: true }`. Not readable after a real look: add `{ name, careers_url: <careers page>, enabled: true, dream: true, scan_method: websearch, scan_query: "<name> careers <main title word>" }`, and tell her it gets a weekly web search instead of the daily scan.
+3. For each accepted company, while she watches: find its careers page and the job board behind it (web search; open the careers page; job links usually point to the board). Check it with `node desk/setup.mjs board <link>`. Readable: add to `portals.yml` `tracked_companies` as `{ name, careers_url: <board link>, website: <its home page, when seen>, enabled: true, dream: true }`. Not readable after a real look: add `{ name, careers_url: <careers page>, enabled: true, dream: true, scan_method: websearch, scan_query: "<name> careers" }`, and tell her it gets a weekly web search instead of the daily scan.
 4. Close with: "Dream companies are always checked and their jobs always reach you, even below your bar. Your deal-breakers still apply to them."
 5. `node desk/setup.mjs done 6`.
 
-## Step 7. Job sources (about 10 minutes)
+## Step 7. Job sources (about 20 minutes)
 
 1. Propose 15 to 30 companies (10 on the fast path) whose jobs she should see daily: employers like the ones she'd want (industry, size, city or remote), found with web search. Offer the ready-made pack in `desk/packs/` that fits her (`agencies.yml` for independent agencies) as one option she can take whole, in part, or skip.
 2. Show them as a short list with one line each; she accepts all, picks, or adds sites she already watches.
@@ -117,21 +120,21 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 ## Step 8. Go live (about 15 minutes)
 
 1. **Her job page.** `node desk/page/build.mjs`, then publish `desk/page/dist/job-search-desk.html` with the Artifact tool: icon `briefcase`, capabilities `{"db": {}, "user": {}, "downloads": true, "assets": {}, "mcp": {"servers": [{"server": "Claude Code Remote", "tools": ["fire_trigger"]}]}}` (the last one lets the page's Run now button start her daily run). Save its link to `desk.yml` `page_url`.
-2. **First jobs.** `bash desk/save.sh "setup: page"`. If the first scan has finished (`profile/jds/` has postings), score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
-3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the status line at the bottom of the page says the first run hasn't happened yet; that is expected, and the morning run replaces it.
+2. **First jobs.** `bash desk/save.sh "setup: page"`. If the first scan has finished (`profile/jds/` has postings), run `mkdir -p .work .page-dump profile/data/extractions` and score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
+3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the status line at the bottom of the page says "Waiting for the first morning run", and the Run now button stays hidden; both are expected.
 4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to click the status line at the bottom of the page ("All working" or the problem count), click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
-5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Attach two repositories to it: her private copy, and the template named in `desk/TEMPLATE`. The template is private and a scheduled run can't add a repository by itself, so without it the run can never check for updates. Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`. The task itself only runs scripts, reads her page and starts the scoring helpers, so it runs on Sonnet: if the tool that creates it asks for a model, pick Sonnet. If it doesn't ask, the task takes this session's model, and point 6 corrects it. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
-6. **Task settings (she does this).** Walk her to the task's settings: remove every connection (Gmail gets added back in step 9), check that automatic approval is on, and check that the model is Sonnet (change it there if it isn't). Wait until she confirms all three.
+5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task: `mcp__claude-code-remote__create_trigger`) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`. The task itself only runs scripts and starts the scoring helpers, so it runs on Sonnet, which she sets in point 6. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
+6. **Task settings (she does this).** Walk her to the task's settings in Claude Code's scheduled tasks. Check, one at a time, and wait for her yes on each: its repositories list her private copy and the template named in `desk/TEMPLATE` (add the template if it's missing: the template is private, and without it the run can't check for updates); every connection is removed (Gmail gets added back in step 9); automatic approval is on; the model is Sonnet.
 7. Save, then `node desk/setup.mjs done 8`.
 8. **Close the session.** Tell her, briefly:
-   - She's live: new jobs arrive every morning by about 7 on her job page. The tour is always one click away from the status line at the bottom of the page.
+   - She's live: her first jobs arrive tomorrow morning by about 7 on her job page, and every morning after that. The tour is always one click away from the status line at the bottom of the page.
    - The first days will score rough. Every Skip with a reason and every Interested teaches it.
    - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: open Claude, open a session on her private copy, type "continue setup". The prep list for it is in Erik's message.
    - "Change my scoring", "add a dream company" and "help" work anytime in Claude.
 
 ## Step 9. Gmail and job alerts (about 15 minutes)
 
-1. **What the Gmail connection allows.** Say plainly: it lets Claude read her email. The Job Search Desk only searches for job alert emails and reads those; it never sends, replies, deletes or labels anything. Ask whether she wants it. If not: leave `desk.yml` `gmail_alerts: false`, tell her LinkedIn and Indeed jobs then reach her only when she adds them on her page, and go to point 9. She can turn it on later from Scan sources.
+1. **What the Gmail connection allows.** Say plainly: it lets Claude read her email. The daily run's instructions limit it to searching for job alert emails and reading those, never sending, replying, deleting or labeling anything; the connection itself could do more, which is why it goes on that one task and nothing else. Ask whether she wants it. If not: leave `desk.yml` `gmail_alerts: false`, tell her LinkedIn and Indeed jobs then reach her only when she adds them on her page, and go to point 9. She can add it later by typing "continue setup" in Claude.
 2. Ask which Gmail address gets her job alerts. If it is a work address, say no: use a personal one, because the work account belongs to her employer.
 3. Walk her through connecting it: Claude settings, Connectors, Gmail, Connect, sign in with that address. Wait.
 4. Confirm: search her Gmail for a recent job alert (LinkedIn, Indeed). Found: say which. None yet: find any recent email to prove the connection works. Set `desk.yml` `gmail_checked: true` and `gmail_alerts: true`.
@@ -164,7 +167,7 @@ Her page calls these her standard resumes: one per kind of role, used whenever a
 
 ## Step 12. Test the scoring (about 10 minutes)
 
-1. `git pull -q --rebase --autostash origin main`, then `node desk/setup.mjs sample` picks 8 scored postings from her real jobs (high, middle and low, across her title families), shuffled. Leave out jobs she already decided on her page; their decisions already teach the scoring. If it answers `short: true`, score more first (`daily.mjs todo --cap 20`, the same way as step 8 point 2). Still short: find live postings for her titles with web search, save each one's text as `profile/jds/s<n>.md` with the same front matter the scan writes (`id: "s<n>"`, `url`, `company`, `title`, `found`, `jd: saved`), score them the same way, and use 5 to 8 in all.
+1. `git pull -q --rebase --autostash origin main`, then `node desk/setup.mjs sample` picks 8 scored postings from her real jobs (high, middle and low, across her title families), shuffled. Leave out jobs she already decided on her page; their decisions already teach the scoring. If it answers `short: true`, score more first (`mkdir -p .work .page-dump profile/data/extractions`, then `daily.mjs todo --cap 20`, the same way as step 8 point 2). Still short: find live postings for her titles with web search, save each one's text as `profile/jds/s<n>.md` with the same front matter the scan writes (`id: "s<n>"`, `url`, `company`, `title`, `found`, `jd: saved`), score them the same way, and use 5 to 8 in all.
 2. Show them blind, 4 per question round: title, company, location, pay, and a 2-line summary of the job. No score. For each she picks Would apply, Wouldn't, or Not sure, and may add a reason (pay, size, location, industry, function, seniority).
 3. Record them all in `profile/config/scoring-cases.yml`: `{ name: "<company>, <title>", decision: apply | skip | unsure, reasons: [...], input: <the posting's extraction from profile/data/extractions/<id>.json> }`.
 4. Reveal: `node desk/test-scoring.mjs`. Tell her the agreement in plain words ("We agreed on 6 of 8"), and show each disagreement with its score and the line that drove it.
