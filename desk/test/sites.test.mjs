@@ -35,5 +35,6 @@ test('sites: known first, lookups capped, masked names skipped, results checked'
   assert.deepEqual(dueLookups(sites, companies, '2026-10-20', 5), []);
   assert.deepEqual(dueLookups(sites, companies, '2027-01-01', 5).map(x => x.company), ['Acme']);
   assert.deepEqual(pageSites(sites, companies), { fabrikam: 'https://fabrikam.com/', stripe: 'https://stripe.com/', hawkemedia: 'https://hawkemedia.com/' });
+  assert.deepEqual(dueLookups(sites, companies, '2027-01-01', 0), []);
   assert.equal(normCo('Tailspin+Toys'), 'tailspintoys');
 });

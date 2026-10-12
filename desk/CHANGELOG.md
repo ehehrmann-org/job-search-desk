@@ -2,6 +2,12 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.1 (2026-10-12)
+- Headings use the same serif as the page name.
+- Your master resume shows on the Resumes tab, with a plain-text copy for application forms. When you update it in Claude, the page shows the new version.
+- How many company websites the morning run looks up a day now follows your Claude plan (5 on Pro).
+- The tour and setup mention Run now, company website links and the status line at the bottom of the page.
+
 ## 0.11.0 (2026-10-12)
 - Company names link to the company's website. The morning run looks up a few new companies each day, and keeps a link only when the address carries the company's name.
 - Links that open another site end with a small out-arrow.

@@ -366,3 +366,20 @@ test('update notes: long lines end at a word, not mid-word', () => {
   assert.equal(run.update.notes[1], 'Short one.');
   assert.ok(run.update.notes[0].endsWith('…') && /keyboard\.…$|[a-z]…$/.test(run.update.notes[0]) && !/ …$/.test(run.update.notes[0]));
 });
+
+test('push: the master resume goes on the page once, as plain text; resume-doc rebuilds it for an update', () => {
+  const d = profile();
+  write(path.join(d, 'cv.md'), '# Pat Doe\n**Location:** Chicago\n## Experience\n### Acme, Chicago, IL\n**Head of Ops**\nJan 2020 – Present\n- Cut cycle time 30%\n- ' + 'Led the studio. '.repeat(20) + '\n');
+  let out = json(d, 'page-sync.mjs', 'push', '--no-run');
+  const w = JSON.parse(read(out.batches[0])).writes.find(x => x.collection === 'resumes' && x.doc_id === 'master');
+  const doc = JSON.parse(read(w.file_path));
+  assert.equal(doc.kind, 'master');
+  assert.match(doc.text, /^Pat Doe\nLocation: Chicago/);
+  assert.match(doc.text, /• Cut cycle time 30%/);
+  sh(d, 'page-sync.mjs', 'ack', out.batches[0]);
+  out = json(d, 'page-sync.mjs', 'push', '--no-run');
+  assert.equal(out.writes, 0);
+  const f = sh(d, 'page-sync.mjs', 'resume-doc', 'master').trim();
+  assert.equal(JSON.parse(read(f)).text, doc.text);
+  assert.throws(() => sh(d, 'page-sync.mjs', 'resume-doc', 'nope'), /no resume nope/);
+});

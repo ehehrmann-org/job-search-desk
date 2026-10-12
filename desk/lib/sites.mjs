@@ -100,6 +100,7 @@ export function fillKnown(sites, companies, portals, day) {
 /** Companies still without a website that are due a lookup, in the order given, at most cap: [{ company, search }]. */
 export function dueLookups(sites, companies, today, cap) {
   const out = [];
+  if (!(cap > 0)) return out;
   const seen = new Set();
   for (const { name } of companies) {
     const k = normCo(name);

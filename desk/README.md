@@ -10,8 +10,9 @@ Job Search Desk additions on top of upstream career-ops. Upstream files stay unt
 | `test/*.test.mjs` | Unit tests: `node --test desk/test/*.test.mjs` |
 | `templates/scoring.example.yml` | Starting point for setup step 5 |
 | `fetch-pending-jds.mjs` | Runs in the daily scan: saves each pending posting's description to `jds/<id>.md` |
-| `page-sync.mjs` | `pull` page clicks into the repo, `since` prints the time to read decisions from, `done` records a handled request, `push` new postings and the run status out as ArtifactData batch files, `ack` after a batch is written |
+| `page-sync.mjs` | `pull` page clicks into the repo, `since` prints the time to read decisions from, `done` records a handled request, `push` new postings and the run status out as ArtifactData batch files, `ack` after a batch is written, `sites` company websites to look up, `resume-doc` one resume's fields for an update |
 | `lib/page-docs.mjs` | Builds the page documents (contract in `DB.md`) |
+| `lib/sites.mjs` | Company websites for the page (`data/sites.json`): from portals.yml, posting links, and the morning run's lookups, kept only when the address carries the company's name |
 | `lib/env.mjs` | Shared paths (`ROOT`, `DATA`), entry-point check, safe ids, strict YAML reads |
 | `lib/urls.mjs` | Clean posting links (alert tracking removed) and the "seen before" key |
 | `lib/boards.mjs` | Which job board reader the scan would use for a company or link |

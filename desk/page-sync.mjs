@@ -29,7 +29,11 @@
  *   node desk/page-sync.mjs sites [--cap N]
  *       Fills company websites known without a lookup (portals.yml `website:`, postings on
  *       the company's own site) into data/sites.json and prints the companies on the page
- *       still to look up, at most N (desk.yml site_cap, default 20): { to_look_up: [names] }.
+ *       still to look up, at most N (desk.yml site_cap, default 5): { to_look_up: [names] }.
+ *
+ *   node desk/page-sync.mjs resume-doc <id>
+ *       Writes .work/resume-<id>.json with the fields push writes for that resume (master: from
+ *       cv.md) and prints its path, for updating a resume already on the page.
  *
  *   node desk/page-sync.mjs sites --record <file.json>
  *       <file.json>: [{ company, url | null }] from the run's web searches. Keeps a url only
@@ -166,7 +170,7 @@ async function pull(dumpDir) {
     if (r.kind === 'switch_group') { events.push({ at: String(r.at || ''), rid, r }); continue; }
     try { await handle(rid, r, summary, { seen, jdByKey, boardAt }); }
     catch (e) {
-      done(rid, "Couldn't do this one. If it matters, copy the message for Erik from the status button.");
+      done(rid, "Couldn't do this one. If it matters, copy the message for Erik from the status line at the bottom of the page.");
       summary.errors.push(`${r.kind} ${rid}: ${e.message}`);
     }
   }
@@ -419,11 +423,9 @@ async function push(args) {
   const doneRes = pushed('resumes');
   let resumes = [];
   try { resumes = readYamlStrict(yaml, P.resumes, {}).resumes || []; } catch (e) { problem({ what: 'Your resume list has a problem.', fix: 'Copy the message for Erik.', detail: text(e.message, 300), since: at }); }
-  for (const r of resumes) if (r?.id && safeId(r.id) && !doneRes.has(r.id)) {
-    const textFile = r.text_file ? path.resolve(DATA, 'resumes', r.text_file) : null;
-    const inside = textFile && textFile.startsWith(path.join(DATA, 'resumes') + path.sep) && fs.existsSync(textFile);
-    add('resumes', r.id, { name: r.name, kind: r.kind || 'default', for_posting: r.for_posting || null, updated: r.updated || at.slice(0, 10), asset_id: r.asset_id || null, text: inside ? fs.readFileSync(textFile, 'utf8') : (r.text || null) });
-  }
+  for (const r of resumes) if (r?.id && safeId(r.id) && !doneRes.has(r.id)) add('resumes', r.id, resumeDoc(r, at));
+  // The master resume (cv.md), once; later changes go through the resume update step (resume-doc master).
+  if (!doneRes.has('master') && !resumes.some(r => r?.id === 'master')) { const m = masterDoc(); if (m) add('resumes', 'master', m); }
 
   // Sources snapshot
   const decisions = readJson(P.decisions, {});
@@ -511,6 +513,38 @@ function alertsAdded(since) {
     .map(l => l.split('\t')).filter(c => /^gmail:|^web/.test(c[2] || '') && c[5] === 'added' && (c[1] || '') >= since).length;
 }
 
+// A resume document as push writes it.
+function resumeDoc(r, at = new Date().toISOString()) {
+  const textFile = r.text_file ? path.resolve(DATA, 'resumes', r.text_file) : null;
+  const inside = textFile && textFile.startsWith(path.join(DATA, 'resumes') + path.sep) && fs.existsSync(textFile);
+  return { name: r.name, kind: r.kind || 'default', for_posting: r.for_posting || null, updated: r.updated || at.slice(0, 10), asset_id: r.asset_id || null, text: inside ? fs.readFileSync(textFile, 'utf8') : (r.text || null) };
+}
+// The master resume from cv.md, as plain text for application forms.
+function masterDoc() {
+  const f = path.join(DATA, 'cv.md');
+  if (!fs.existsSync(f)) return null;
+  const md = fs.readFileSync(f, 'utf8');
+  if (md.trim().length < 200) return null;
+  const text = md.replace(/^#{1,6}\s+/gm, '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/^\s*[-*]\s+/gm, '• ').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  return { name: 'Master resume', kind: 'master', for_posting: null, updated: fs.statSync(f).mtime.toISOString().slice(0, 10), asset_id: null, text };
+}
+// .work/resume-<id>.json: the fields of one resume as push writes them, for the resume update step.
+function resumeDocCmd(id) {
+  if (!id || !safeId(id)) throw new Error('usage: page-sync.mjs resume-doc <resume id>');
+  let doc = null;
+  if (id === 'master') doc = masterDoc();
+  else {
+    const idx = readYamlStrict(yaml, P.resumes, {}).resumes || [];
+    const r = idx.find(x => x?.id === id);
+    if (r) doc = resumeDoc(r);
+  }
+  if (!doc) throw new Error(`no resume ${id} in resumes/index.yml`);
+  const out = path.join(ROOT, '.work', `resume-${id}.json`);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, JSON.stringify(doc, null, 2));
+  console.log(out);
+}
+
 // Companies with a job on the page, the ones she is acting on first, then newest first.
 function pageCompanies() {
   const decisions = readJson(P.decisions, {});
@@ -553,7 +587,7 @@ function sites(args) {
   saveSites(DATA, store);
   const ci = args.indexOf('--cap');
   const desk = readYamlStrict(yaml, P.desk, {});
-  const cap = ci >= 0 ? Number(args[ci + 1]) : Number.isInteger(desk.site_cap) ? desk.site_cap : 20;
+  const cap = ci >= 0 ? Number(args[ci + 1]) : Number.isInteger(desk.site_cap) ? desk.site_cap : 5;
   console.log(JSON.stringify({ to_look_up: dueLookups(store, companies, day, Math.max(0, cap || 0)) }, null, 2));
 }
 
@@ -632,6 +666,7 @@ if (isMain(import.meta.url)) {
     },
     ack: () => ack(rest[0]),
     sites: () => sites(rest),
+    'resume-doc': () => resumeDocCmd(rest[0]),
     done: () => {
       const posting = flag('--posting')[0];
       if (posting && !safeId(posting)) throw new Error(`not a posting id: ${posting}`);

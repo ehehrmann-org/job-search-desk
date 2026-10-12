@@ -37,12 +37,14 @@ Then greet her, show the checklist, and start step 3.
 
 Ask which Claude plan she has: Pro, Max 5x, Max 20x, Not sure. Write `profile/config/desk.yml`:
 
-| Plan | daily_cap | deep_cap |
-|---|---|---|
-| Pro | 10 | 1 |
-| Max 5x | 25 | 2 |
-| Max 20x | 50 | 3 |
-| Not sure | 10 | 1 |
+| Plan | daily_cap | deep_cap | site_cap |
+|---|---|---|---|
+| Pro | 10 | 1 | 5 |
+| Max 5x | 25 | 2 | 10 |
+| Max 20x | 50 | 3 | 20 |
+| Not sure | 10 | 1 | 5 |
+
+(`site_cap`: how many company websites the morning run looks up a day, so company names on her page link to their sites.)
 
 Also set `help_email` from `desk/HELP-CONTACT` if that file exists.
 For Pro and Not sure, say once: setup is long, so Claude may pause for a usage limit partway through. Nothing is lost; she can come back later and type "continue setup". After the first week the cap can go up if usage allows.
@@ -103,7 +105,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 1. Propose 15 to 30 companies (10 on the fast path) whose jobs she should see daily: employers like the ones she'd want (industry, size, city or remote), found with web search. Offer the ready-made pack in `desk/packs/` that fits her (`agencies.yml` for independent agencies) as one option she can take whole, in part, or skip.
 2. Show them as a short list with one line each; she accepts all, picks, or adds sites she already watches.
-3. Classify each once: a job board the scan can read (`setup.mjs board`), weekly web search (dream companies only), or alert only (LinkedIn, Indeed and similar: those come in through Gmail alerts in step 9). Add the readable ones to `portals.yml` `tracked_companies` with `enabled: true`.
+3. Classify each once: a job board the scan can read (`setup.mjs board`), weekly web search (dream companies only), or alert only (LinkedIn, Indeed and similar: those come in through Gmail alerts in step 9). Add the readable ones to `portals.yml` `tracked_companies` with `enabled: true`, and `website` (its home page) when you saw it.
 4. Start the first scan, so her page can show real jobs before this session ends:
    ```bash
    bash desk/save.sh "setup: sources"
@@ -116,13 +118,13 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 1. **Her job page.** `node desk/page/build.mjs`, then publish `desk/page/dist/job-search-desk.html` with the Artifact tool: icon `briefcase`, capabilities `{"db": {}, "user": {}, "downloads": true, "assets": {}, "mcp": {"servers": [{"server": "Claude Code Remote", "tools": ["fire_trigger"]}]}}` (the last one lets the page's Run now button start her daily run). Save its link to `desk.yml` `page_url`.
 2. **First jobs.** `bash desk/save.sh "setup: page"`. If the first scan has finished (`profile/jds/` has postings), score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
-3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the page's status button says the first run hasn't happened yet; that is expected, and the morning run replaces it.
-4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to open the status button, click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
+3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the status line at the bottom of the page says the first run hasn't happened yet; that is expected, and the morning run replaces it.
+4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to click the status line at the bottom of the page ("All working" or the problem count), click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
 5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Attach two repositories to it: her private copy, and the template named in `desk/TEMPLATE`. The template is private and a scheduled run can't add a repository by itself, so without it the run can never check for updates. Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`. The task itself only runs scripts, reads her page and starts the scoring helpers, so it runs on Sonnet: if the tool that creates it asks for a model, pick Sonnet. If it doesn't ask, the task takes this session's model, and point 6 corrects it. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
 6. **Task settings (she does this).** Walk her to the task's settings: remove every connection (Gmail gets added back in step 9), check that automatic approval is on, and check that the model is Sonnet (change it there if it isn't). Wait until she confirms all three.
 7. Save, then `node desk/setup.mjs done 8`.
 8. **Close the session.** Tell her, briefly:
-   - She's live: new jobs arrive every morning around 6:45 on her job page. The tour is always one click away from the status button.
+   - She's live: new jobs arrive every morning by about 7 on her job page. The tour is always one click away from the status line at the bottom of the page.
    - The first days will score rough. Every Skip with a reason and every Interested teaches it.
    - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: open Claude, open a session on her private copy, type "continue setup". The prep list for it is in Erik's message.
    - "Change my scoring", "add a dream company" and "help" work anytime in Claude.
@@ -150,11 +152,13 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 ## Step 11. Your resumes (about 15 minutes)
 
-1. `git pull -q --rebase --autostash origin main` for the latest scored jobs. Propose 1 to 3 role tracks from her target roles. Add a second track only when its postings reward different things (read the scored postings in `profile/data/scores/` and `profile/jds/` to check).
+Her page calls these her standard resumes: one per kind of role, used whenever a posting needs no tailoring.
+
+1. `git pull -q --rebase --autostash origin main` for the latest scored jobs. First ask whether she already has a resume per kind of role that she's happy with. If she does, use those as they are: save each PDF as `profile/resumes/<track-id>.pdf`, its text as `<track-id>.txt` (`pdftotext <pdf> <txt>`), skip points 2 to 4, and go on with point 5. Otherwise propose 1 to 3 role tracks from her target roles. Add a second track only when its postings reward different things (read the scored postings in `profile/data/scores/` and `profile/jds/` to check).
 2. For each track, draft a resume from `profile/cv.md` only, as `profile/resumes/<track-id>.md` in the same shape: a summary written for the track, the bullets that matter most for it first, wording mirrored from real postings in her scan, at most 2 pages. Roles that ended more than 15 years ago collapse into one line under "Earlier experience".
 3. `node desk/resume.mjs build profile/resumes/<track-id>.md`. It refuses any number not in the master resume: fix the draft, or confirm the fact with her and add it to the master first.
 4. Show each in chat: the summary and the top 3 bullets per role, and send the PDF as a file. She edits in plain words; rebuild after each change until she approves.
-5. Add each to `profile/resumes/index.yml`: `{ id, name, kind: default, updated, pdf: <id>.pdf, text_file: <id>.txt, summary: <one line on what it leads with> }`.
+5. Add each to `profile/resumes/index.yml`: `{ id, name, kind: default, updated, pdf: <id>.pdf, text_file: <id>.txt, summary: <one line on what it leads with> }`. `name` is the kind of role in her words ("Chief of Staff"); her page shows it as the resume's title.
 6. **On her page.** Upload each resume PDF as an asset of her job page (Artifact publish with `url` = `desk.yml` `page_url`, `asset: true`, `file_paths`). Save each asset id to its `index.yml` entry as `asset_id`. Then `node desk/page-sync.mjs push --no-run`, ArtifactData `batch` per printed file, `node desk/page-sync.mjs ack <file>`. If a PDF upload failed and the resume was already pushed, upload it, add the asset_id, and use the resume update step in desk/CLAUDE-DESK.md; push skips resumes already on the page.
 7. `node desk/setup.mjs done 11`
 

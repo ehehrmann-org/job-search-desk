@@ -394,3 +394,9 @@ button.tag:not(.act):not(.q):hover { background: color-mix(in srgb, var(--surfac
 .b.primary, .b.pref { background: var(--p-clay-bg); color: var(--p-clay); border-color: color-mix(in srgb, var(--accent) 38%, transparent); font-weight: 600; }
 .b.primary:hover, .b.pref:hover { background: color-mix(in srgb, var(--p-clay-bg) 70%, var(--accent) 18%); }
 .b.primary[disabled], .b.pref[disabled] { opacity: .55; }
+
+/* Headings use the same serif as the page name */
+.app h2, .tour-card h2, .dlg-back h2 { font-family: var(--f-display); font-weight: 500; letter-spacing: -.005em; }
+.panel h2 { font-size: 19px; }
+.tour-card h2 { font-size: 19px; }
+h3.sec { font-family: var(--f-display); font-weight: 500; font-size: 19px; letter-spacing: -.005em; text-transform: none; color: var(--fg); margin: 10px 0 -2px; text-wrap: balance; }
