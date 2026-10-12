@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.10 (2026-10-12)
+- Stats: the second step of each funnel no longer repeats its percentage.
+
 ## 0.11.9 (2026-10-12)
 - Updates come from a public template, so checking for a new version no longer needs any extra access.
 - Setup: no GitHub invitation needed anymore, and the first steps say which Claude model to pick.

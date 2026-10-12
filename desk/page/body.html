@@ -1189,7 +1189,7 @@
     stages.forEach(function (st, idx) {
       if (idx > 0) {
         var prev = stages[idx - 1], thin = prev.n < 10;
-        host.appendChild(el("div", { class: "conv" }, [el("span", null, ["↓ ", el("span", { class: "rate" + (thin ? " thin" : ""), text: pct(st.n, prev.n) + "%" + (thin ? " (only " + prev.n + ")" : "") }), " from " + prev.k.toLowerCase()]), el("span", { text: pct(st.n, max) + "% " + shareLabel })]));
+        host.appendChild(el("div", { class: "conv" }, [el("span", null, ["↓ ", el("span", { class: "rate" + (thin ? " thin" : ""), text: pct(st.n, prev.n) + "%" + (thin ? " (only " + prev.n + ")" : "") }), " from " + prev.k.toLowerCase()]), idx > 1 ? el("span", { text: pct(st.n, max) + "% " + shareLabel }) : null]));   // the share of the first stage only adds something from the third stage on
       }
       var track = el("div", { class: "track" }, [el("div", { class: "fill", style: "background:" + color + ";width:" + width(st.n, max, 0.6) })]);
       hover(track, st.k + ": " + fmt(st.n) + (idx ? " · " + pct(st.n, stages[idx - 1].n) + "% from " + stages[idx - 1].k.toLowerCase() : "") + (st.note ? " · " + st.note : ""));
