@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.9.1 (2026-10-12)
+- Setup's start message walks you through accepting Erik's invitation before you make your private copy.
+- "update career tool" asks for access to Erik's copy of the tool first, so updates can be fetched.
+
 ## 0.9.0 (2026-10-12)
 A review release: fixes across the job page, the daily run, scoring, setup and saving. Nothing new to learn.
 - On phones, the Stats tab, the stage buttons and the three outcome buttons on Applied and Interviewing cards no longer run off the screen; small tag buttons and links are easier to tap; tapping a field on an iPhone no longer zooms the page; the page shows its content before its fonts arrive.
