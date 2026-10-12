@@ -407,3 +407,6 @@ button.tag:not(.act):not(.q):hover { background: color-mix(in srgb, var(--surfac
 .panel h2 { font-size: 19px; }
 .tour-card h2 { font-size: 19px; }
 h3.sec { font-family: var(--f-display); font-weight: 500; font-size: 19px; letter-spacing: -.005em; text-transform: none; color: var(--fg); margin: 10px 0 -2px; text-wrap: balance; }
+
+/* Keep room for the scrollbar on every tab, so the centered page doesn't shift between short and long tabs */
+html { scrollbar-gutter: stable; }

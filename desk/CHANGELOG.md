@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.7 (2026-10-12)
+- The page no longer shifts sideways when you switch between a short tab and a long one.
+
 ## 0.11.6 (2026-10-12)
 - Run now moved down to the right end of the main tabs (Triage, Resumes, Scan sources, Stats).
 
