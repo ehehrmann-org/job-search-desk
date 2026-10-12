@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.1 (2026-10-12)
+- Setup keeps the nightly sweep focused: a stricter title list for it, and a longer list of countries to leave out by default.
+
 ## 0.13.0 (2026-10-12)
 - Every night, a free sweep of about 15,000 companies' public job boards (Greenhouse, Lever, Ashby) looks for your titles and locations, on top of the companies you listed. It uses no Claude usage and has its own switch on Scan sources. Copies made before this version need Erik to add it.
 - Daily limits on Scan sources: set how many web searches, scored jobs and deep evaluations Claude does each morning, to use less of your plan or find more.
