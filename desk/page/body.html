@@ -1130,7 +1130,7 @@
     var tiles = document.getElementById("tiles"); tiles.textContent = "";
     function tile(k, v, n, thin) { tiles.appendChild(el("div", { class: "tile" + (thin ? " thin" : "") }, [el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "n", text: n })])); }
     tile("Scoring accuracy", q.qualified ? Math.round(q.acted / q.qualified * 100) + "%" : "–", "You acted on " + q.acted + " of " + q.qualified + " qualified postings.", q.qualified < 10);
-    tile("Applications", String(you.applied), dec.pending + " still waiting for an answer");
+    tile("Applications submitted", String(you.applied), dec.pending + " still waiting for an answer");
     tile("Application → interview", decided ? Math.round(dec.interview / decided * 100) + "%" : "–", dec.interview + " of " + decided + " decided applications", decided < 10);
     tile("Interview → offer", dec.interview ? Math.round(you.offer / dec.interview * 100) + "%" : "–", dec.interview < 10 ? "Too few to judge yet (" + dec.interview + " interviews)" : you.offer + " of " + dec.interview + " interviews", dec.interview < 10);
     document.getElementById("foot-acc").textContent = "Scoring accuracy: of postings that reached your " + (thr !== null && thr !== undefined ? thr.toFixed(1) + " " : "") + "bar, the share you marked Interested or Applied. Below 50% means the scoring needs tuning.";

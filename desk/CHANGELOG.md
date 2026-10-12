@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.14 (2026-10-12)
+- Stats: the Applications tile is now Applications submitted.
+
 ## 0.11.13 (2026-10-12)
 - Works from a regular Claude chat: setup runs in the same chat as the start prompt, and the page's copy buttons (update, tailor, master resume) copy a request that opens your private copy in any new chat.
 - Stats: "Withdrew" reads "You withdrew".
