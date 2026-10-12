@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.6 (2026-10-12)
+- Run now moved down to the right end of the main tabs (Triage, Resumes, Scan sources, Stats).
+
 ## 0.11.5 (2026-10-12)
 - All buttons share one color again. The next step for each job is still the rightmost button, now marked by a bold label instead of a tint.
 

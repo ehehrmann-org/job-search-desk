@@ -336,7 +336,12 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 /* Button groups hug their buttons, so highlights and focus match what's visible */
 .side > .btns, .side > .more { justify-self: end; }
 @media (max-width: 860px) { .side > .btns, .side > .more { justify-self: start; } }
-.top #run-host:empty { display: none; }
+/* Run now sits at the right end of the main tabs, on the same line */
+.navrow { display: flex; align-items: stretch; min-width: 0; }
+.navrow .tabs { flex: 1 1 auto; min-width: 0; }
+.navrow #run-host { display: flex; align-items: center; flex: none; padding: 0 0 4px 12px; border-bottom: 1px solid var(--line); }
+.navrow #run-host:empty { display: none; }
+@media (max-width: 600px) { .navrow #run-host { align-items: flex-start; padding-top: 3px; } }
 .b.runnow { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
 .note.runnote { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .panel.update { border-color: var(--accent); gap: 8px; }
