@@ -204,6 +204,7 @@ async function pull(dumpDir) {
 async function handle(rid, r, summary, ctx) {
   const day = String(r.at || nowIso()).slice(0, 10);
   if (r.kind === 'add_job') return addJob(rid, r, summary, ctx);
+  if (r.kind === 'add_description') return addDescription(rid, r, summary);
   if (r.kind === 'add_source') {
     summary.sources_to_set_up.push({ id: rid, text: text(r.text, 500), dream: !!r.dream, gap: safeId(r.gap) ? r.gap : null });
     return;
@@ -269,7 +270,7 @@ function addJob(rid, r, summary, { seen, jdByKey }) {
   const extra = { added: true, source: 'Added by you', applied: !!r.applied };
   const day = String(r.at || nowIso()).slice(0, 10);
   const key = url ? urlKey(url) : '';
-  const soon = summary.mode === 'quick' ? 'Scoring in the next morning run' : 'Scoring in this run';   // a quick run skips scoring
+  const soon = 'Scoring in this run';   // a quick run scores pasted text too (daily.mjs todo --priority-only)
   const entry = { id: rid, ...(url ? { url } : {}) };
   if (key && !seen.has(key)) entry.missed_by_scan = true;
 
@@ -296,6 +297,26 @@ function addJob(rid, r, summary, { seen, jdByKey }) {
   const res = queueLink(url, rid);
   done(rid, 'Scoring tomorrow, after the scan reads the posting', rid, res.replaces);
   summary.jobs_queued.push({ ...entry, on_job_site: /linkedin\.com|indeed\.com/.test(url), how: 'link queued; the next scan saves the description' });
+}
+
+// She pasted the description of a posting that was scored from its title only. Save it as the
+// posting's text and put the posting back in line for scoring; the old score and extraction are
+// kept under data/replaced/ (never deleted), and the new score reaches the page as a rescore.
+function addDescription(rid, r, summary) {
+  const id = r.posting;
+  const raw = String(r.text || '').trim().slice(0, 60000);
+  if (!safeId(id) || !fs.existsSync(path.join(P.jds, `${id}.md`))) return done(rid, "That job isn't in your copy any more.");
+  if (raw.length < 200) return done(rid, 'That was too short to be a job description. Paste the whole description.');
+  const { meta } = readFrontMatter(path.join(P.jds, `${id}.md`));
+  const { id: _drop, ...rest } = meta;
+  writeJd(id, { ...rest, jd: 'saved', pasted: true }, raw);
+  const stamp = nowIso().replace(/[^0-9]/g, '').slice(0, 14);
+  for (const [dir, f] of [[P.scores, `${id}.json`], [P.extractions, `${id}.json`]]) {
+    const from = path.join(dir, f);
+    if (fs.existsSync(from)) { const to = path.join(DATA, 'data', 'replaced', path.basename(dir), `${id}~${stamp}.json`); fs.mkdirSync(path.dirname(to), { recursive: true }); fs.renameSync(from, to); }
+  }
+  done(rid, 'Description saved. Scoring in this run', id);
+  (summary.descriptions_added ||= []).push(id);
 }
 
 function writeJd(id, meta, body) {
@@ -369,7 +390,7 @@ async function push(args) {
     const id = rec.verdict.id;
     if (!rec.rescored_at || !donePostings.has(id) || st.rescores[id] === rec.rescored_at) continue;
     const v = rec.verdict;
-    add('rescores', `${id}~${rec.rescored_at.replace(/[^0-9]/g, '').slice(0, 14)}`, { posting_id: id, at: rec.rescored_at, score: v.score, status_hint: v.status, threshold: v.threshold, dealbreakers: v.dealbreakers, ratings: (v.ratings || []).map(r => ({ id: r.id, name: r.name, bucket: r.bucket, score: r.score, why: r.why })), checks: v.checks || [] });
+    add('rescores', `${id}~${rec.rescored_at.replace(/[^0-9]/g, '').slice(0, 14)}`, { posting_id: id, at: rec.rescored_at, jd: jdMeta(id).jd === 'saved' ? 'saved' : undefined, score: v.score, status_hint: v.status, threshold: v.threshold, dealbreakers: v.dealbreakers, ratings: (v.ratings || []).map(r => ({ id: r.id, name: r.name, bucket: r.bucket, score: r.score, why: r.why })), checks: v.checks || [] });
   }
   // Weekly suggestions
   const doneSug = pushed('suggestions');
@@ -533,7 +554,7 @@ function updateInfo(file) {
   const [a, b] = [v(c.latest), v(c.current)];
   const newer = a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
   if (newer <= 0) return null;
-  const notes = (Array.isArray(c.changelog) ? c.changelog : []).flatMap(x => String(x.text || '').split('\n')).map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 8).map(l => text(l, 300));
+  const notes = (Array.isArray(c.changelog) ? c.changelog : []).flatMap(x => String(x.text || '').split('\n')).map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean).slice(0, 12).map(l => { const t = text(l, 1000); return t.length < 1000 ? t : t.slice(0, t.lastIndexOf(' ', 990)) + '…'; });
   return { to: c.latest, notes, needs_erik: Array.isArray(c.needs_erik) && c.needs_erik.length > 0 };
 }
 

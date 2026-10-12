@@ -1,50 +1,49 @@
 <title>Job Search Desk</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" media="print" id="gf" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Job Search Desk, live page. Design locked as mockup version 9 (2026-10-10). */
 :root {
-  --bg: #f6f7f8;
+  /* Claude desktop app look: warm paper neutrals, clay accent, the system's own UI font. */
+  --bg: #faf9f5;
   --surface: #ffffff;
-  --surface-2: #eef0f2;
-  --fg: #15181c;
-  --fg-2: #4b525b;
-  --muted: #656c75;
-  --line: #dde1e5;
-  --accent: #1f5fa8;
-  --accent-soft: #e3edf8;
-  --star: #9a6416;
-  --s-interview: #1baf7a;
-  --s-rejected: #d03b3b;
-  --s-noresp: #8a9098;
-  --s-withdrew: #eda100;
-  --s-pending: #c9ced4;
-  --bar: #2a78d6;
-  --bar-2: #6250d6;
-  --warn-bg: #fff4dc;
+  --surface-2: #f0eee6;
+  --fg: #141413;
+  --fg-2: #3d3d3a;
+  --muted: #73726c;
+  --line: #e5e3da;
+  --accent: #b5532f;
+  --accent-soft: #f6e9e2;
+  --star: #8f5d12;
+  --s-interview: #2f8a5b;
+  --s-rejected: #c4473a;
+  --s-noresp: #8a8880;
+  --s-withdrew: #d49a1c;
+  --s-pending: #cfccc2;
+  --bar: #c6613f;
+  --bar-2: #8c7b62;
+  --warn-bg: #fbf0dc;
   --warn-ink: #7a5300;
   --on-accent: #ffffff;
-  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-label: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --r: 8px;
+  --f-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-label: var(--f-body);
+  --f-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #111315; --surface: #1a1d20; --surface-2: #23272b; --fg: #eceef0; --fg-2: #b7bdc4;
-    --muted: #8a9099; --line: #2e3338; --accent: #79aef0; --accent-soft: #1d2c3d; --star: #e0a94a;
-    --s-interview: #199e70; --s-rejected: #e66767; --s-noresp: #7b828b; --s-withdrew: #c98500; --s-pending: #454b52;
-    --bar: #3987e5; --bar-2: #9085e9; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #0b1420;
+    --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
+    --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
+    --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
+    --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111315; --surface: #1a1d20; --surface-2: #23272b; --fg: #eceef0; --fg-2: #b7bdc4;
-  --muted: #8a9099; --line: #2e3338; --accent: #79aef0; --accent-soft: #1d2c3d; --star: #e0a94a;
-  --s-interview: #199e70; --s-rejected: #e66767; --s-noresp: #7b828b; --s-withdrew: #c98500; --s-pending: #454b52;
-  --bar: #3987e5; --bar-2: #9085e9; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #0b1420;
+  --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
+  --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
+  --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
+  --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
 }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
 .app { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; display: grid; gap: 14px; }
@@ -58,7 +57,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.brand { font-family: var(--f-label); font-weight: 600; font-size: 20px; letter-spacing: .01em; margin-right: auto; }
+.brand { font-family: var(--f-display); font-weight: 500; font-size: 22px; letter-spacing: -.005em; margin-right: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .banner { font-size: 13px; color: var(--fg-2); margin: 0; }
 
 /* Tabs */
@@ -66,7 +65,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .tabs::-webkit-scrollbar { display: none; }
 .tab { background: none; border: 0; padding: 8px 12px 10px; font-family: var(--f-label); font-weight: 600; font-size: 15px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
 .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
-.tab .count { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 4px; }
+.tab .count { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 4px; }
 .view { display: grid; gap: 12px; }
 
 /* Pipeline chevrons */
@@ -78,7 +77,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .step:last-child { border-radius: 0 var(--r) var(--r) 0; padding-right: 16px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--notch) 50%); }
 .step:hover { background: var(--line); }
 .step .sl { font-family: var(--f-label); font-weight: 600; font-size: 13px; color: var(--fg-2); }
-.step .sn { font-family: var(--f-mono); font-size: 18px; }
+.step .sn { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-size: 18px; }
 .step[aria-pressed="true"] { background: var(--accent-soft); }
 .step[aria-pressed="true"] .sl { color: var(--accent); }
 .list { display: grid; gap: 8px; }
@@ -96,7 +95,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 
 /* Posting rows */
 .row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; grid-template-columns: 56px minmax(0, 1fr) 220px; gap: 6px 16px; align-items: start; }
-.score { font-family: var(--f-mono); font-size: 20px; font-weight: 500; line-height: 1; padding-top: 2px; }
+.score { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; line-height: 1; padding-top: 2px; }
 .score.hi { color: var(--accent); }
 .score.na { color: var(--muted); font-size: 16px; }
 .main { min-width: 0; display: grid; gap: 4px; }
@@ -183,9 +182,9 @@ button.tag { cursor: pointer; }
 .stage .lbl { font-size: 13px; color: var(--fg); }
 .track { position: relative; height: 22px; }
 .fill { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; min-width: 3px; }
-.stage .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; }
+.stage .num { font-family: var(--f-body); font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; }
 .conv { margin-left: 138px; font-size: 12px; color: var(--fg-2); display: flex; flex-wrap: wrap; gap: 2px 10px; }
-.conv .rate { font-family: var(--f-mono); color: var(--fg); }
+.conv .rate { font-family: var(--f-body); font-variant-numeric: tabular-nums; color: var(--fg); }
 .conv .thin { color: var(--muted); }
 .foot { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12.5px; padding: 6px 9px; border-radius: 6px; max-width: 260px; }
@@ -265,7 +264,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .stab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; border-radius: 8px; padding: 8px 14px; font-family: var(--f-label); font-weight: 600; font-size: 14px; color: var(--fg-2); white-space: nowrap; min-height: 38px; }
 .stab:hover { color: var(--fg); }
 .stab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.stabn { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.stabn { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-weight: 400; font-size: 12px; color: var(--muted); }
 .srctools { display: flex; gap: 8px; align-items: center; }
 .srctools .srcsearch { flex: 1 1 auto; min-width: 0; }
 .srctools .b { flex: none; min-height: 38px; }
@@ -341,16 +340,31 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .upnotes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg-2); display: grid; gap: 3px; }
 /* Touch phones zoom in on a field whose text is smaller than 16px; keep fields at 16px there */
 @media (hover: none) and (pointer: coarse) { input, textarea, select { font-size: 16px; } }
+
+/* Version and update flag, next to the name */
+.ver { font-family: var(--f-body); font-size: 12px; font-weight: 400; letter-spacing: 0; }
+.ver .vtxt { color: var(--muted); background: none; border: 0; padding: 0; font: inherit; }
+.ver button.vtxt.upd { color: var(--accent); display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; text-underline-offset: 2px; }
+.ver .vdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.panel.update .uptxt { display: grid; gap: 8px; flex: 1 1 320px; min-width: 0; }
+.panel.update .uptxt .sub { margin: 0; }
+/* Resumes: the same three columns in every row, whatever buttons a row has */
+.lrow.res { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 300px; }
+.lrow.res > .btns { justify-content: flex-end; }
+@media (max-width: 760px) { .lrow.res { grid-template-columns: minmax(0, 1fr); } .lrow.res > .btns { justify-content: flex-start; } }
+/* Pasting a description inside a job card */
+.drawer.addjob { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 10px 0 0; background: none; }
+.drawer.addjob textarea { min-height: 140px; }
 </style>
 
 <script>
-(function(){var l=document.getElementById('gf');if(!l)return;var on=function(){l.media='all'};if(l.sheet){on();}else{l.addEventListener('load',on,{once:true});}})();
+var JSD_VERSION = "0.10.0";
 // Phosphor Icons (regular weight), MIT license (see desk/page/PHOSPHOR-LICENSE.txt), https://phosphoricons.com. Generated from @phosphor-icons/core 2.1.1.
 var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z\"/>","file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
 </script>
 <div class="app">
   <header class="top">
-    <div class="brand">Job Search Desk</div>
+    <div class="brand">Job Search Desk<span class="ver" id="ver"></span></div>
     <span class="meta-line" id="meta-line">Connecting…</span>
     <span id="run-host"></span>
     <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
@@ -424,9 +438,9 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     { k: "interested", label: "Interested", has: ["interested"] },
     { k: "applied", label: "Applied", has: ["applied"] },
     { k: "interviewing", label: "Interviewing", has: ["screen", "hm", "offer"] },
-    { k: "closed", label: "Closed", has: ["skipped", "rejected", "withdrew", "noresp"] }
+    { k: "closed", label: "Closed", has: ["skipped", "rejected", "withdrew", "noresp", "accepted"] }
   ];
-  var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Interviewing", hm: "Interviewing", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response" };
+  var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Interviewing", hm: "Interviewing", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response", accepted: "Offer accepted" };
   var BUCKET = { must: "Must have", important: "Important", nice: "Nice to have" };
   var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority"];
   var STAMPED = ["interested", "applied", "screen", "hm", "offer"];
@@ -443,7 +457,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
   var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
   // Unsent typing and picks survive the page redrawing when new data arrives.
-  var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "" };
+  var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "", desc: {} };
   var V = null;   // per-render indexes, rebuilt in draw()
 
   // ---------- Helpers ----------
@@ -519,7 +533,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
 
   // ---------- Per-render indexes ----------
   function buildIndex() {
-    var ix = { latest: Object.create(null), replaced: Object.create(null), blocked: Object.create(null), group: Object.create(null), board: Object.create(null), pendingAdds: 0, sugg: Object.create(null) };
+    var ix = { latest: Object.create(null), replaced: Object.create(null), blocked: Object.create(null), group: Object.create(null), board: Object.create(null), pendingAdds: 0, sugg: Object.create(null), described: Object.create(null) };
     Object.keys(D.rescores).forEach(function (k) { var r = D.rescores[k]; if (r && r.posting_id && (!ix.latest[r.posting_id] || cmpStr(r.at, ix.latest[r.posting_id].at) > 0)) ix.latest[r.posting_id] = r; });
     Object.keys(D.done).forEach(function (k) { var d = D.done[k]; if (d && d.replaces) ix.replaced[d.replaces] = true; });
     ((D.sources && D.sources.blocked) || []).forEach(function (b) { ix.blocked[normCo(b.company)] = { company: b.company, since: b.since, reason: b.reason, system: !!b.system, website: !!b.website }; });
@@ -534,6 +548,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
         if (r.kind === "switch_group" && pending) ix.group[r.group] = r;
         if (r.kind === "set_board" && pending) ix.board[r.source] = r;
         if (r.kind === "add_job" && !D.done[rid]) ix.pendingAdds++;
+        if (r.kind === "add_description" && r.posting) ix.described[r.posting] = rid;
         if ((r.kind === "apply_suggestion" || r.kind === "decline_suggestion") && r.week) ix.sugg[r.week + "/" + r.sid] = r.kind;
       });
     return ix;
@@ -542,7 +557,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   function view(id) {
     var p = D.postings[id]; if (!p) return null;
     var r = V.latest[id];
-    return r ? Object.assign({}, p, { score: r.score, status_hint: r.status_hint, threshold: r.threshold, ratings: r.ratings, checks: r.checks }) : p;
+    return r ? Object.assign({}, p, { score: r.score, status_hint: r.status_hint, threshold: r.threshold, ratings: r.ratings, checks: r.checks }, r.jd ? { jd: r.jd } : {}) : p;
   }
   // Postings hidden from Triage and Stats unless she already acted on them.
   function hidden(p) {
@@ -693,22 +708,51 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
   }
   // A newer version of the career tool, as the last run found it. Installing it changes the tool's own files,
   // which only Claude in a chat with her may do (she sees and approves it), so the button copies the request.
+  // The page's own version (build.mjs writes JSD_VERSION) and whether the last run found a newer one.
+  var PAGE_VERSION = typeof JSD_VERSION !== "undefined" ? String(JSD_VERSION) : "";
+  function newer(a, b) {
+    var x = String(a || "").split(".").map(Number), y = String(b || "").split(".").map(Number);
+    for (var i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+    return false;
+  }
+  function pendingUpdate() {
+    var u = D.run && D.run.update;
+    if (!u || !u.to) return null;
+    return !PAGE_VERSION || newer(u.to, PAGE_VERSION) ? u : null;   // a run before the last update can still list it
+  }
+  var updOpen = false;
+  function renderVersion() {
+    var v = document.getElementById("ver"); v.textContent = "";
+    if (!PAGE_VERSION) return;
+    var u = tour.on ? null : pendingUpdate();
+    if (!u) { v.appendChild(el("span", { class: "vtxt", text: "v" + PAGE_VERSION + " · up to date" })); return; }
+    v.appendChild(el("button", { class: "vtxt upd", "data-k": "ver-upd", "aria-expanded": String(updOpen), onclick: function () { updOpen = !updOpen; render(); } }, [el("span", { class: "vdot", "aria-hidden": "true" }), "v" + PAGE_VERSION + " · update to " + u.to + " available"]));
+  }
+  // A newer version of the career tool. Installing it changes the tool's own files, which only Claude
+  // in a chat with her may do (she sees and approves it), so the button copies the request.
   function updateBanner() {
-    var r = D.run, u = r && r.update;
-    if (!u || !u.to || tour.on) return null;
+    var u = pendingUpdate();
+    if (!u || tour.on) return null;
+    var notes = (u.notes || []).filter(Boolean);
     var box = el("div", { class: "panel update" }, [
       el("div", { class: "uphead" }, [
-        el("h2", { text: "Update available: version " + u.to + (r.version ? " (you have " + r.version + ")" : "") }),
-        el("button", { class: "b primary", "data-k": "update-copy", onclick: function () { copy("update career tool", "Copied. Paste it into Claude, in your Job Search Desk chat."); } }, [ic("copy"), "Copy update request"])
-      ]),
-      el("p", { class: "sub", text: "Paste it into Claude, in your Job Search Desk chat: it shows what's new and asks before changing anything. Your jobs, decisions, resumes and settings stay as they are." })
+        el("div", { class: "uptxt" }, [
+          el("h2", { text: "Version " + u.to + " is available" }),
+          el("p", { class: "sub", text: "Paste the update request into Claude, in your Job Search Desk chat. It shows what's new and asks before changing anything; your jobs, decisions, resumes and settings stay as they are." })
+        ]),
+        el("div", { class: "btns" }, [
+          notes.length ? el("button", { class: "b", "data-k": "upd-notes", "aria-expanded": String(updOpen), onclick: function () { updOpen = !updOpen; render(); } }, [updOpen ? "Hide what's new" : "What's new"]) : null,
+          el("button", { class: "b primary", "data-k": "update-copy", onclick: function () { copy("update career tool", "Copied. Paste it into Claude, in your Job Search Desk chat."); } }, [ic("copy"), "Copy update request"])
+        ])
+      ])
     ]);
-    if ((u.notes || []).length) box.appendChild(el("ul", { class: "upnotes" }, u.notes.map(function (n) { return el("li", { text: n }); })));
+    if (updOpen && notes.length) box.appendChild(el("ul", { class: "upnotes" }, notes.map(function (n) { return el("li", { text: n }); })));
     if (u.needs_erik) box.appendChild(el("p", { class: "sub", text: "One part (the daily scan's own settings) needs Erik; the update tells you how." }));
     return box;
   }
 
   function renderHeader() {
+    renderVersion();
     var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now", "head"); if (rb) rh.appendChild(rb);
     var r = D.run;
     var meta = [];
@@ -778,8 +822,11 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     renderSuggestions();
     var list = document.getElementById("list"); list.textContent = "";
     var shown = all.filter(function (p) { return stageOf(eff(p.id).status) === state.stage; });
-    if (state.stage === "review" || state.stage === "interested") shown.sort(function (a, b) { return (b.dream ? 1 : 0) - (a.dream ? 1 : 0) || (num(b.score) || 0) - (num(a.score) || 0) || cmpStr(b.found, a.found) || cmpStr(a.id, b.id); });
-    else shown.sort(function (a, b) { return cmpStr((D.decisions[b.id] || {}).at, (D.decisions[a.id] || {}).at) || cmpStr(a.id, b.id); });
+    // Every stage: highest score first; jobs without a score last; then the newest.
+    shown.sort(function (a, b) {
+      var sa = a.pending ? null : num(a.score), sb = b.pending ? null : num(b.score);
+      return (sb === null ? -1 : sb) - (sa === null ? -1 : sa) || cmpStr((D.decisions[b.id] || {}).at || b.found, (D.decisions[a.id] || {}).at || a.found) || cmpStr(a.id, b.id);
+    });
     var EMPTY = { review: !loaded ? "Loading your postings…" : !db ? "Not connected. Open the page in Claude while signed in." : "Nothing new to review. Come back tomorrow.", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
     if (state.stage === "interested") {
       var waitingDeep = shown.filter(function (p) { return !D.deep[p.id]; }).length, rs = runState();
@@ -882,7 +929,14 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     if (p.warning) tags.appendChild(el("span", { class: "tag q", text: p.warning }));
     if (p.status_hint === "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Couldn't be scored: the posting couldn't be read" }));
     if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [ic("chart-bar-horizontal"), drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
-    if (p.jd === "missing" && p.status_hint !== "unscorable") tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
+    if (p.jd === "missing" && p.status_hint !== "unscorable" && !p.pending) {
+      var pastedReq = V.described[p.id];
+      if (pastedReq && !D.done[pastedReq]) tags.appendChild(el("span", { class: "tag q" }, [ic("clock"), "Description saved: rescored in the next run"]));
+      else {
+        tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
+        if (canWrite) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "desc", "aria-expanded": String(drawer[p.id] === "desc"), onclick: function () { toggleDrawer(p.id, "desc"); } }, [ic("plus"), "Paste the description"]));
+      }
+    }
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
       else tags.appendChild(el("button", { class: "tag act", "data-k": dk + "report", "aria-expanded": String(drawer[p.id] === "report"), onclick: function () { toggleDrawer(p.id, "report"); } }, [ic("file-magnifying-glass"), drawer[p.id] === "report" ? "Hide deep evaluation" : "Deep evaluation ready"]));
@@ -895,7 +949,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     row.appendChild(main);
 
     var side = el("div", { class: "side" });
-    side.appendChild(el("div", { class: "state", text: LABEL[s] }));
+    side.appendChild(el("div", { class: "state", text: s === "withdrew" && e.lost_at === "offer" ? "Offer declined" : LABEL[s] }));
     var btns = el("div", { class: "btns" }), more = el("div", { class: "more" });
     var off = !canWrite || !!writing[p.id];
     function act(label, key, fn, extra, icon) { return el("button", Object.assign({ class: "b", "data-k": dk + key, disabled: off, onclick: fn }, extra || {}), [icon ? ic(icon) : null, label]); }
@@ -916,7 +970,8 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       var left = windowLeft(p.id);
       if (left !== null) main.appendChild(el("div", { class: "when" }, [ic("hourglass-medium"), "Closes as No response in " + left + (left === 1 ? " day" : " days") + " if nothing comes back"]));
     } else if (s === "offer") {
-      btns.appendChild(act("Declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed as Withdrew: you declined the offer"); }, null, "x-circle"));
+      btns.appendChild(act("Offer accepted", "acc", function () { saveDecision(p.id, { status: "accepted", lost_at: null }, "Moved to Closed: offer accepted. Congratulations!"); }, { class: "b primary" }, "check"));
+      btns.appendChild(act("Offer declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed: offer declined"); }, null, "x-circle"));
     } else if (s === "noresp") {
       // They answered after all: back to the stage where it went quiet, with a fresh date.
       var back = e.lost_at === "applied" ? "screen" : e.lost_at;
@@ -924,8 +979,8 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
-      btns.appendChild(act("Reopen", "reo", function () { var pv = dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
-      if (e.lost_at) side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
+      btns.appendChild(act("Reopen", "reo", function () { var pv = s === "accepted" ? "offer" : dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
+      if (e.lost_at && !(s === "withdrew" && e.lost_at === "offer")) side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     }
     side.appendChild(btns);
     if (more.childNodes.length) side.appendChild(more);
@@ -940,6 +995,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       row.appendChild(rd);
     }
     if (drawer[p.id] === "skip") row.appendChild(skipDrawer(p));
+    if (drawer[p.id] === "desc") row.appendChild(descDrawer(p));
     if (drawer[p.id] === "resume") row.appendChild(resumeDrawer(p, s));
     return row;
   }
@@ -964,6 +1020,26 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     (p.checks || []).forEach(function (c) { d.appendChild(el("p", { class: "calc", text: /^(Deal-breaker:|career-ops v1 )/.test(c) ? c : "Check: " + c })); });
     d.appendChild(el("p", { class: "calc", text: "Must have counts 3×, Important 2×, Nice to have 1×. Your bar is " + (thr === null ? "4.0" : thr.toFixed(1)) + ". Disagree with a line? Skip it with a reason, or tell Claude \"change my scoring\"." }));
     return d;
+  }
+
+  function descDrawer(p) {
+    var key = "desc-" + p.id;
+    var ta = el("textarea", { id: key, "data-k": key, rows: 8, "aria-label": "Job description for " + p.title, placeholder: "Open the job posting, select its whole description, copy it and paste it here.", oninput: function () { drafts.desc[p.id] = ta.value; } });
+    ta.value = drafts.desc[p.id] || "";
+    var off = !canWrite || !!writing[p.id];
+    return el("div", { class: "drawer wide addjob" }, [
+      el("label", { for: key, text: "Paste the job description. The next run rescores the job from it (Run now does it right away)." }),
+      ta,
+      el("div", { class: "btns", style: "justify-content:flex-start" }, [
+        el("button", { class: "b primary", "data-k": "d-" + p.id + "-descgo", disabled: off, onclick: async function () {
+          var t = String(drafts.desc[p.id] || "").trim();
+          if (t.length < 200) { toast("That's too short for a job description. Paste the whole description."); return; }
+          var rid = await saveRequest({ kind: "add_description", posting: p.id, text: t.slice(0, 60000) }, "Saved. The next run rescores this job from the description.");
+          if (rid) { delete drafts.desc[p.id]; drawer[p.id] = null; render(); }
+        } }, ["Save description"]),
+        el("button", { class: "b", onclick: function () { delete drafts.desc[p.id]; toggleDrawer(p.id, "desc"); } }, ["Cancel"])
+      ])
+    ]);
   }
 
   function skipDrawer(p) {
@@ -1032,7 +1108,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       if (!res.ok) { msg.textContent = "Couldn't load the file (" + res.status + ")."; return; }
       var blob = await res.blob();
       var out = await downloads.save({ filename: String(r.name || "resume").replace(/[^\w\- ]+/g, "").trim() + ".pdf", data: blob });
-      msg.textContent = out && out.status === "saved" ? "Saved" : "Sent to your downloads";
+      msg.textContent = "";
     } catch (e) {
       if (e && e.code === "declined") { msg.textContent = ""; return; }
       if (e && e.code === "rate_limited") { msg.textContent = "Not saved: a save prompt is already open. Answer it, then try again."; return; }
@@ -1055,7 +1131,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
       var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
-      return el("div", { class: "lrow" }, [
+      return el("div", { class: "lrow res" }, [
         el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
         el("div", { class: "m", text: mid }),
         el("div", { class: "btns" }, btns.concat([msg]))
@@ -1374,7 +1450,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     });
   }
   function renderClosed() {
-    var how = { skipped: 0, rejected: 0, noresp: 0, withdrew: 0 }, why = {}, where = { applied: 0, screen: 0, hm: 0, offer: 0 };
+    var how = { skipped: 0, rejected: 0, noresp: 0, withdrew: 0, accepted: 0 }, why = {}, where = { applied: 0, screen: 0, hm: 0, offer: 0 };
     Object.keys(D.decisions).forEach(function (id) {
       var e = eff(id), s = e.status;
       if (!(s in how)) return;
@@ -1382,11 +1458,12 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
       if (s === "skipped") (e.d.reasons && e.d.reasons.length ? e.d.reasons : ["No reason given"]).forEach(function (r) { why[r] = (why[r] || 0) + 1; });
       else if (e.lost_at && e.lost_at in where) where[e.lost_at]++;
     });
-    var total = how.skipped + how.rejected + how.noresp + how.withdrew;
+    var total = how.skipped + how.rejected + how.noresp + how.withdrew + how.accepted;
     document.getElementById("closed-sub").textContent = total ? total + (total === 1 ? " job" : " jobs") + " closed so far. No response means nothing came back within 21 days of applying, or 14 days after an interview." : "Nothing closed yet.";
     bars(document.getElementById("closed-how"), [
       { k: "Skipped by you", n: how.skipped, color: "var(--s-pending)" }, { k: "Rejected", n: how.rejected, color: "var(--s-rejected)" },
-      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "Withdrew", n: how.withdrew, color: "var(--s-withdrew)" }
+      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "Withdrew", n: how.withdrew, color: "var(--s-withdrew)" },
+      { k: "Offer accepted", n: how.accepted, color: "var(--s-interview)" }
     ], "var(--bar)", "None yet.");
     bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--bar)", "No skips yet.");
     bars(document.getElementById("closed-where"), [
@@ -1562,7 +1639,7 @@ var JSD_ICONS = {"lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,9
     { tab: "triage", stage: "interested", target: '.row[data-id="s4"]', title: "Interested", text: "The deep evaluation arrives by the next morning: whether to apply, the main risk, and which of your resumes fits best. Click **Deep evaluation ready** to read it. When you've sent your application, click **Applied** and pick the resume you used." },
     { tab: "triage", stage: "applied", target: ".list .row", title: "Applied", text: "Move a job forward as you hear back. If nothing comes back in 21 days (or 14 days after an interview), it moves to Closed as No response on its own." },
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
-    { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, or never heard back on, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
+    { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, never heard back on, or accepted an offer from, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your master resume holds every fact; the other versions are built from it for each kind of role. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, or add one with **+ Add a source**, which also blocks companies and websites." },
     { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },

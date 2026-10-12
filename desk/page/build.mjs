@@ -14,15 +14,12 @@ try {
   if (m && m[1].trim()) title = m[1].trim().replace(/[<>&]/g, '');
 } catch {}
 const head = `<title>${title}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" media="print" id="gf" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 ${css}</style>
 `;
 fs.mkdirSync(path.join(dir, 'dist'), { recursive: true });
 const out = path.join(dir, 'dist', 'job-search-desk.html');
-// The font stylesheet loads as a print sheet (non-blocking) and switches to all media once it has arrived.
-const fontJs = "(function(){var l=document.getElementById('gf');if(!l)return;var on=function(){l.media='all'};if(l.sheet){on();}else{l.addEventListener('load',on,{once:true});}})();\n";
-fs.writeFileSync(out, head + '\n<script>\n' + fontJs + icons + '</script>\n' + body);
+// The page's own version, shown small in the header next to the update flag.
+const version = fs.readFileSync(path.join(dir, '..', 'VERSION'), 'utf8').trim().replace(/[^0-9.]/g, '');
+fs.writeFileSync(out, head + '\n<script>\nvar JSD_VERSION = "' + version + '";\n' + icons + '</script>\n' + body);
 console.log(`built ${out} (${fs.statSync(out).size} bytes)`);

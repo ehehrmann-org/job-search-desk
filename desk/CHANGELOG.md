@@ -2,6 +2,13 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.10.0 (2026-10-12)
+- Your job page now uses the Claude app's colors and fonts, in light and dark.
+- An offer can be closed as Offer accepted or Offer declined; both move it to Closed.
+- The version number sits small next to the page's name and says when an update is available. The update notice is shorter, with what's new one click away, and no longer cuts sentences off.
+- A job scored from its title only has a "Paste the description" button: paste the description and the next run (or Run now) rescores it.
+- Jobs are sorted by score on every stage, highest first.
+- The Resumes tab lines up its columns, and saving a PDF no longer leaves a "Saved" note behind.
 ## 0.9.2 (2026-10-12)
 - Setup connects your daily run to Erik's copy of the tool, so your job page can tell you when an update exists.
 

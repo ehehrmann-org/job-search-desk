@@ -9,7 +9,9 @@
  *       Order: jobs the user added, dream companies, then newest first. Postings found
  *       more than 14 days ago and never scored are dropped (counted as too_old). A
  *       posting handed out 3 times without a usable extraction is recorded as unscorable.
- *       --cap 0 hands out nothing and records no attempt (used by a quick run to read to_deep only).
+ *       --cap 0 hands out nothing and records no attempt.
+ *       --priority-only hands out only jobs she added and descriptions she pasted that have their
+ *       text saved (used by a quick run, so a Run now scores them right away).
  *
  *   node desk/daily.mjs alerts <file.json>
  *       <file.json> is an array of jobs read from alert emails or web search:
@@ -67,6 +69,7 @@ async function todo(args) {
   const desk = readYamlStrict(yaml, P.desk, {});
   const capAt = args.indexOf('--cap');
   const cap = capAt >= 0 ? Math.max(0, Number(args[capAt + 1]) || 0) : Number(desk.daily_cap) || 10;
+  const priorityOnly = args.includes('--priority-only');
   const scored = new Set(ids(P.scores, '.json'));
   const dreams = loadDreamCompanies(P.portals);
   const lists = loadBlocklist(DATA);
@@ -77,7 +80,7 @@ async function todo(args) {
   for (const id of ids(P.jds, '.md')) {
     if (scored.has(id)) continue;
     const m = meta(id);
-    const p = { id, jd_file: `jds/${id}.md`, company: m.company || '', title: m.title || '', url: m.url || '', jd: m.jd || 'missing', added: isTrue(m.added), dream: isDream(m.company, dreams), found: String(m.found || '') };
+    const p = { id, jd_file: `jds/${id}.md`, company: m.company || '', title: m.title || '', url: m.url || '', jd: m.jd || 'missing', added: isTrue(m.added) || isTrue(m.pasted), dream: isDream(m.company, dreams), found: String(m.found || '') };
     if (p.jd === 'gone') {
       if (p.added) { unscorable(id, m, 'the job posting was taken down before it could be read'); gaveUp++; } else gone++;
       continue;
@@ -86,6 +89,7 @@ async function todo(args) {
     if (p.added && p.jd === 'missing' && (!m.title || m.title === 'Added job')) { unscorable(id, m, 'the link needs a login; paste the job text instead'); gaveUp++; continue; }
     if ((attempts[id] || 0) >= MAX_ATTEMPTS) { unscorable(id, m, `no usable extraction after ${MAX_ATTEMPTS} tries`); gaveUp++; continue; }
     if (!p.added && !p.dream && p.found && p.found < cutoff) { tooOld++; continue; }
+    if (priorityOnly && !(p.added && p.jd === 'saved')) continue;
     pending.push(p);
   }
   pending.sort((a, b) => (b.added - a.added) || (b.dream - a.dream) || b.found.localeCompare(a.found) || a.id.localeCompare(b.id));
@@ -210,6 +214,7 @@ function score() {
       const unrated = v.ratings.filter(r => r.source === 'judged' && r.score == null).map(r => r.name);
       if (unrated.length) { out.push({ id, error: `${unrated.join(', ')} not rated; it is handed out again tomorrow` }); continue; }
       writeJson(path.join(P.scores, `${id}.json`), {
+        ...(isTrue(jd.meta.pasted) ? { rescored_at: new Date().toISOString() } : {}),
         verdict: v, facts: cleanFacts(x.facts), company: x.company || null, title: x.title || null,
         suggested_resume: typeof x.suggested_resume === 'string' ? x.suggested_resume : null, scored_at: new Date().toISOString(),
         ...(x.injection ? { injection: String(x.injection).slice(0, 300) } : {}),

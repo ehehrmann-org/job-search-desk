@@ -1,45 +1,47 @@
 /* Job Search Desk, live page. Design locked as mockup version 9 (2026-10-10). */
 :root {
-  --bg: #f6f7f8;
+  /* Claude desktop app look: warm paper neutrals, clay accent, the system's own UI font. */
+  --bg: #faf9f5;
   --surface: #ffffff;
-  --surface-2: #eef0f2;
-  --fg: #15181c;
-  --fg-2: #4b525b;
-  --muted: #656c75;
-  --line: #dde1e5;
-  --accent: #1f5fa8;
-  --accent-soft: #e3edf8;
-  --star: #9a6416;
-  --s-interview: #1baf7a;
-  --s-rejected: #d03b3b;
-  --s-noresp: #8a9098;
-  --s-withdrew: #eda100;
-  --s-pending: #c9ced4;
-  --bar: #2a78d6;
-  --bar-2: #6250d6;
-  --warn-bg: #fff4dc;
+  --surface-2: #f0eee6;
+  --fg: #141413;
+  --fg-2: #3d3d3a;
+  --muted: #73726c;
+  --line: #e5e3da;
+  --accent: #b5532f;
+  --accent-soft: #f6e9e2;
+  --star: #8f5d12;
+  --s-interview: #2f8a5b;
+  --s-rejected: #c4473a;
+  --s-noresp: #8a8880;
+  --s-withdrew: #d49a1c;
+  --s-pending: #cfccc2;
+  --bar: #c6613f;
+  --bar-2: #8c7b62;
+  --warn-bg: #fbf0dc;
   --warn-ink: #7a5300;
   --on-accent: #ffffff;
-  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-label: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --r: 8px;
+  --f-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-label: var(--f-body);
+  --f-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #111315; --surface: #1a1d20; --surface-2: #23272b; --fg: #eceef0; --fg-2: #b7bdc4;
-    --muted: #8a9099; --line: #2e3338; --accent: #79aef0; --accent-soft: #1d2c3d; --star: #e0a94a;
-    --s-interview: #199e70; --s-rejected: #e66767; --s-noresp: #7b828b; --s-withdrew: #c98500; --s-pending: #454b52;
-    --bar: #3987e5; --bar-2: #9085e9; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #0b1420;
+    --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
+    --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
+    --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
+    --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111315; --surface: #1a1d20; --surface-2: #23272b; --fg: #eceef0; --fg-2: #b7bdc4;
-  --muted: #8a9099; --line: #2e3338; --accent: #79aef0; --accent-soft: #1d2c3d; --star: #e0a94a;
-  --s-interview: #199e70; --s-rejected: #e66767; --s-noresp: #7b828b; --s-withdrew: #c98500; --s-pending: #454b52;
-  --bar: #3987e5; --bar-2: #9085e9; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #0b1420;
+  --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
+  --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
+  --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
+  --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
 }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
 .app { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; display: grid; gap: 14px; }
@@ -53,7 +55,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.brand { font-family: var(--f-label); font-weight: 600; font-size: 20px; letter-spacing: .01em; margin-right: auto; }
+.brand { font-family: var(--f-display); font-weight: 500; font-size: 22px; letter-spacing: -.005em; margin-right: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .banner { font-size: 13px; color: var(--fg-2); margin: 0; }
 
 /* Tabs */
@@ -61,7 +63,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .tabs::-webkit-scrollbar { display: none; }
 .tab { background: none; border: 0; padding: 8px 12px 10px; font-family: var(--f-label); font-weight: 600; font-size: 15px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
 .tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
-.tab .count { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 4px; }
+.tab .count { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 4px; }
 .view { display: grid; gap: 12px; }
 
 /* Pipeline chevrons */
@@ -73,7 +75,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .step:last-child { border-radius: 0 var(--r) var(--r) 0; padding-right: 16px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, var(--notch) 50%); }
 .step:hover { background: var(--line); }
 .step .sl { font-family: var(--f-label); font-weight: 600; font-size: 13px; color: var(--fg-2); }
-.step .sn { font-family: var(--f-mono); font-size: 18px; }
+.step .sn { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-size: 18px; }
 .step[aria-pressed="true"] { background: var(--accent-soft); }
 .step[aria-pressed="true"] .sl { color: var(--accent); }
 .list { display: grid; gap: 8px; }
@@ -91,7 +93,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 
 /* Posting rows */
 .row { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; grid-template-columns: 56px minmax(0, 1fr) 220px; gap: 6px 16px; align-items: start; }
-.score { font-family: var(--f-mono); font-size: 20px; font-weight: 500; line-height: 1; padding-top: 2px; }
+.score { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; line-height: 1; padding-top: 2px; }
 .score.hi { color: var(--accent); }
 .score.na { color: var(--muted); font-size: 16px; }
 .main { min-width: 0; display: grid; gap: 4px; }
@@ -178,9 +180,9 @@ button.tag { cursor: pointer; }
 .stage .lbl { font-size: 13px; color: var(--fg); }
 .track { position: relative; height: 22px; }
 .fill { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; min-width: 3px; }
-.stage .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; }
+.stage .num { font-family: var(--f-body); font-variant-numeric: tabular-nums; text-align: right; font-size: 13px; }
 .conv { margin-left: 138px; font-size: 12px; color: var(--fg-2); display: flex; flex-wrap: wrap; gap: 2px 10px; }
-.conv .rate { font-family: var(--f-mono); color: var(--fg); }
+.conv .rate { font-family: var(--f-body); font-variant-numeric: tabular-nums; color: var(--fg); }
 .conv .thin { color: var(--muted); }
 .foot { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12.5px; padding: 6px 9px; border-radius: 6px; max-width: 260px; }
@@ -260,7 +262,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .stab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; background: none; border-radius: 8px; padding: 8px 14px; font-family: var(--f-label); font-weight: 600; font-size: 14px; color: var(--fg-2); white-space: nowrap; min-height: 38px; }
 .stab:hover { color: var(--fg); }
 .stab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.stabn { font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: var(--muted); }
+.stabn { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-weight: 400; font-size: 12px; color: var(--muted); }
 .srctools { display: flex; gap: 8px; align-items: center; }
 .srctools .srcsearch { flex: 1 1 auto; min-width: 0; }
 .srctools .b { flex: none; min-height: 38px; }
@@ -336,3 +338,18 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .upnotes { margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg-2); display: grid; gap: 3px; }
 /* Touch phones zoom in on a field whose text is smaller than 16px; keep fields at 16px there */
 @media (hover: none) and (pointer: coarse) { input, textarea, select { font-size: 16px; } }
+
+/* Version and update flag, next to the name */
+.ver { font-family: var(--f-body); font-size: 12px; font-weight: 400; letter-spacing: 0; }
+.ver .vtxt { color: var(--muted); background: none; border: 0; padding: 0; font: inherit; }
+.ver button.vtxt.upd { color: var(--accent); display: inline-flex; align-items: center; gap: 6px; text-decoration: underline; text-underline-offset: 2px; }
+.ver .vdot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.panel.update .uptxt { display: grid; gap: 8px; flex: 1 1 320px; min-width: 0; }
+.panel.update .uptxt .sub { margin: 0; }
+/* Resumes: the same three columns in every row, whatever buttons a row has */
+.lrow.res { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 300px; }
+.lrow.res > .btns { justify-content: flex-end; }
+@media (max-width: 760px) { .lrow.res { grid-template-columns: minmax(0, 1fr); } .lrow.res > .btns { justify-content: flex-start; } }
+/* Pasting a description inside a job card */
+.drawer.addjob { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 10px 0 0; background: none; }
+.drawer.addjob textarea { min-height: 140px; }

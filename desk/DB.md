@@ -12,7 +12,7 @@ Task writes are creates only, so the task never needs a document version (Artifa
 | Path | When | Body |
 |---|---|---|
 | `postings/<id>` | once, when a posting is scored and reaches the bar (dream companies reach it at any score unless a deal-breaker hits), or was added by the user | `id, company, title, url, location, pay, source, found, posted, dream, score, threshold, status_hint (qualified, below_bar, dealbreaker, unscorable), ratings[{id,name,bucket,score,why}], checks[], suggested_resume, jd (saved, missing, gone), added_by_user, warning` |
-| `rescores/<id>~<YYYYMMDDHHMMSS>` | when a posting already on the page is scored again (rubric change, dream company added) | `posting_id, at, score, status_hint, threshold, dealbreakers[], ratings[], checks[]`; the page uses the newest per posting |
+| `rescores/<id>~<YYYYMMDDHHMMSS>` | when a posting already on the page is scored again (rubric change, dream company added) | `posting_id, at, score, status_hint, threshold, dealbreakers[], ratings[], checks[], jd?` (`jd: saved` once a pasted description replaced a title-only score); the page uses the newest per posting |
 | `deep/<id>` | once, after a deep evaluation | `at, model, recommendation, resume{id, fits, note}, tailor_why, sections[[label, text]]` |
 | `requests_done/<request id>` | once, when the task handled a page request | `at, result, posting_id?, replaces?` (`replaces`: the posting id an added job took over, which the page then hides) |
 | `suggestions/<YYYY-Www>` | Sundays, when there is something to suggest | `week, at, items[{id, title, why, change}]` |
@@ -24,8 +24,8 @@ Task writes are creates only, so the task never needs a document version (Artifa
 
 | Path | Body |
 |---|---|
-| `decisions/<posting id>` | `status (new, interested, applied, screen, hm, offer, skipped, rejected, withdrew), prev, reasons[], sent (resume id or "other"), outside, dates{interested, applied, screen, hm, offer, closed}, lost_at, at` |
-| `requests/<request id>` | `kind`, `at`, and per kind: `add_job {text, applied}` · `add_source {text, dream, gap?}` · `dismiss_gap {gap}` · `block_company {company, reason, website?}` (website: `company` is a site address like jobright.ai; blocks every posting hosted there) · `unblock_company {company}` · `set_board {source, company, url}` · `switch_group {group: "search", on}` · `apply_suggestion` and `decline_suggestion {week, sid}` |
+| `decisions/<posting id>` | `status (new, interested, applied, screen, hm, offer, accepted, skipped, rejected, withdrew; a declined offer is withdrew with lost_at offer), prev, reasons[], sent (resume id or "other"), outside, dates{interested, applied, screen, hm, offer, closed}, lost_at, at` |
+| `requests/<request id>` | `kind`, `at`, and per kind: `add_job {text, applied}` · `add_description {posting, text}` (she pasted the description of a job scored from its title only; the next run saves it and rescores the job) · `add_source {text, dream, gap?}` · `dismiss_gap {gap}` · `block_company {company, reason, website?}` (website: `company` is a site address like jobright.ai; blocks every posting hosted there) · `unblock_company {company}` · `set_board {source, company, url}` · `switch_group {group: "search", on}` · `apply_suggestion` and `decline_suggestion {week, sid}` |
 | `source_switches/<source id>` | `on, at` (`gmail`, or `co-<company slug>`) |
 | `prefs/tour` | `done, at`: she finished or skipped the first-visit tour. Absent: the page starts the tour on her first visit. |
 | `prefs/run_now` | `at, kind (quick), failed?`: she clicked Run now. Saved before the run starts; the run reads it in step 2 to pick its mode (within 20 minutes, and only by the first run that reads it). The buttons show "Running" until a newer `runs` document arrives (45 minutes at most). |

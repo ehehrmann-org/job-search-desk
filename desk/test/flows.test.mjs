@@ -319,3 +319,50 @@ test('block list: websites block by address, unblock removes them', async () => 
   assert.equal(removeFromBlacklist(d, 'jobright.ai'), true);
   assert.equal(blockedBy(loadBlocklist(d), 'Anyone', 'https://app.jobright.ai/jobs/9'), null);
 });
+
+test('pasted description: replaces a title-only score, scores first in a quick run, reaches the page as a rescore', () => {
+  const d = profile();
+  const today = new Date().toISOString().slice(0, 10);
+  jd(d, 't1', { company: 'A', title: 'Ops', found: '2026-09-01', jd: 'missing', url: 'https://job-boards.greenhouse.io/a/jobs/9' }, '');
+  write(path.join(d, 'data', 'scores', 't1.json'), { verdict: { id: 't1', status: 'qualified', score: 3.5, threshold: 3.3, ratings: [], dealbreakers: [], checks: [] }, facts: {}, company: 'A', scored_at: '2026-09-01T10:00:00Z' });
+  write(path.join(d, 'data', 'extractions', 't1.json'), { company: 'A' });
+  // The posting is already on the page
+  write(path.join(d, 'data', 'page', 'state.json'), { pushed: { postings: ['t1'] } });
+  const dump = path.join(d, 'dump');
+  const text = 'We need a leader for operations. Pay $200,000. ' + 'Responsibilities include running the studio. '.repeat(6);
+  write(path.join(dump, 'requests', 'rd1.json'), { kind: 'add_description', posting: 't1', text, at: new Date().toISOString() });
+  write(path.join(dump, 'requests', 'rd2.json'), { kind: 'add_description', posting: 't1', text: 'too short', at: new Date().toISOString() });
+  write(path.join(dump, 'requests', 'rd3.json'), { kind: 'add_description', posting: '../x', text, at: new Date().toISOString() });
+  const out = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.deepEqual(out.descriptions_added, ['t1']);
+  const doneOf = id => JSON.parse(read(path.join(d, 'data', 'page', 'done', `${id}.json`))).result;
+  assert.match(doneOf('rd2'), /too short/); assert.match(doneOf('rd3'), /isn't in your copy/);
+  const page = read(path.join(d, 'jds', 't1.md'));
+  assert.match(page, /jd: "saved"/); assert.match(page, /pasted: true/); assert.match(page, /running the studio/);
+  assert.equal(fs.existsSync(path.join(d, 'data', 'scores', 't1.json')), false);
+  assert.equal(fs.readdirSync(path.join(d, 'data', 'replaced', 'scores')).length, 1, 'the old score is kept, not deleted');
+  // A quick run hands out only her pasted text (and jobs she added), even when older than 14 days
+  jd(d, 'n1', { company: 'B', title: 'Ops', found: today, jd: 'saved' });
+  const t = json(d, 'daily.mjs', 'todo', '--priority-only');
+  assert.deepEqual(t.to_score.map(x => x.id), ['t1']);
+  write(path.join(d, 'data', 'extractions', 't1.json'), { company: 'A', title: 'Ops', facts: { base_top: '200,000', work_mode: 'remote', evidence: { base_top: 'Pay $200,000' } }, ratings: { role_fit: { score: 5, why: 'x', evidence: 'leader for operations' }, level: { score: 4 }, team: { score: 4 }, company: { score: 4 } } });
+  json(d, 'daily.mjs', 'score');
+  const rec = JSON.parse(read(path.join(d, 'data', 'scores', 't1.json')));
+  assert.ok(rec.rescored_at);
+  const push = json(d, 'page-sync.mjs', 'push', '--no-run');
+  const writes = push.batches.flatMap(b => JSON.parse(read(b)).writes);
+  const rs = writes.find(w => w.collection === 'rescores' && w.doc_id.startsWith('t1~'));
+  assert.ok(rs, 'a rescore document, not a second posting');
+  assert.equal(JSON.parse(read(rs.file_path)).jd, 'saved');
+  assert.equal(writes.some(w => w.collection === 'postings' && w.doc_id === 't1'), false);
+});
+
+test('update notes: long lines end at a word, not mid-word', () => {
+  const d = profile();
+  const long = 'Easier to read and to use with a keyboard. '.repeat(30).trim();
+  write(path.join(d, 'upd.json'), { current: '0.9.2', latest: '0.10.0', changelog: [{ version: '0.10.0', text: '- ' + long + '\n- Short one.' }], needs_erik: [] });
+  const out = json(d, 'page-sync.mjs', 'push', '--update-file', path.join(d, 'upd.json'));
+  const run = JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.equal(run.update.notes[1], 'Short one.');
+  assert.ok(run.update.notes[0].endsWith('…') && /keyboard\.…$|[a-z]…$/.test(run.update.notes[0]) && !/ …$/.test(run.update.notes[0]));
+});
