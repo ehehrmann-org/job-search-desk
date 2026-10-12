@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.2 (2026-10-12)
+- Setup leaves out 19 more countries by default, so remote jobs based abroad stay out of the nightly sweep.
+
 ## 0.13.1 (2026-10-12)
 - Setup keeps the nightly sweep focused: a stricter title list for it, and a longer list of countries to leave out by default.
 
