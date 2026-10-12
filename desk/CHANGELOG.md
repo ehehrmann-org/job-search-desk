@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.11 (2026-10-12)
+- Stats: the three breakdowns under Closed jobs are separated by thin rules.
+
 ## 0.11.10 (2026-10-12)
 - Stats: the second step of each funnel no longer repeats its percentage.
 
