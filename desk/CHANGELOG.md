@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.9.2 (2026-10-12)
+- Setup connects your daily run to Erik's copy of the tool, so your job page can tell you when an update exists.
+
 ## 0.9.1 (2026-10-12)
 - Setup's start message walks you through accepting Erik's invitation before you make your private copy.
 - "update career tool" asks for access to Erik's copy of the tool first, so updates can be fetched.
