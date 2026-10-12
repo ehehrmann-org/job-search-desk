@@ -96,7 +96,10 @@ const CHECKS = {
   },
   7: () => {
     const portals = readYaml(f('portals.yml'), {});
-    return (portals.tracked_companies || []).filter(c => c?.enabled !== false).length ? [] : ['no job sources are turned on'];
+    const out = [];
+    if (!(portals.tracked_companies || []).filter(c => c?.enabled !== false).length) out.push('no job sources are turned on');
+    if ((portals.search_queries || []).filter(q => q?.enabled !== false && q?.query).length < 3) out.push('fewer than 3 web searches in portals.yml search_queries (point 4)');
+    return out;
   },
   9: () => {
     const d = readYaml(f('config', 'desk.yml'), {});

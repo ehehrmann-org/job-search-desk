@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.12.0 (2026-10-12)
+- Every morning run searches the web for your titles across Greenhouse, Lever, Ashby, Workable and other job boards, so it finds jobs at companies you never listed. Setup writes the searches for you; a few run each morning, in turn (5 on Pro, 10 on Max 5x, 15 on Max 20x).
+- Scan sources shows the web search next to Gmail alerts, with its own on and off switch.
+
 ## 0.11.15 (2026-10-12)
 - Stats: a new Latest run section shows what the most recent run did: jobs listed on your job boards, new jobs found, how many were scored and how many went to To review, plus deep evaluations, requests and company websites.
 

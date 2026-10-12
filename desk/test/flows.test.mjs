@@ -408,3 +408,22 @@ test('push: the run document counts what this run did since the run before', () 
   assert.equal(run.last.to_review, 1);
   assert.equal(run.last.started, '2026-10-12T11:27:00Z');
 });
+
+test('web-queries: a rotating window of the enabled searches, capped per day, off with the switch', async () => {
+  const { webQueries } = await import('../daily.mjs');
+  const list = ['a', 'b', 'c', 'd', 'e'].map(x => ({ name: x, query: 'site:jobs.lever.co "' + x + '"', enabled: true })).concat([{ name: 'off', query: 'x', enabled: false }]);
+  const d1 = webQueries(list, 2, new Date('2026-10-12T12:00:00Z')).map(q => q.name);
+  const d2 = webQueries(list, 2, new Date('2026-10-13T12:00:00Z')).map(q => q.name);
+  assert.equal(d1.length, 2); assert.notDeepEqual(d1, d2);
+  assert.ok(!d1.includes('off'));
+  const seen = new Set();
+  for (let i = 0; i < 5; i++) webQueries(list, 2, new Date(Date.UTC(2026, 9, 12 + i))).forEach(q => seen.add(q.name));
+  assert.equal(seen.size, 5);
+  assert.equal(webQueries(list, 10).length, 5);
+  assert.deepEqual(webQueries([], 5), []);
+  const d = profile();
+  fs.appendFileSync(path.join(d, 'portals.yml'), '\nsearch_queries:\n  - { name: One, query: \'site:jobs.lever.co "VP Ops"\', enabled: true }\n');
+  assert.equal(json(d, 'daily.mjs', 'web-queries').queries.length, 1);
+  fs.appendFileSync(path.join(d, 'config', 'desk.yml'), '\nweb_search: false\n');
+  assert.equal(json(d, 'daily.mjs', 'web-queries').queries.length, 0);
+});

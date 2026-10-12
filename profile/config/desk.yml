@@ -3,6 +3,8 @@ plan: ""               # Pro | Max 5x | Max 20x | Not sure (step 3)
 daily_cap: 10          # postings scored per day (step 3 sets it from the plan)
 deep_cap: 1            # deep evaluations per day (step 3 sets it from the plan)
 site_cap: 5            # company websites looked up per day (step 3 sets it from the plan)
+web_cap: 5             # web searches for new jobs per morning run (step 3 sets it from the plan)
+web_search: true       # the Scan sources switch for the web search
 help_email: ""         # shown on the job page next to "Copy message for Erik"
 current_employer: ""   # step 4; "none" when not employed. Never shown jobs from it.
 gmail_alerts: false    # step 9 turns it on once Gmail is connected

@@ -197,6 +197,10 @@ async function pull(dumpDir) {
           setDeskKey('gmail_alerts', !!ev.sw.on);
           applied[ev.sid] = ev.sw.at;
           summary.switches_applied.push({ id: 'gmail', on: !!ev.sw.on });
+        } else if (ev.sid === 'web') {
+          setDeskKey('web_search', !!ev.sw.on);
+          applied[ev.sid] = ev.sw.at;
+          summary.switches_applied.push({ id: 'web', on: !!ev.sw.on });
         } else {
           if (!portals) throw new Error('portals.yml could not be read');
           if (boardAt[ev.sid] && ev.at < boardAt[ev.sid]) { applied[ev.sid] = ev.sw.at; continue; }   // the link she pasted later turned it on
@@ -622,6 +626,11 @@ async function buildSources(counts) {
   const rows = [];
   const c = name => counts[slug(name)] || { found: 0, qual: 0, app: 0 };
   rows.push({ id: 'gmail', group: 'mail', name: 'Gmail job alerts', desc: 'LinkedIn, Indeed and other alert emails', how: 'Read every run', on: desk.gmail_alerts !== false, cost: false, found: 0, qual: 0, app: 0 });
+  const webList = (portals.search_queries || []).filter(q => q && q.enabled !== false && q.query);
+  if (webList.length) {
+    const perDay = Math.min(Number.isInteger(desk.web_cap) ? desk.web_cap : 5, webList.length);
+    rows.push({ id: 'web', group: 'mail', name: 'Web search across job boards', desc: `${webList.length} searches for your titles on Greenhouse, Lever, Ashby and other job boards, finding companies you haven't listed`, how: `Every morning, ${perDay} at a time`, on: desk.web_search !== false, cost: true, found: 0, qual: 0, app: 0 });
+  }
   for (const co of portals.tracked_companies || []) {
     if (!co?.name) continue;
     const board = co.scan_method === 'websearch' ? null : await boardFor(co);

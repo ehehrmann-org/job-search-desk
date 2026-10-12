@@ -40,14 +40,14 @@ Then greet her, show the checklist, and start step 3.
 
 Ask which Claude plan she has: Pro, Max 5x, Max 20x, Not sure. Write `plan` (her answer) and the three caps below to `profile/config/desk.yml`:
 
-| Plan | daily_cap | deep_cap | site_cap |
-|---|---|---|---|
-| Pro | 10 | 1 | 5 |
-| Max 5x | 25 | 2 | 10 |
-| Max 20x | 50 | 3 | 20 |
-| Not sure | 10 | 1 | 5 |
+| Plan | daily_cap | deep_cap | site_cap | web_cap |
+|---|---|---|---|---|
+| Pro | 10 | 1 | 5 | 5 |
+| Max 5x | 25 | 2 | 10 | 10 |
+| Max 20x | 50 | 3 | 20 | 15 |
+| Not sure | 10 | 1 | 5 | 5 |
 
-(`site_cap`: how many company websites the morning run looks up a day, so company names on her page link to their sites.)
+(`site_cap`: how many company websites the morning run looks up a day, so company names on her page link to their sites. `web_cap`: how many web searches for new jobs the morning run does; step 7 writes the searches.)
 
 Also set `help_email` from `desk/HELP-CONTACT` if that file exists.
 For Pro and Not sure, say once: setup is long, so Claude may pause for a usage limit partway through; nothing is lost, and she can come back later and type "continue setup". After the first week the caps can go up if usage allows.
@@ -109,13 +109,14 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 1. Propose 15 to 30 companies (10 on the fast path) whose jobs she should see daily: employers like the ones she'd want (industry, size, city or remote), found with web search. Offer the ready-made pack in `desk/packs/` that fits her (`agencies.yml` for independent agencies) as one option she can take whole, in part, or skip.
 2. Show them as a short list with one line each; she accepts all, picks, or adds sites she already watches.
 3. Classify each once: a job board the scan can read (`setup.mjs board`), weekly web search (dream companies only), or alert only (LinkedIn, Indeed and similar: those come in through Gmail alerts in step 9). Add the readable ones to `portals.yml` `tracked_companies` with `enabled: true`, and `website` (its home page) when you saw it.
-4. Start the first scan, so her page can show real jobs before this session ends:
+4. **Web search (no work for her).** Write 6 to 12 entries under `portals.yml` `search_queries`, each `{ name, query, enabled: true }`, so the morning run finds jobs at companies she never listed. Each query combines one job board with her title family: `site:job-boards.greenhouse.io OR site:boards.greenhouse.io`, `site:jobs.lever.co`, `site:jobs.ashbyhq.com`, `site:apply.workable.com`, `site:jobs.smartrecruiters.com`, `site:myworkdayjobs.com`, `site:wellfound.com`, each followed by 2 to 4 of her titles in quotes joined with OR, plus her industry or remote/city words when they narrow it. Tell her in one sentence that every morning a few of these run, so new companies keep turning up.
+5. Start the first scan, so her page can show real jobs before this session ends:
    ```bash
    bash desk/save.sh "setup: sources"
    git push -q -f origin HEAD:scan-now
    ```
    It takes a few minutes and runs while you do step 8. If the second command is refused, walk her through starting it by hand instead: her private copy on GitHub, Actions, daily-scan, Run workflow, Run workflow.
-5. `node desk/setup.mjs done 7`
+6. `node desk/setup.mjs done 7`
 
 ## Step 8. Go live (about 15 minutes)
 

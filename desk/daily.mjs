@@ -26,6 +26,12 @@
  *       A file the scan already wrote with `jd: missing` is removed so the scan reads the
  *       employer link; a saved or scored posting is left alone.
  *
+ *   node desk/daily.mjs web-queries
+ *       JSON: today's web searches for new jobs, { queries: [{ name, query }], total }. Takes
+ *       portals.yml `search_queries` with `enabled: true`, at most desk.yml `web_cap` (default 5)
+ *       a day, rotating through the list so every search runs every few days. Empty when
+ *       desk.yml `web_search` is false.
+ *
  *   node desk/daily.mjs score
  *       Scores every data/extractions/<id>.json that has no data/scores/<id>.json yet,
  *       checking quotes against the saved posting, and records the verdicts. One bad
@@ -227,9 +233,27 @@ function score() {
   console.log(JSON.stringify(out, null, 2));
 }
 
+// Today's share of the web searches: a window of web_cap queries that moves along the list each day.
+export function webQueries(list, cap, day = new Date()) {
+  const all = (Array.isArray(list) ? list : []).filter(q => q && q.enabled !== false && typeof q.query === 'string' && q.query.trim());
+  const n = Math.max(0, Math.min(Number.isInteger(cap) ? cap : 5, all.length));
+  if (!n) return [];
+  const dayNo = Math.floor(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()) / 86400000);
+  const start = (dayNo * n) % all.length;
+  return Array.from({ length: n }, (_, i) => all[(start + i) % all.length]).map(q => ({ name: String(q.name || q.query).slice(0, 120), query: q.query.trim() }));
+}
+
+function webQueriesCmd() {
+  const desk = readYamlStrict(yaml, P.desk, {});
+  const portals = readYamlStrict(yaml, P.portals, {});
+  const list = (portals.search_queries || []).filter(q => q && q.enabled !== false);
+  const queries = desk.web_search === false ? [] : webQueries(list, desk.web_cap);
+  console.log(JSON.stringify({ queries, total: list.length }, null, 2));
+}
+
 if (isMain(import.meta.url)) {
   const [cmd, ...rest] = process.argv.slice(2);
-  const run = { todo: () => todo(rest), alerts: () => alerts(rest[0]), relink: () => relink(rest[0], rest[1]), score }[cmd];
-  if (!run) { console.error('usage: daily.mjs todo [--cap N] | alerts <file.json> | relink <old link> <employer link> | score'); process.exit(2); }
+  const run = { todo: () => todo(rest), alerts: () => alerts(rest[0]), relink: () => relink(rest[0], rest[1]), score, 'web-queries': webQueriesCmd }[cmd];
+  if (!run) { console.error('usage: daily.mjs todo [--cap N] | alerts <file.json> | relink <old link> <employer link> | web-queries | score'); process.exit(2); }
   Promise.resolve().then(run).catch(e => { console.error(`daily: ${e.message}`); process.exit(1); });
 }
