@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.5 (2026-10-12)
+- All buttons share one color again. The next step for each job is still the rightmost button, now marked by a bold label instead of a tint.
+
 ## 0.11.4 (2026-10-12)
 - Scan sources: the Add button shows up once you type something, so the field stands alone until then.
 

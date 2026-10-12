@@ -392,8 +392,9 @@ button.tag:not(.act):not(.q):hover { background: color-mix(in srgb, var(--surfac
 .row.flash { outline: 2px solid var(--accent); outline-offset: 2px; transition: outline-color 1.5s ease; }
 .lrow.res .link { margin-top: 4px; }
 /* The preferred next step: a quieter clay tint instead of a solid fill, always the rightmost button */
-.b.primary, .b.pref { background: var(--p-clay-bg); color: var(--p-clay); border-color: color-mix(in srgb, var(--accent) 38%, transparent); font-weight: 600; }
-.b.primary:hover, .b.pref:hover { background: color-mix(in srgb, var(--p-clay-bg) 70%, var(--accent) 18%); }
+/* The next step looks like every other button, with a bold label; color would read as already chosen */
+.b.primary, .b.pref { background: var(--surface); color: var(--fg); border-color: var(--line); font-weight: 700; }
+.b.primary:hover, .b.pref:hover { background: var(--surface-2); }
 .b.primary[disabled], .b.pref[disabled] { opacity: .55; }
 
 /* Headings use the same serif as the page name */
