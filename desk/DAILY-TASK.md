@@ -60,7 +60,7 @@ Keep its JSON output; steps 3 and 5 use it. Mention any `errors` from it in the 
 
 **Sources to set up** (`sources_to_set_up` in the pull output). Each `text` is what she typed: a company name or a link. For each one:
 1. Find the company's careers page and the job board behind it (Greenhouse, Lever, Ashby, Workday, Workable, SmartRecruiters, BambooHR, Recruitee, Breezy, iCIMS) with WebSearch and WebFetch. A link she pasted wins. Check a candidate link with `node desk/setup.mjs board '<link>'`.
-2. Add an entry to `profile/portals.yml` under `tracked_companies`: `name`, `careers_url` (the job board link when readable, else the careers page), `enabled: true`, and `dream: true` when the request says `dream`. With no readable job board, also set `scan_method: websearch` and `scan_query: "<company> careers"`. If the company is already listed, update that entry instead of adding a second one.
+2. Add an entry to `profile/portals.yml` under `tracked_companies`: `name`, `careers_url` (the job board link when readable, else the careers page), `website` (its home page, when seen), `enabled: true`, and `dream: true` when the request says `dream`. With no readable job board, also set `scan_method: websearch` and `scan_query: "<company> careers"`. If the company is already listed, update that entry instead of adding a second one.
 3. `node desk/page-sync.mjs done <request id> "<one short sentence: what you added, or why not>"`.
 
 **Jobs she added** (`jobs_queued`):
@@ -103,7 +103,9 @@ If the Gmail search errors, add the Gmail problem.
 
 Before the first evaluator, take the same snapshot as step 5.4 (the `git add -A -- profile` and the `.work` copy); this covers a quick run and the step 5.6 output too. Then for each item in `to_deep`, one at a time: `Agent` with `subagent_type: "desk-evaluator"`, or, when that type isn't listed, `subagent_type: "general-purpose"` with `model: "opus"` and the instructions from `DESK/.claude/agents/desk-evaluator.md` at the top of the prompt. The prompt: `DESK = <absolute path>. Posting id: <id>.` Afterwards run the step 5.5 check, allowing only `profile/data/deep/`. On a failure, undo and add the problem the same way.
 
-## 7. Weekly work
+## 7. Company websites and weekly work
+
+**Every morning run: company websites.** `node desk/page-sync.mjs sites`. For each entry in `to_look_up`, run one WebSearch for `<search> official website` and take the company's own home page from the results: not a job board, LinkedIn, a directory or a news site. When no result is clearly that company's own site, use null. Write `.work/sites.json` as an array of `{company, url}`, with `company` copied exactly as listed, then `node desk/page-sync.mjs sites --record .work/sites.json`. The script keeps a link only when its address carries the company's name; her page links company names to these sites.
 
 **Mondays: web search for dream companies.** For each entry in `dream_web_search`, run one WebSearch with its query plus her main role words. Collect open postings at that company into `.work/web.json` (same shape as alerts, `source: "Web search"`) and run `node desk/daily.mjs alerts .work/web.json`.
 

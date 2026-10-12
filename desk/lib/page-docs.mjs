@@ -71,9 +71,9 @@ export function runId(date = new Date()) {
 }
 
 /** sources/<id>: rows + gaps; id is the date plus a content hash, so unchanged lists are not rewritten. */
-export function sourcesDoc(rows, gaps, at, blocked = []) {
-  const hash = crypto.createHash('sha1').update(JSON.stringify({ rows, gaps, blocked })).digest('hex').slice(0, 8);
-  return { id: `${at.slice(0, 10)}-${hash}`, hash, body: { at, rows, gaps, blocked } };
+export function sourcesDoc(rows, gaps, at, blocked = [], sites = {}) {
+  const hash = crypto.createHash('sha1').update(JSON.stringify({ rows, gaps, blocked, sites })).digest('hex').slice(0, 8);
+  return { id: `${at.slice(0, 10)}-${hash}`, hash, body: { at, rows, gaps, blocked, sites } };
 }
 
 /** Counts per company over the window, from jds front matter, score records and decisions. */

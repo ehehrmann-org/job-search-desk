@@ -25,6 +25,15 @@
  *
  *   node desk/page-sync.mjs ack <batch file>
  *       After a batch was written successfully: marks its documents as pushed.
+ *
+ *   node desk/page-sync.mjs sites [--cap N]
+ *       Fills company websites known without a lookup (portals.yml `website:`, postings on
+ *       the company's own site) into data/sites.json and prints the companies on the page
+ *       still to look up, at most N (desk.yml site_cap, default 20): { to_look_up: [names] }.
+ *
+ *   node desk/page-sync.mjs sites --record <file.json>
+ *       <file.json>: [{ company, url | null }] from the run's web searches. Keeps a url only
+ *       when it is the company's own site (its address carries the company's name).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +43,7 @@ import { loadScoringConfig } from './lib/scoring.mjs';
 import { readFrontMatter } from './lib/frontmatter.mjs';
 import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist, websiteOf } from './lib/blocklist.mjs';
 import { boardFor } from './lib/boards.mjs';
+import { loadSites, saveSites, fillKnown, dueLookups, recordLookups, pageSites } from './lib/sites.mjs';
 import { canonicalUrl, urlKey, seenKeys } from './lib/urls.mjs';
 import { DATA, ROOT, isMain, safeId, dict, readYamlStrict } from './lib/env.mjs';
 import { applySuggestion, decline as declineSuggestion } from './suggest.mjs';
@@ -420,8 +430,8 @@ async function push(args) {
   const since30 = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   let snap = null;
   try {
-    const { rows, gaps, blocked } = await buildSources(sourceCounts(allJds(), scores, decisions, since30));
-    snap = sourcesDoc(rows, gaps, at, blocked);
+    const { rows, gaps, blocked, sites } = await buildSources(sourceCounts(allJds(), scores, decisions, since30));
+    snap = sourcesDoc(rows, gaps, at, blocked, sites);
     snap.body.switches_as_of = st.pulled_at || at;   // outside the hash: a moved stamp alone must not re-push an unchanged list
     if (snap.hash !== st.sources_hash) add('sources', snap.id, snap.body);
   } catch (e) {
@@ -501,6 +511,52 @@ function alertsAdded(since) {
     .map(l => l.split('\t')).filter(c => /^gmail:|^web/.test(c[2] || '') && c[5] === 'added' && (c[1] || '') >= since).length;
 }
 
+// Companies with a job on the page, the ones she is acting on first, then newest first.
+function pageCompanies() {
+  const decisions = readJson(P.decisions, {});
+  const onPage = new Set(state().pushed?.postings || []);
+  const open = new Set(['interested', 'applied', 'screen', 'hm', 'offer']);
+  const rows = [];
+  for (const rec of Object.values(readDir(P.scores) || {})) {
+    if (!rec?.verdict?.id || !safeId(rec.verdict.id)) continue;
+    let jd = {};
+    try { jd = readFrontMatter(path.join(P.jds, `${rec.verdict.id}.md`)).meta || {}; } catch { /* no saved posting */ }
+    if (!onPage.has(rec.verdict.id) && !belongsOnPage(rec, jd)) continue;
+    const d = postingDoc(rec, jd);
+    if (!d.company) continue;
+    rows.push({ name: d.company, url: d.url, found: d.found || '', active: open.has(decisions[d.id]?.status) });
+  }
+  rows.sort((a, b) => (b.active - a.active) || String(b.found).localeCompare(String(a.found)));
+  const by = new Map();
+  for (const r of rows) {
+    const k = r.name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (!by.has(k)) by.set(k, { name: r.name, urls: [] });
+    if (r.url) by.get(k).urls.push(r.url);
+  }
+  return [...by.values()];
+}
+
+function sites(args) {
+  const day = new Date().toISOString().slice(0, 10);
+  const store = loadSites(DATA);
+  const rec = args.indexOf('--record');
+  if (rec >= 0) {
+    const results = readJson(args[rec + 1], null);
+    if (!Array.isArray(results)) throw new Error(`${args[rec + 1]} is not a list of { company, url }`);
+    const out = recordLookups(store, results, day);
+    saveSites(DATA, store);
+    console.log(JSON.stringify(out));
+    return;
+  }
+  const companies = pageCompanies();
+  fillKnown(store, companies, readPortals(), day);
+  saveSites(DATA, store);
+  const ci = args.indexOf('--cap');
+  const desk = readYamlStrict(yaml, P.desk, {});
+  const cap = ci >= 0 ? Number(args[ci + 1]) : Number.isInteger(desk.site_cap) ? desk.site_cap : 20;
+  console.log(JSON.stringify({ to_look_up: dueLookups(store, companies, day, Math.max(0, cap || 0)) }, null, 2));
+}
+
 async function buildSources(counts) {
   const portals = readPortals();
   const desk = readYamlStrict(yaml, P.desk, {});
@@ -519,7 +575,10 @@ async function buildSources(counts) {
     });
   }
   const gaps = readJson(P.gaps, []);
-  return { rows, gaps: Array.isArray(gaps) ? gaps : [], blocked: listBlocked(loadBlocklist(DATA)) };
+  const companies = pageCompanies();
+  const store = loadSites(DATA);
+  if (fillKnown(store, companies, portals, new Date().toISOString().slice(0, 10))) saveSites(DATA, store);
+  return { rows, gaps: Array.isArray(gaps) ? gaps : [], blocked: listBlocked(loadBlocklist(DATA)), sites: pageSites(store, companies) };
 }
 
 // ------------------------------------------------------------------ ack
@@ -572,6 +631,7 @@ if (isMain(import.meta.url)) {
       return push({ problems: [...flag('--problem'), ...fromFile], noRun: rest.includes('--no-run'), quick: rest.includes('--quick'), updateFile: flag('--update-file')[0] || null });
     },
     ack: () => ack(rest[0]),
+    sites: () => sites(rest),
     done: () => {
       const posting = flag('--posting')[0];
       if (posting && !safeId(posting)) throw new Error(`not a posting id: ${posting}`);

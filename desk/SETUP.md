@@ -95,7 +95,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 
 1. Ask for the companies she'd most like to work at: names or careers links, any number.
 2. Suggest 3 to 5 more like the employers in her best job, each with one line on why. She accepts or declines each.
-3. For each accepted company, while she watches: find its careers page and the job board behind it (web search; open the careers page; job links usually point to the board). Check it with `node desk/setup.mjs board <link>`. Readable: add to `portals.yml` `tracked_companies` as `{ name, careers_url: <board link>, enabled: true, dream: true }`. Not readable after a real look: add `{ name, careers_url: <careers page>, enabled: true, dream: true, scan_method: websearch, scan_query: "<name> careers <main title word>" }`, and tell her it gets a weekly web search instead of the daily scan.
+3. For each accepted company, while she watches: find its careers page and the job board behind it (web search; open the careers page; job links usually point to the board). Check it with `node desk/setup.mjs board <link>`. Readable: add to `portals.yml` `tracked_companies` as `{ name, careers_url: <board link>, website: <its home page, when seen>, enabled: true, dream: true }`. Not readable after a real look: add `{ name, careers_url: <careers page>, enabled: true, dream: true, scan_method: websearch, scan_query: "<name> careers <main title word>" }`, and tell her it gets a weekly web search instead of the daily scan.
 4. Close with: "Dream companies are always checked and their jobs always reach you, even below your bar. Your deal-breakers still apply to them."
 5. `node desk/setup.mjs done 6`.
 

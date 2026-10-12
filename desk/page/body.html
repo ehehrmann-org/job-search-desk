@@ -1,8 +1,7 @@
 <div class="app">
   <header class="top">
-    <div class="brand">Job Search Desk</div>
+    <button class="brand" id="brand" data-k="brand" title="Go to To review">Job Search Desk</button>
     <span id="run-host"></span>
-    <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
   </header>
   <div id="help-host"></div>
 
@@ -58,7 +57,7 @@
       <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
-  <footer class="pagefoot"><span class="ver" id="ver"></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
+  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -103,6 +102,17 @@
     var n = document.createElement("span"); n.className = "ic"; n.setAttribute("aria-hidden", "true");
     n.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16">' + paths + "</svg>";
     return n;
+  }
+  // A link to another site: opens in a new tab and ends with the out-arrow.
+  function extLink(href, kids, attrs) {
+    var a = el("a", Object.assign({ href: href, target: "_blank", rel: "noopener noreferrer" }, attrs || {}), kids);
+    var x = ic("arrow-square-out"); x.className = "ic ext"; a.appendChild(x);
+    return a;
+  }
+  // The company's own website, when the run found it (sources doc, keyed like the block list).
+  function siteOf(company) {
+    var m = D.sources && D.sources.sites, u = m && company ? m[normCo(company)] : null;
+    return u && isLink(u) ? u : null;
   }
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
@@ -400,7 +410,12 @@
     var probs = problems();
     var hb = document.getElementById("help-btn");
     hb.setAttribute("aria-expanded", String(helpOpen));
-    hb.setAttribute("data-state", !loaded ? "loading" : probs.length ? "problem" : "ok");
+    var hstate = !loaded ? "loading" : probs.length ? "problem" : "ok";
+    if (hb.getAttribute("data-state") !== hstate || !document.getElementById("status-ic").firstChild) {
+      var si = document.getElementById("status-ic"); si.textContent = "";
+      si.appendChild(ic(hstate === "problem" ? "warning" : hstate === "ok" ? "thumbs-up" : "clock"));
+    }
+    hb.setAttribute("data-state", hstate);
     document.getElementById("status-text").textContent = !loaded ? "Checking" : probs.length ? (probs.length === 1 ? "1 problem" : probs.length + " problems") + ": see details" : "All working";
     var hh = document.getElementById("help-host"); hh.textContent = "";
     var ub = updateBanner(); if (ub) hh.appendChild(ub);
@@ -550,8 +565,8 @@
     else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
 
     var head = el("div", { class: "head" }, [
-      isLink(p.url) ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
-      el("span", { class: "co", text: p.company })
+      isLink(p.url) ? extLink(p.url, [p.title], { class: "title", title: "Opens the job posting in a new tab" }) : el("span", { class: "title", text: p.title }),
+      siteOf(p.company) ? el("span", { class: "co" }, [extLink(siteOf(p.company), [p.company], { class: "co", title: "Opens " + p.company + "'s website in a new tab" })]) : el("span", { class: "co", text: p.company })
     ]);
     if (p.dream) head.appendChild(el("span", { class: "star" }, [el("span", { "aria-hidden": "true", text: "★ " }), "Dream company"]));
     var meta = el("div", { class: "meta" });
@@ -611,10 +626,10 @@
       btns.appendChild(act("Offer declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed: offer declined"); }, null, "x-circle"));
       btns.appendChild(act("Offer accepted", "acc", function () { saveDecision(p.id, { status: "accepted", lost_at: null }, "Moved to Closed: offer accepted. Congratulations!"); }, PREF, "check"));
     } else if (s === "noresp") {
-      // They answered after all: back to the stage where it went quiet, with a fresh date.
-      var back = e.lost_at === "applied" ? "screen" : e.lost_at;
+      // Reopen works as on every closed job: back to the stage where it went quiet, with a fresh date (a new 21 or 14 day window).
+      var back = e.lost_at || "applied";
       btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
-      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, PREF, "arrow-bend-up-left"));
+      btns.appendChild(act("Reopen", "reo", function () { saveDecision(p.id, { status: back }, "Reopened in " + LABEL[back], { restamp: true }); }, null, "arrow-counter-clockwise"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
       btns.appendChild(act("Reopen", "reo", function () { var pv = s === "accepted" ? "offer" : dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
@@ -639,7 +654,7 @@
   }
 
   // The job's state as a colored pill with an icon.
-  var PILL = { new: ["clay", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
+  var PILL = { new: ["yellow", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
     offer: ["green", "handshake"], accepted: ["green", "check-circle"], skipped: ["gray", "x"], rejected: ["red", "thumbs-down"], withdrew: ["amber", "sign-out"], noresp: ["gray", "hourglass-medium"] };
   function statePill(s, e) {
     var declined = s === "withdrew" && e && e.lost_at === "offer";
@@ -790,18 +805,22 @@
       if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
-      var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
-      var jobLink = r.kind === "tailored" && D.postings[r.for_posting] ? el("button", { class: "link", "data-k": "res-job-" + k, onclick: function () { goToJob(r.for_posting); } }, [ic("arrow-up-right"), "Show the job"]) : null;
+      var sub = r.kind === "tailored" ? "Made for one posting" : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
+      // A tailored resume names its job; the job part opens that job's card when the job is on her list.
+      var tp = r.kind === "tailored" ? view(r.for_posting) : null, what = tp && tp.title && tp.company ? tp.title + " at " + tp.company : null;
+      var name = !what ? el("div", { class: "t", text: r.name })
+        : !hidden(tp) ? el("div", { class: "t" }, ["Tailored for ", el("button", { class: "joblink", "data-k": "res-job-" + k, title: "Show this job", onclick: function () { goToJob(r.for_posting); } }, [what])])
+        : el("div", { class: "t", text: "Tailored for " + what });
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
       return el("div", { class: "lrow res" }, [
-        el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") }), jobLink]),
+        el("div", null, [name, el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
         el("div", { class: "m", text: mid }),
         el("div", { class: "btns" }, btns.concat([msg]))
       ]);
     }
     if (!keys.length) { v.appendChild(el("div", { class: "empty", text: "This will list resumes I created for you." })); return; }
-    [["master", "Master resume", ""],
-     ["default", "Default versions", "One per kind of role you're targeting. Scoring suggests one of these, or a tailored version, for every posting that reaches your bar."],
+    [["default", "Standard resumes", "One per kind of role you're targeting, used whenever a posting needs no tailoring. Scoring suggests one of these, or a tailored version, for every posting that reaches your bar."],
+     ["master", "Master resume", ""],
      ["tailored", "Tailored versions", "Made when no existing resume fit a posting. Reused whenever a new posting matches one better than the defaults."]].forEach(function (grp) {
       var ks = keys.filter(function (k) { return (D.resumes[k].kind || "default") === grp[0]; }).sort(function (a, b) { return cmpStr(D.resumes[a].name, D.resumes[b].name); });
       if (!ks.length) return;
@@ -1166,6 +1185,8 @@
     render();
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+  // The name at the top goes back to To review on Triage.
+  document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
   // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
   function tabKeys(e) {
@@ -1313,7 +1334,7 @@
 
   var TOUR = [
     { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning around 6:45." },
-    { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
+    { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },

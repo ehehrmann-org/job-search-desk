@@ -57,7 +57,7 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 
 /* Header */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.brand { font-family: var(--f-display); font-weight: 500; font-size: 22px; letter-spacing: -.005em; margin-right: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.brand { background: none; border: 0; padding: 0; color: inherit; cursor: pointer; text-align: left; font-family: var(--f-display); font-weight: 500; font-size: 22px; letter-spacing: -.005em; margin-right: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
 .banner { font-size: 13px; color: var(--fg-2); margin: 0; }
 
 /* Tabs */
@@ -78,8 +78,8 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .step:hover { background: var(--line); }
 .step .sl { font-family: var(--f-label); font-weight: 600; font-size: 13px; color: var(--fg-2); }
 .step .sn { font-family: var(--f-body); font-variant-numeric: tabular-nums; font-size: 18px; }
-.step[aria-pressed="true"] { background: var(--accent-soft); }
-.step[aria-pressed="true"] .sl { color: var(--accent); }
+.step[aria-pressed="true"], .step[aria-pressed="true"]:hover { background: var(--accent); color: var(--on-accent); }
+.step[aria-pressed="true"] .sl { color: var(--on-accent); }
 .list { display: grid; gap: 8px; }
 .empty { padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); }
 
@@ -89,6 +89,12 @@ button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focu
 .b.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .b.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .b[disabled] { opacity: .55; cursor: default; }
+/* Links that open another site carry a small out-arrow */
+.ic.ext { width: .85em; height: .85em; margin-left: .25em; vertical-align: -.05em; opacity: .7; }
+a.co { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 2px; }
+a.co:hover { color: var(--accent); text-decoration-color: currentColor; }
+.joblink { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 2px; cursor: pointer; }
+.joblink:hover { color: var(--accent); text-decoration-color: currentColor; }
 .link { background: none; border: 0; padding: 2px 0; font-size: 12.5px; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .btns { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .more { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: flex-end; }
@@ -222,12 +228,12 @@ a.title { display: inline; }
 
 /* Header: plain meta text, one status button (the check-engine light) */
 .meta-line { font-size: 12.5px; color: var(--muted); }
-.status { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--fg-2); border-radius: 999px; padding: 5px 12px 5px 10px; font-size: 12.5px; font-weight: 500; min-height: 30px; }
-.status:hover { background: var(--surface-2); }
-.status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--s-pending); flex: none; }
-.status[data-state="ok"] .dot { background: var(--s-interview); }
-.status[data-state="problem"] { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-ink); font-weight: 600; }
-.status[data-state="problem"] .dot { background: var(--s-withdrew); box-shadow: 0 0 0 3px color-mix(in srgb, var(--s-withdrew) 30%, transparent); }
+.status { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 2px 0; color: var(--muted); font: inherit; font-size: 12px; cursor: pointer; }
+.status #status-ic { display: inline-flex; }
+.status .ic { width: 14px; height: 14px; }
+.status:hover #status-text { text-decoration: underline; text-underline-offset: 2px; }
+.status[data-state="ok"] .ic { color: var(--s-interview); }
+.status[data-state="problem"] { color: var(--warn-ink); font-weight: 600; }
 .panel.help.bad { border-color: var(--warn-ink); }
 .probs { display: grid; gap: 10px; }
 .prob { display: grid; gap: 3px; padding: 10px 12px; border-radius: 6px; background: var(--warn-bg); color: var(--warn-ink); }
@@ -358,17 +364,18 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 /* Footer: version, plan and the last run, small and quiet */
 .pagefoot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding-top: 14px; margin-top: 8px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 .pagefoot .meta-line { font-size: 12px; }
+.footl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 /* State pills on job cards: color and icon by stage */
-:root { --p-clay-bg: #f6e9e2; --p-clay: #a24a28; --p-amber-bg: #fbf0dc; --p-amber: #7a5300; --p-blue-bg: #e7eef6; --p-blue: #2d5a88;
+:root { --p-clay-bg: #f6e9e2; --p-clay: #a24a28; --p-yellow-bg: #fdf3b8; --p-yellow: #6b5600; --p-amber-bg: #fbf0dc; --p-amber: #7a5300; --p-blue-bg: #e7eef6; --p-blue: #2d5a88;
   --p-green-bg: #e3f1e8; --p-green: #22693f; --p-red-bg: #f8e4e1; --p-red: #a3352a; --p-gray-bg: #efede6; --p-gray: #5e5d58; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-yellow-bg: #3b3514; --p-yellow: #eedb7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
   --p-green-bg: #1f3428; --p-green: #8fd3a8; --p-red-bg: #3d2421; --p-red: #f0a197; --p-gray-bg: #3a3a37; --p-gray: #c2c0b6; } }
-:root[data-theme="dark"] { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
+:root[data-theme="dark"] { --p-clay-bg: #3d2b24; --p-clay: #eb9a7c; --p-yellow-bg: #3b3514; --p-yellow: #eedb7c; --p-amber-bg: #3a2e12; --p-amber: #f0c66a; --p-blue-bg: #22303d; --p-blue: #9cc0e6;
   --p-green-bg: #1f3428; --p-green: #8fd3a8; --p-red-bg: #3d2421; --p-red: #f0a197; --p-gray-bg: #3a3a37; --p-gray: #c2c0b6; }
 .state { text-transform: none; letter-spacing: 0; }
 .pill2 { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-body); font-size: 12px; font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 999px; white-space: nowrap; }
 .pill2 .ic { width: 14px; height: 14px; }
-.p-clay { background: var(--p-clay-bg); color: var(--p-clay); } .p-amber { background: var(--p-amber-bg); color: var(--p-amber); }
+.p-clay { background: var(--p-clay-bg); color: var(--p-clay); } .p-yellow { background: var(--p-yellow-bg); color: var(--p-yellow); } .p-amber { background: var(--p-amber-bg); color: var(--p-amber); }
 .p-blue { background: var(--p-blue-bg); color: var(--p-blue); } .p-green { background: var(--p-green-bg); color: var(--p-green); }
 .p-red { background: var(--p-red-bg); color: var(--p-red); } .p-gray { background: var(--p-gray-bg); color: var(--p-gray); }
 /* Card side: state at the top, buttons in the bottom right corner */
@@ -377,8 +384,11 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .row .side > .more { margin-top: 0; }
 @media (max-width: 860px) { .row .side { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; } .row .side > .btns { margin-left: auto; justify-content: flex-end; } .row .side > .timer { flex: 1 1 100%; } }
 /* Title-only warning that opens the paste box */
-button.tag.act-q { cursor: pointer; text-decoration: underline; text-decoration-color: transparent; }
-button.tag.act-q:hover { text-decoration-color: currentColor; }
+/* Every clickable tag gets the same hover: its own tint, a step deeper */
+button.tag { transition: background-color .12s ease; }
+button.tag.act:hover { background: color-mix(in srgb, var(--accent-soft) 78%, var(--accent) 22%); }
+button.tag.q:hover { background: color-mix(in srgb, var(--warn-bg) 78%, var(--warn-ink) 22%); }
+button.tag:not(.act):not(.q):hover { background: color-mix(in srgb, var(--surface-2) 78%, var(--fg) 12%); }
 /* A job card opened from the Resumes tab */
 .row.flash { outline: 2px solid var(--accent); outline-offset: 2px; transition: outline-color 1.5s ease; }
 .lrow.res .link { margin-top: 4px; }
@@ -389,15 +399,14 @@ button.tag.act-q:hover { text-decoration-color: currentColor; }
 </style>
 
 <script>
-var JSD_VERSION = "0.10.2";
+var JSD_VERSION = "0.11.0";
 // Phosphor Icons (regular weight), MIT license (see desk/page/PHOSPHOR-LICENSE.txt), https://phosphoricons.com. Generated from @phosphor-icons/core 2.1.1.
-var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>","check-circle":"<path d=\"M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-up-right":"<path d=\"M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z\"/>","lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z\"/>","file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
+var JSD_ICONS = {"warning":"<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z\"/>","thumbs-up":"<path d=\"M234,80.12A24,24,0,0,0,216,72H160V56a40,40,0,0,0-40-40,8,8,0,0,0-7.16,4.42L75.06,96H32a16,16,0,0,0-16,16v88a16,16,0,0,0,16,16H204a24,24,0,0,0,23.82-21l12-96A24,24,0,0,0,234,80.12ZM32,112H72v88H32ZM223.94,97l-12,96a8,8,0,0,1-7.94,7H88V105.89l36.71-73.43A24,24,0,0,1,144,56V80a8,8,0,0,0,8,8h64a8,8,0,0,1,7.94,9Z\"/>","arrow-square-out":"<path d=\"M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z\"/>","sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>","check-circle":"<path d=\"M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-up-right":"<path d=\"M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z\"/>","lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z\"/>","file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
 </script>
 <div class="app">
   <header class="top">
-    <div class="brand">Job Search Desk</div>
+    <button class="brand" id="brand" data-k="brand" title="Go to To review">Job Search Desk</button>
     <span id="run-host"></span>
-    <button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span class="dot" aria-hidden="true"></span><span id="status-text">Checking</span></button>
   </header>
   <div id="help-host"></div>
 
@@ -453,7 +462,7 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
       <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
-  <footer class="pagefoot"><span class="ver" id="ver"></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
+  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -498,6 +507,17 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
     var n = document.createElement("span"); n.className = "ic"; n.setAttribute("aria-hidden", "true");
     n.innerHTML = '<svg viewBox="0 0 256 256" fill="currentColor" width="16" height="16">' + paths + "</svg>";
     return n;
+  }
+  // A link to another site: opens in a new tab and ends with the out-arrow.
+  function extLink(href, kids, attrs) {
+    var a = el("a", Object.assign({ href: href, target: "_blank", rel: "noopener noreferrer" }, attrs || {}), kids);
+    var x = ic("arrow-square-out"); x.className = "ic ext"; a.appendChild(x);
+    return a;
+  }
+  // The company's own website, when the run found it (sources doc, keyed like the block list).
+  function siteOf(company) {
+    var m = D.sources && D.sources.sites, u = m && company ? m[normCo(company)] : null;
+    return u && isLink(u) ? u : null;
   }
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
@@ -795,7 +815,12 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
     var probs = problems();
     var hb = document.getElementById("help-btn");
     hb.setAttribute("aria-expanded", String(helpOpen));
-    hb.setAttribute("data-state", !loaded ? "loading" : probs.length ? "problem" : "ok");
+    var hstate = !loaded ? "loading" : probs.length ? "problem" : "ok";
+    if (hb.getAttribute("data-state") !== hstate || !document.getElementById("status-ic").firstChild) {
+      var si = document.getElementById("status-ic"); si.textContent = "";
+      si.appendChild(ic(hstate === "problem" ? "warning" : hstate === "ok" ? "thumbs-up" : "clock"));
+    }
+    hb.setAttribute("data-state", hstate);
     document.getElementById("status-text").textContent = !loaded ? "Checking" : probs.length ? (probs.length === 1 ? "1 problem" : probs.length + " problems") + ": see details" : "All working";
     var hh = document.getElementById("help-host"); hh.textContent = "";
     var ub = updateBanner(); if (ub) hh.appendChild(ub);
@@ -945,8 +970,8 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
     else row.appendChild(el("div", { class: "score" + (sc >= (thr === null ? 4 : thr) + 0.5 ? " hi" : "") }, [sc.toFixed(1)]));
 
     var head = el("div", { class: "head" }, [
-      isLink(p.url) ? el("a", { class: "title", href: p.url, target: "_blank", rel: "noopener noreferrer", title: "Opens the job posting" }, [p.title]) : el("span", { class: "title", text: p.title }),
-      el("span", { class: "co", text: p.company })
+      isLink(p.url) ? extLink(p.url, [p.title], { class: "title", title: "Opens the job posting in a new tab" }) : el("span", { class: "title", text: p.title }),
+      siteOf(p.company) ? el("span", { class: "co" }, [extLink(siteOf(p.company), [p.company], { class: "co", title: "Opens " + p.company + "'s website in a new tab" })]) : el("span", { class: "co", text: p.company })
     ]);
     if (p.dream) head.appendChild(el("span", { class: "star" }, [el("span", { "aria-hidden": "true", text: "★ " }), "Dream company"]));
     var meta = el("div", { class: "meta" });
@@ -1006,10 +1031,10 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
       btns.appendChild(act("Offer declined", "dec", function () { saveDecision(p.id, { status: "withdrew", lost_at: "offer" }, "Moved to Closed: offer declined"); }, null, "x-circle"));
       btns.appendChild(act("Offer accepted", "acc", function () { saveDecision(p.id, { status: "accepted", lost_at: null }, "Moved to Closed: offer accepted. Congratulations!"); }, PREF, "check"));
     } else if (s === "noresp") {
-      // They answered after all: back to the stage where it went quiet, with a fresh date.
-      var back = e.lost_at === "applied" ? "screen" : e.lost_at;
+      // Reopen works as on every closed job: back to the stage where it went quiet, with a fresh date (a new 21 or 14 day window).
+      var back = e.lost_at || "applied";
       btns.appendChild(act("Rejected", "rej", function () { saveDecision(p.id, { status: "rejected", lost_at: e.lost_at }, "Moved to Closed as Rejected"); }, null, "thumbs-down"));
-      btns.appendChild(act("They replied", "rep", function () { saveDecision(p.id, { status: back }, "Moved back to " + LABEL[back], { restamp: true }); }, PREF, "arrow-bend-up-left"));
+      btns.appendChild(act("Reopen", "reo", function () { saveDecision(p.id, { status: back }, "Reopened in " + LABEL[back], { restamp: true }); }, null, "arrow-counter-clockwise"));
       side.appendChild(el("div", { class: "timer", text: "Ended at: " + LABEL[e.lost_at] }));
     } else {
       btns.appendChild(act("Reopen", "reo", function () { var pv = s === "accepted" ? "offer" : dec.prev && stageOf(dec.prev) !== "closed" ? dec.prev : "interested"; saveDecision(p.id, { status: pv, lost_at: null }, "Reopened", ["applied", "screen", "hm"].indexOf(pv) > -1 ? { restamp: true } : { keepDates: true }); }, null, "arrow-counter-clockwise"));
@@ -1034,7 +1059,7 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
   }
 
   // The job's state as a colored pill with an icon.
-  var PILL = { new: ["clay", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
+  var PILL = { new: ["yellow", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
     offer: ["green", "handshake"], accepted: ["green", "check-circle"], skipped: ["gray", "x"], rejected: ["red", "thumbs-down"], withdrew: ["amber", "sign-out"], noresp: ["gray", "hourglass-medium"] };
   function statePill(s, e) {
     var declined = s === "withdrew" && e && e.lost_at === "offer";
@@ -1185,18 +1210,22 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
       if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
-      var sub = r.kind === "tailored" ? "Made for " + ((D.postings[r.for_posting] || {}).company || "one posting") : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
-      var jobLink = r.kind === "tailored" && D.postings[r.for_posting] ? el("button", { class: "link", "data-k": "res-job-" + k, onclick: function () { goToJob(r.for_posting); } }, [ic("arrow-up-right"), "Show the job"]) : null;
+      var sub = r.kind === "tailored" ? "Made for one posting" : r.kind === "master" ? "Every fact the other versions use" : "Approved during setup";
+      // A tailored resume names its job; the job part opens that job's card when the job is on her list.
+      var tp = r.kind === "tailored" ? view(r.for_posting) : null, what = tp && tp.title && tp.company ? tp.title + " at " + tp.company : null;
+      var name = !what ? el("div", { class: "t", text: r.name })
+        : !hidden(tp) ? el("div", { class: "t" }, ["Tailored for ", el("button", { class: "joblink", "data-k": "res-job-" + k, title: "Show this job", onclick: function () { goToJob(r.for_posting); } }, [what])])
+        : el("div", { class: "t", text: "Tailored for " + what });
       var mid = r.kind === "master" ? "To change it, drop a new resume into Claude or say what changed." : "Suggested for " + stat[k].sug + (stat[k].sug === 1 ? " posting" : " postings") + " · sent with " + stat[k].sent + (stat[k].sent === 1 ? " application" : " applications");
       return el("div", { class: "lrow res" }, [
-        el("div", null, [el("div", { class: "t", text: r.name }), el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") }), jobLink]),
+        el("div", null, [name, el("div", { class: "s", text: sub + (r.updated ? " · updated " + niceDate(r.updated) : "") })]),
         el("div", { class: "m", text: mid }),
         el("div", { class: "btns" }, btns.concat([msg]))
       ]);
     }
     if (!keys.length) { v.appendChild(el("div", { class: "empty", text: "This will list resumes I created for you." })); return; }
-    [["master", "Master resume", ""],
-     ["default", "Default versions", "One per kind of role you're targeting. Scoring suggests one of these, or a tailored version, for every posting that reaches your bar."],
+    [["default", "Standard resumes", "One per kind of role you're targeting, used whenever a posting needs no tailoring. Scoring suggests one of these, or a tailored version, for every posting that reaches your bar."],
+     ["master", "Master resume", ""],
      ["tailored", "Tailored versions", "Made when no existing resume fit a posting. Reused whenever a new posting matches one better than the defaults."]].forEach(function (grp) {
       var ks = keys.filter(function (k) { return (D.resumes[k].kind || "default") === grp[0]; }).sort(function (a, b) { return cmpStr(D.resumes[a].name, D.resumes[b].name); });
       if (!ks.length) return;
@@ -1561,6 +1590,8 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
     render();
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+  // The name at the top goes back to To review on Triage.
+  document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
   // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
   function tabKeys(e) {
@@ -1708,7 +1739,7 @@ var JSD_ICONS = {"sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.
 
   var TOUR = [
     { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning around 6:45." },
-    { target: "#help-btn", title: "Is everything working?", text: "This button says \u201cAll working\u201d when the morning run went fine. If something breaks, it turns yellow: click it to see what to do, with a ready-made message for Erik." },
+    { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting. Jobs at dream companies always show, regardless of score." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },

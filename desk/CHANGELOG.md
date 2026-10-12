@@ -2,6 +2,16 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.0 (2026-10-12)
+- Company names link to the company's website. The morning run looks up a few new companies each day, and keeps a link only when the address carries the company's name.
+- Links that open another site end with a small out-arrow.
+- The selected stage on Triage is filled in clay, so it stands out.
+- The status moved into the footer next to the version: a thumbs up when everything works, a warning sign when something needs a look.
+- Clicking Job Search Desk at the top goes back to To review.
+- Resumes: standard resumes come first. A tailored resume reads "Tailored for (job) at (company)", and the job part opens that job's card when it's on your list.
+- Clickable tags share one hover: a slightly deeper tint. New labels are pastel yellow.
+- No response jobs have Reopen like every closed job: it puts the job back where it went quiet, with a fresh 21 or 14 day window.
+
 ## 0.10.2 (2026-10-12)
 - The next step for each job (Interested, Applied, Interviewing, Offer, Offer accepted, They replied) is always the rightmost button, in a soft clay color. Save and confirm buttons sit to the right of Cancel everywhere.
 

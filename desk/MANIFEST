@@ -190,6 +190,7 @@ desk/lib/env.mjs
 desk/lib/frontmatter.mjs
 desk/lib/page-docs.mjs
 desk/lib/scoring.mjs
+desk/lib/sites.mjs
 desk/lib/urls.mjs
 desk/lists/reposting-services.md
 desk/packs/agencies.yml
@@ -217,6 +218,7 @@ desk/test-scoring.mjs
 desk/test/flows.test.mjs
 desk/test/page-docs.test.mjs
 desk/test/scoring.test.mjs
+desk/test/sites.test.mjs
 desk/test/suggest.test.mjs
 desk/update.mjs
 detect-reposts.mjs
