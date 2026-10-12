@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.4 (2026-10-12)
+- Scan sources: the Add button shows up once you type something, so the field stands alone until then.
+
 ## 0.11.3 (2026-10-12)
 - Scan sources has one field: typing finds a company, and a company that isn't there gets added with Add (or Enter), as a dream company, a job board, or a block.
 

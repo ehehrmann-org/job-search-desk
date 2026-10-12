@@ -917,9 +917,10 @@
     search.addEventListener("keydown", function (e) { if (e.key === "Enter" && srcQuery.trim() && canWrite && !matchesAnywhere(srcQuery)) { e.preventDefault(); openAdd(); } });
     tools.appendChild(search);
     var typed = srcQuery.trim();
-    tools.appendChild(el("button", { class: "b addsrc" + (addSrcOpen ? " on" : ""), "data-k": "addsrc", "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () {
+    // The button appears once there is something to add (or to close the picker).
+    if (typed || addSrcOpen) tools.appendChild(el("button", { class: "b addsrc" + (addSrcOpen ? " on" : ""), "data-k": "addsrc", "aria-expanded": String(addSrcOpen), disabled: !canWrite, onclick: function () {
       if (addSrcOpen) { addSrcOpen = false; lastVerdict = ""; render(); } else openAdd();
-    } }, addSrcOpen ? [ic("x"), "Close"] : [ic("plus"), typed ? "Add \u201c" + (typed.length > 24 ? typed.slice(0, 23) + "\u2026" : typed) + "\u201d" : "Add a source"]));
+    } }, addSrcOpen ? [ic("x"), "Close"] : [ic("plus"), "Add \u201c" + (typed.length > 24 ? typed.slice(0, 23) + "\u2026" : typed) + "\u201d"]));
     v.appendChild(tools);
     if (addSrcOpen) addSourceForm(v);
 
@@ -944,7 +945,7 @@
           b.system ? el("div") : el("div", { class: "btns" }, [el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "unblock_company", company: b.company }, b.company + " unblocked. Its jobs come back from the next run."); } }, [ic("lock-simple-open"), "Unblock"])])
         ]));
       });
-      if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Use “Add a source” to block a company or website, or skip a job with “Never show jobs from this company”." })]));
+      if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Type a company or website in the field above and click Add, or skip a job with “Never show jobs from this company”." })]));
       v.appendChild(bl);
       return;
     }
@@ -974,7 +975,7 @@
       ]));
       if (qo) quiet.forEach(function (s) { l.appendChild(srcRow(s)); });
     }
-    if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." + (canWrite && !addSrcOpen ? " Press Enter or click Add to add it." : "") : view.k === "dream" ? "No dream companies yet. Use “Add a source” and type a company name." : "Nothing here yet." })]));
+    if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." + (canWrite && !addSrcOpen ? " Press Enter or click Add to add it." : "") : view.k === "dream" ? "No dream companies yet. Type a company name in the field above and click Add." : "Nothing here yet." })]));
     v.appendChild(l);
   }
   var SRC_KINDS = [
