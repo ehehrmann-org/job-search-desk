@@ -170,6 +170,12 @@ button.tag { cursor: pointer; }
 .tile .v { font-size: 30px; font-weight: 600; line-height: 1.1; }
 .tile .n { font-size: 12.5px; color: var(--fg-2); }
 .tile.thin .v { color: var(--muted); }
+/* Latest run: small figures in a row */
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px 22px; margin-top: 4px; }
+.mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; border-left: 3px solid var(--line); }
+.mini .v { font-size: 24px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.mini .k { font-size: 13px; font-weight: 600; color: var(--fg-2); }
+.mini .s { font-size: 12px; color: var(--muted); }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
 .panel h2 { margin: 0; font-family: var(--f-label); font-weight: 600; font-size: 16px; text-wrap: balance; }
 .panel .sub { margin: -6px 0 0; font-size: 13px; color: var(--fg-2); }

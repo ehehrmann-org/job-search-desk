@@ -392,11 +392,13 @@ async function push(args) {
   const scores = Object.values(readDir(P.scores) || {}).filter(r => r?.verdict?.id && safeId(r.verdict.id));
   const jdMeta = id => { try { return readFrontMatter(path.join(P.jds, `${id}.md`)).meta || {}; } catch { return {}; } };
   const donePostings = pushed('postings');
+  let newPostings = 0;
   for (const rec of scores) {
     const id = rec.verdict.id; if (donePostings.has(id)) continue;
     const jd = jdMeta(id);
     if (!belongsOnPage(rec, jd)) continue;
     add('postings', id, postingDoc(rec, jd));
+    newPostings++;
   }
   // Rescored postings that are already on the page: a new create-only document each time
   st.rescores ||= {};
@@ -464,6 +466,27 @@ async function push(args) {
       return String(jd.found || (s.scored_at || '')).slice(0, 10) >= st.search_start;
     });
     const ok = problems.length === 0;
+    // What this run did, counted since the run before it (for the Latest run panel on Stats).
+    const prevAt = st.last_run_at || null;
+    const after = t => !prevAt || String(t || '') > prevAt;
+    const scansSince = scanRuns.filter(r => after(r[0]));
+    const scoredSince = scores.filter(s => after(s.scored_at) && s.verdict.status !== 'unscorable');
+    let started = null;
+    try { started = (fs.readFileSync(path.join(P.page, 'last-run.md'), 'utf8').match(/^started:\s*(\S+)/m) || [])[1] || null; } catch { /* no run log */ }
+    const sitesFound = Object.values(loadSites(DATA)).filter(e => e?.how === 'search' && e.url && e.at === todayIso).length;
+    const last = {
+      since: prevAt, started: started && !Number.isNaN(Date.parse(started)) ? started : null,
+      scans: scansSince.length,
+      companies: scansSince.reduce((m, r) => Math.max(m, Number(r[2]) || 0), 0),
+      listed: scansSince.length ? Number(scansSince.at(-1)[4]) || 0 : 0,
+      found: scansSince.reduce((n, r) => n + (Number(r[13]) || 0), 0) + (args.quick ? 0 : alertsAdded(todayIso)),
+      scored: scoredSince.length,
+      dealbreakers: scoredSince.filter(s => s.verdict.status === 'dealbreaker').length,
+      to_review: newPostings,
+      deep: Object.values(readDir(P.deep) || {}).filter(d => after(d?.at)).length,
+      requests: Object.values(readDir(P.done) || {}).filter(d => after(d?.at)).length,
+      sites: sitesFound,
+    };
     if (ok) st.last_good_run = at;
     st.last_run_at = at;
     add('runs', runId(new Date(at)), {
@@ -482,6 +505,7 @@ async function push(args) {
         qualified: sysScores.filter(s => s.verdict.status === 'qualified').length,
       },
       today: { scored: scoredToday.length, qualified: scoredToday.filter(s => s.verdict.status === 'qualified').length },
+      last,
     });
   }
 

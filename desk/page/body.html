@@ -24,6 +24,12 @@
   <section class="view" id="view-resumes" role="tabpanel" aria-labelledby="tab-resumes" hidden></section>
   <section class="view" id="view-sources" role="tabpanel" aria-labelledby="tab-sources" hidden></section>
   <section class="view" id="view-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
+    <div class="panel" id="lastrun">
+      <h2>Latest run</h2>
+      <p class="sub" id="lastrun-sub"></p>
+      <div class="minis" id="lastrun-minis"></div>
+      <p class="sub" id="lastrun-more"></p>
+    </div>
     <div class="tiles" id="tiles"></div>
     <div class="panel">
       <h2>How your decided applications ended</h2>
@@ -1123,10 +1129,37 @@
     });
     return { q: q, you: you, dec: dec };
   }
+  // What the most recent run did: jobs found, scored and sent to To review, and the rest of its work.
+  function renderLastRun(r) {
+    var sub = document.getElementById("lastrun-sub"), minis = document.getElementById("lastrun-minis"), more = document.getElementById("lastrun-more");
+    minis.textContent = ""; more.textContent = "";
+    if (!r || !r.at) { sub.textContent = loaded ? "Appears after the first morning run." : "Loading…"; return; }
+    var L = r.last || null, took = "";
+    if (L && L.started) { var m = Math.round((new Date(r.at) - new Date(L.started)) / 60000); if (m > 0 && m < 600) took = ", took " + m + (m === 1 ? " minute" : " minutes"); }
+    sub.textContent = (r.quick ? "Run now" : "Morning run") + ", " + niceTime(r.at) + took + "." + (L && L.since ? " Counted since the run before, " + niceTime(L.since) + "." : "");
+    function mini(k, v, note) { minis.appendChild(el("div", { class: "mini" }, [el("div", { class: "v", text: v === null || v === undefined ? "–" : fmt(v) }), el("div", { class: "k", text: k }), note ? el("div", { class: "s", text: note }) : null])); }
+    if (L) {
+      if (!r.quick) mini("Listed on your job boards", L.listed, L.companies ? L.companies + " companies checked" : null);
+      mini("New jobs found", r.quick ? null : L.found, r.quick ? "Run now doesn't scan" : "passed your title and location filters");
+      mini("Scored", L.scored, L.dealbreakers ? L.dealbreakers + " hit a deal-breaker" : null);
+      mini("Sent to To review", L.to_review, "reached your bar, or a dream company");
+      var bits = [];
+      if (L.deep) bits.push(L.deep + (L.deep === 1 ? " deep evaluation" : " deep evaluations") + " written");
+      if (L.requests) bits.push(L.requests + (L.requests === 1 ? " request" : " requests") + " from this page handled");
+      if (L.sites) bits.push(L.sites + (L.sites === 1 ? " company website" : " company websites") + " found");
+      bits.push((r.problems || []).length ? (r.problems.length === 1 ? "1 problem" : r.problems.length + " problems") + " (see the status line below)" : "no problems");
+      more.textContent = "Also: " + bits.join(", ") + ".";
+    } else {
+      var t = r.today || {};
+      mini("Scored today", t.scored); mini("Sent to To review today", t.qualified);
+      more.textContent = "The full breakdown shows after the next run.";
+    }
+  }
   function renderStats() {
     var S = computeStats(), q = S.q, you = S.you, dec = S.dec, r = D.run || {};
     var thr = r.scoring && num(r.scoring.threshold);
     var decided = dec.interview + dec.rejected + dec.noresp + dec.withdrew;
+    renderLastRun(r);
     var tiles = document.getElementById("tiles"); tiles.textContent = "";
     function tile(k, v, n, thin) { tiles.appendChild(el("div", { class: "tile" + (thin ? " thin" : "") }, [el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "n", text: n })])); }
     tile("Scoring accuracy", q.qualified ? Math.round(q.acted / q.qualified * 100) + "%" : "–", "You acted on " + q.acted + " of " + q.qualified + " qualified postings.", q.qualified < 10);
@@ -1352,7 +1385,7 @@
       row("co-quietbrook", "boards", "Quietbrook", "Greenhouse", "Checked daily", 0, 0, 0),
       row("co-studio-vale", "search", "Studio Vale", "No job board found", "Not checked: needs a careers or job board link", 0, 0, 0)
     ] };
-    var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 } };
+    var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 }, last: { since: iso(1), started: new Date(Date.now() - 20 * 60000).toISOString(), scans: 2, companies: 48, listed: 1240, found: 14, scored: 10, dealbreakers: 2, to_review: 3, deep: 1, requests: 0, sites: 5 } };
     var suggestions = { week: "sample", items: [{ id: "pay-floor", title: "Set your minimum pay to $140K", why: "You skipped 3 jobs for pay; the best-paid of them topped out at $135K.", change: "Jobs whose posted range tops out under $140K are skipped before scoring." }] };
     return { postings: postings, decisions: decisions, deep: deep, requests: {}, done: {}, resumes: resumes, switches: {}, rescores: {}, prefs: {}, run: run, sources: sources, suggestions: suggestions };
   }
@@ -1372,7 +1405,7 @@
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, never heard back on, or accepted an offer from, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, dream companies, and job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
-    { tab: "stats", target: "#tiles", title: "How it's going", text: "Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
+    { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page." }
   ];
   // Tour text: **word** shows in bold.

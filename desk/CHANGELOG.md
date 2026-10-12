@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.15 (2026-10-12)
+- Stats: a new Latest run section shows what the most recent run did: jobs listed on your job boards, new jobs found, how many were scored and how many went to To review, plus deep evaluations, requests and company websites.
+
 ## 0.11.14 (2026-10-12)
 - Stats: the Applications tile is now Applications submitted.
 

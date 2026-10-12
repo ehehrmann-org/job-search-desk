@@ -383,3 +383,28 @@ test('push: the master resume goes on the page once, as plain text; resume-doc r
   assert.equal(JSON.parse(read(f)).text, doc.text);
   assert.throws(() => sh(d, 'page-sync.mjs', 'resume-doc', 'nope'), /no resume nope/);
 });
+
+test('push: the run document counts what this run did since the run before', () => {
+  const d = profile();
+  write(path.join(d, 'data', 'page', 'state.json'), { pushed: {}, last_run_at: '2026-10-11T11:00:00.000Z', search_start: '2026-10-01' });
+  write(path.join(d, 'data', 'scan-runs.tsv'), 'timestamp\tstatus\tcompanies\tboards\tfound\tf1\tf2\tf3\tf4\tf5\tf6\tf7\tdupes\tnew_added\terrors\n'
+    + '2026-10-10T03:00:00.000Z\tcompleted\t40\t0\t900\t0\t0\t0\t0\t0\t0\t0\t0\t9\t0\n'
+    + '2026-10-12T03:00:00.000Z\tcompleted\t51\t0\t1300\t0\t0\t0\t0\t0\t0\t0\t0\t7\t0\n');
+  write(path.join(d, 'data', 'page', 'last-run.md'), '# Last run\nstarted: 2026-10-12T11:27:00Z\n');
+  jd(d, 'n1', { url: 'https://job-boards.greenhouse.io/glossier/jobs/9', company: 'Glossier', title: 'VP Ops', found: '2026-10-12', jd: 'saved' });
+  jd(d, 'n2', { url: 'https://job-boards.greenhouse.io/glossier/jobs/8', company: 'Glossier', title: 'Clerk', found: '2026-10-12', jd: 'saved' });
+  const now = new Date().toISOString();
+  write(path.join(d, 'data', 'scores', 'n1.json'), { verdict: { id: 'n1', status: 'qualified', score: 4.4, threshold: 4, ratings: [], dealbreakers: [], checks: [] }, facts: {}, company: 'Glossier', scored_at: now });
+  write(path.join(d, 'data', 'scores', 'n2.json'), { verdict: { id: 'n2', status: 'dealbreaker', score: null, threshold: 4, ratings: [], dealbreakers: ['pay'], checks: [] }, facts: {}, company: 'Glossier', scored_at: now });
+  const out = json(d, 'page-sync.mjs', 'push');
+  const run = JSON.parse(read(JSON.parse(read(out.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.equal(run.last.since, '2026-10-11T11:00:00.000Z');
+  assert.equal(run.last.scans, 1);
+  assert.equal(run.last.listed, 1300);
+  assert.equal(run.last.companies, 51);
+  assert.equal(run.last.found, 7);
+  assert.equal(run.last.scored, 2);
+  assert.equal(run.last.dealbreakers, 1);
+  assert.equal(run.last.to_review, 1);
+  assert.equal(run.last.started, '2026-10-12T11:27:00Z');
+});
