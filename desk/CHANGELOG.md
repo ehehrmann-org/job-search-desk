@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.3 (2026-10-12)
+- Scan sources has one field: typing finds a company, and a company that isn't there gets added with Add (or Enter), as a dream company, a job board, or a block.
+
 ## 0.11.2 (2026-10-12)
 - Resumes: the master resume's two buttons sit on one line, and Copy update prompt explains what it does when you point at it.
 
