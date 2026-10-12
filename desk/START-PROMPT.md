@@ -8,9 +8,11 @@ Step 1, my private copy:
 - Then, signed in, on github.com/{{TEMPLATE}}: the green "Use this template" button, "Create a new repository", owner = me, name = job-search-desk, and make sure Private is selected (my job search stays private). Create.
 - In my new copy, open the Actions tab. If GitHub asks, click to enable workflows.
 
-Step 2, connect Claude to my copy:
+Step 2, connect Claude to my copy and start setup, all in this chat:
 - Help me give Claude access to my GitHub account, allowing only the job-search-desk copy when GitHub asks which ones.
-- Then help me start a Claude Code session on job-search-desk. Before I type anything there, help me pick the model: Sonnet if I'm on the Pro plan, Opus if I'm on a Max plan, with medium effort. Then tell me to type: start setup
+- Help me pick this chat's model: Sonnet if I'm on the Pro plan, Opus if I'm on a Max plan.
+- Then attach my job-search-desk copy to this chat with permission to save to it, clone it here, follow the instructions in its CLAUDE.md, and start setup.
+- If this chat can't attach my copy, help me start a Claude Code session on job-search-desk instead, with the same model, and tell me to type there: start setup
 
 If anything doesn't match what I see, ask me to describe my screen, and adjust. If we get stuck, write a short message for Erik saying where we got stuck.
 ---

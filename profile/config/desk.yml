@@ -10,6 +10,7 @@ gmail_checked: false   # step 9: set true once a job alert email was found
 gmail_query: ""        # optional; the daily task has a default
 alert_searches: []     # step 9: the saved searches she set up, { site, search, frequency }
 page_url: ""           # step 8
+repo: ""               # step 8: her private copy as owner/name; the page's copy-to-Claude prompts name it
 task_id: ""            # step 8
 page_consent: false    # step 8: true after she finished the tour and allowed saving
 page_title: ""           # optional: the job page's name in the browser tab (default "Job Search Desk")

@@ -28,7 +28,7 @@ This step happens in a normal Claude chat, from the start prompt Erik sends (des
 
 ## Step 2. Connect Claude to your copy (about 10 minutes)
 
-Also done before this file is readable. First thing in this session:
+Also done before this file is readable: her copy is attached to this chat (or a Claude Code session) and cloned. First thing:
 ```bash
 npm install --ignore-scripts --no-audit --no-fund
 node desk/setup.mjs init
@@ -123,14 +123,14 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 2. **First jobs.** `bash desk/save.sh "setup: page"`. If the first scan has finished (`profile/jds/` has postings), run `mkdir -p .work .page-dump profile/data/extractions` and score up to 10 now the same way the daily run does (desk/DAILY-TASK.md step 5 points 2 to 6, with `node desk/daily.mjs todo --cap 10`). If it hasn't finished, skip this: the first morning run scores them.
 3. **First fill.** `node desk/page-sync.mjs push --no-run`, then for each batch file: ArtifactData `batch` with the file's `writes`, then `node desk/page-sync.mjs ack <file>`. Until the first morning run, the status line at the bottom of the page says "Waiting for the first morning run", and the Run now button stays hidden; both are expected.
 4. **The tour.** Ask her to open the page. It starts a two-minute tour on sample jobs (they are built into the page and never saved); she clicks through and finishes with Finish. That click shows a one-time permission question; she allows it. Confirm with ArtifactData `list` on `prefs` (a `tour` document). If it's missing, she skipped the permission: ask her to click the status line at the bottom of the page ("All working" or the problem count), click "Take the tour again", and allow it at the end. Then set `desk.yml` `page_consent: true`. Offer to pin the page to her sidebar; pin it on a yes.
-5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task: `mcp__claude-code-remote__create_trigger`) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`. The task itself only runs scripts and starts the scoring helpers, so it runs on Sonnet, which she sets in point 6. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
+5. **The daily run.** The daily scan already runs on its own twice a night; nothing to set. Make sure `desk.yml` has `gmail_alerts: false` (step 9 turns it on). Create a cloud scheduled task (a routine, not a local or session task: `mcp__claude-code-remote__create_trigger`) named "Job Search Desk daily run", every day at 6:27 AM her time (`CRON_TZ=<profile.yml location.timezone> 27 6 * * *`), with the prompt in `desk/TASK-PROMPT.md` filled in with her REPO (`owner/name` of her private copy) and PAGE (the page link). Save its trigger id (it starts with `trig_`; a local or session task has no such id and can't be started from her page) to `desk.yml` `task_id`, and her REPO to `desk.yml` `repo` (the page's copy-to-Claude buttons name it, so they work in any new chat). The task itself only runs scripts and starts the scoring helpers, so it runs on Sonnet, which she sets in point 6. The scoring helpers keep their own models (desk/DAILY-TASK.md step 0.3).
 6. **Task settings (she does this).** Walk her to the task's settings in Claude Code's scheduled tasks. Check, one at a time, and wait for her yes on each: its repositories list her private copy; every connection is removed (Gmail gets added back in step 9); automatic approval is on; the model is Sonnet.
 7. Save, then `node desk/setup.mjs done 8`.
 8. **Close the session.** Tell her, briefly:
    - She's live: her first jobs arrive tomorrow morning by about 7 on her job page, and every morning after that. The tour is always one click away from the status line at the bottom of the page.
    - The first days will score rough. Every Skip with a reason and every Interested teaches it.
-   - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: open Claude, open a session on her private copy, type "continue setup". The prep list for it is in Erik's message.
-   - "Change my scoring", "add a dream company" and "help" work anytime in Claude.
+   - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: in a new Claude chat, type "Open my Job Search Desk (<her REPO>) and continue setup". The prep list for it is in Erik's message.
+   - "Change my scoring", "add a dream company" and "help" work anytime in a new Claude chat, starting with "Open my Job Search Desk (<her REPO>) and ...". The buttons on her page copy requests that already start that way.
 
 ## Step 9. Gmail and job alerts (about 15 minutes)
 

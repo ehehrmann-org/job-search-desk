@@ -6,6 +6,8 @@ Talk in plain terms: "your private copy", "the daily scan", "your job page", "Gm
 
 **Saving.** "Save" below means `bash desk/save.sh "<short message>"`. It commits `profile/` and pushes, retrying when the daily scan saved at the same time. If it prints `save failed`, tell her in one plain sentence and offer the message for Erik.
 
+**Opened from a new chat.** Requests often start "Open my Job Search Desk, my private copy <owner/name>": once this file is loaded, the copy is open; do the rest of that message.
+
 **First message of a session.** If `node desk/setup.mjs status` shows setup isn't finished, say where she left off and offer to continue.
 
 ## What the user can say

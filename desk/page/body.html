@@ -116,6 +116,11 @@
     var m = D.sources && D.sources.sites, u = m && company ? m[normCo(company)] : null;
     return u && isLink(u) ? u : null;
   }
+  // A request for Claude that works in any new chat: it names her private copy so Claude can open it first.
+  function deskPrompt(text) {
+    var repo = D.run && D.run.repo;
+    return repo ? "Open my Job Search Desk, my private copy " + repo + " on GitHub: attach it to this chat with permission to save, clone it, and follow its CLAUDE.md. Then: " + text : text;
+  }
   function el(tag, attrs, kids) {
     var n = document.createElement(tag);
     if (attrs) for (var k in attrs) {
@@ -392,7 +397,7 @@
         ]),
         el("div", { class: "btns" }, [
           notes.length ? el("button", { class: "b", "data-k": "upd-notes", "aria-expanded": String(updOpen), onclick: function () { updOpen = !updOpen; render(); } }, [updOpen ? "Hide what's new" : "What's new"]) : null,
-          el("button", { class: "b primary", "data-k": "update-copy", onclick: function () { copy("update career tool", "Copied. Paste it into Claude, in your Job Search Desk chat."); } }, [ic("copy"), "Copy update request"])
+          el("button", { class: "b primary", "data-k": "update-copy", onclick: function () { copy(deskPrompt("update career tool"), "Copied. Paste it into a new Claude chat."); } }, [ic("copy"), "Copy update request"])
         ])
       ])
     ]);
@@ -614,7 +619,7 @@
       else btns.appendChild(act("Applied", "app", function () { toggleDrawer(p.id, "resume"); }, Object.assign({ "aria-expanded": String(drawer[p.id] === "resume") }, PREF), "paper-plane-tilt"));
       if (s === "interested" && deep && deep.resume && deep.resume.fits === false) {
         side.appendChild(el("div", { class: "timer", text: "Tailoring recommended" + (deep.tailor_why ? ": " + deep.tailor_why : "") }));
-        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy("Tailor my resume for " + p.id, "Copied. Paste it into Claude to tailor."); } }, [ic("copy"), "Copy tailor prompt"]));
+        more.appendChild(el("button", { class: "link", "data-k": dk + "tailor", onclick: function () { copy(deskPrompt("tailor my resume for " + p.id), "Copied. Paste it into a new Claude chat to tailor."); } }, [ic("copy"), "Copy tailor prompt"]));
       }
     } else if (s === "applied" || s === "screen" || s === "hm") {
       btns.appendChild(act("Withdrew", "wd", function () { saveDecision(p.id, { status: "withdrew", lost_at: s }, "Moved to Closed as Withdrew"); }, null, "sign-out"));
@@ -807,7 +812,7 @@
       if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
       if (r.kind === "master") {
-        var up = el("button", { class: "b", "aria-describedby": "tip", onclick: function () { hideTip(); copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]);
+        var up = el("button", { class: "b", "aria-describedby": "tip", onclick: function () { hideTip(); copy(deskPrompt("update my master resume"), "Copied. Paste it into a new Claude chat to update your master."); } }, [ic("copy"), "Copy update prompt"]);
         explain(up, "Copies a request for Claude. Paste it into a Claude chat on your private copy, then drop in a new resume or say what changed. Claude updates your master resume, offers to redo any standard resume it affects, and refreshes this page.");
         btns.push(up);
       }
@@ -1133,7 +1138,7 @@
     document.getElementById("split-sub").textContent = decided ? decided + (decided === 1 ? " application has" : " applications have") + " an outcome. " + dec.pending + " more " + (dec.pending === 1 ? "is" : "are") + " still waiting and " + (dec.pending === 1 ? "isn't" : "aren't") + " counted." : "No application has an outcome yet.";
     var split = document.getElementById("split"); split.textContent = "";
     var labels = document.getElementById("split-labels"); labels.textContent = "";
-    var parts = [{ k: "interview", label: "Got an interview", color: "var(--s-interview)" }, { k: "rejected", label: "Rejected", color: "var(--s-rejected)" }, { k: "noresp", label: "No response", color: "var(--s-noresp)" }, { k: "withdrew", label: "Withdrew", color: "var(--s-withdrew)" }];
+    var parts = [{ k: "interview", label: "Got an interview", color: "var(--s-interview)" }, { k: "rejected", label: "Rejected", color: "var(--s-rejected)" }, { k: "noresp", label: "No response", color: "var(--s-noresp)" }, { k: "withdrew", label: "You withdrew", color: "var(--s-withdrew)" }];
     split.setAttribute("aria-label", parts.map(function (pt) { return pt.label + " " + dec[pt.k]; }).join(", "));
     parts.forEach(function (pt) {
       var n = dec[pt.k];
@@ -1175,7 +1180,7 @@
     document.getElementById("closed-sub").textContent = total ? total + (total === 1 ? " job" : " jobs") + " closed so far. No response means nothing came back within 21 days of applying, or 14 days after an interview." : "Nothing closed yet.";
     bars(document.getElementById("closed-how"), [
       { k: "Skipped by you", n: how.skipped, color: "var(--s-pending)" }, { k: "Rejected", n: how.rejected, color: "var(--s-rejected)" },
-      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "Withdrew", n: how.withdrew, color: "var(--s-withdrew)" },
+      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "You withdrew", n: how.withdrew, color: "var(--s-withdrew)" },
       { k: "Offer accepted", n: how.accepted, color: "var(--s-interview)" }
     ], "var(--bar)", "None yet.");
     bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--bar)", "No skips yet.");

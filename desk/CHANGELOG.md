@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.13 (2026-10-12)
+- Works from a regular Claude chat: setup runs in the same chat as the start prompt, and the page's copy buttons (update, tailor, master resume) copy a request that opens your private copy in any new chat.
+- Stats: "Withdrew" reads "You withdrew".
+
 ## 0.11.12 (2026-10-12)
 - Stats: the scoring accuracy tile reads "You acted on 9 of 21 qualified postings."
 

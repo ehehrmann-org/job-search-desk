@@ -470,7 +470,8 @@ async function push(args) {
       at, ok, problems, last_good_run: st.last_good_run, version: VERSION,
       plan: desk.plan || null, daily_cap: desk.daily_cap || null, deep_cap: desk.deep_cap || null, help_email: desk.help_email || null,
       update: updateInfo(args.updateFile),
-      task_id: typeof desk.task_id === 'string' && /^trig_[A-Za-z0-9]+$/.test(desk.task_id) ? desk.task_id : null, quick: !!args.quick,
+      task_id: typeof desk.task_id === 'string' && /^trig_[A-Za-z0-9]+$/.test(desk.task_id) ? desk.task_id : null,
+      repo: typeof desk.repo === 'string' && /^[\w.-]+\/[\w.-]+$/.test(desk.repo) ? desk.repo : null, quick: !!args.quick,
       scoring,
       funnel: {
         since: st.search_start,
