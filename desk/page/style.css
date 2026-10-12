@@ -353,8 +353,9 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .panel.update .uptxt { display: grid; gap: 8px; flex: 1 1 320px; min-width: 0; }
 .panel.update .uptxt .sub { margin: 0; }
 /* Resumes: the same three columns in every row, whatever buttons a row has */
-.lrow.res { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 300px; }
-.lrow.res > @media (max-width: 760px) { .lrow.res { grid-template-columns: minmax(0, 1fr); } .lrow.res > .btns { justify-content: flex-start; } }
+.lrow.res { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 340px; }
+.lrow.res > .btns { flex-wrap: nowrap; }
+@media (max-width: 760px) { .lrow.res { grid-template-columns: minmax(0, 1fr); } .lrow.res > .btns { justify-content: flex-start; flex-wrap: wrap; } }
 /* Pasting a description inside a job card */
 .drawer.addjob { border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 10px 0 0; background: none; }
 .drawer.addjob textarea { min-height: 140px; }

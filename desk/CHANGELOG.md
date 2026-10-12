@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.11.2 (2026-10-12)
+- Resumes: the master resume's two buttons sit on one line, and Copy update prompt explains what it does when you point at it.
+
 ## 0.11.1 (2026-10-12)
 - Headings use the same serif as the page name.
 - Your master resume shows on the Resumes tab, with a plain-text copy for application forms. When you update it in Claude, the page shows the new version.

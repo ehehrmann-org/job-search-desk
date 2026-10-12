@@ -804,7 +804,11 @@
       var btns = [];
       if (r.asset_id) btns.push(el("button", { class: "b", onclick: function () { savePdf(r, msg); } }, [ic("download-simple"), "Save PDF"]));
       if (r.text) btns.push(el("button", { class: "b", onclick: function () { copy(r.text, "Copied the plain-text version for application forms."); } }, [ic("copy"), "Copy plain text"]));
-      if (r.kind === "master") btns.push(el("button", { class: "b", onclick: function () { copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]));
+      if (r.kind === "master") {
+        var up = el("button", { class: "b", "aria-describedby": "tip", onclick: function () { hideTip(); copy("Update my master resume", "Copied. Paste it into Claude to update your master."); } }, [ic("copy"), "Copy update prompt"]);
+        explain(up, "Copies a request for Claude. Paste it into a Claude chat on your private copy, then drop in a new resume or say what changed. Claude updates your master resume, offers to redo any standard resume it affects, and refreshes this page.");
+        btns.push(up);
+      }
       var sub = r.kind === "tailored" ? "Made for one posting" : r.kind === "master" ? "Every fact the other versions use" : "Standard version";
       // A tailored resume names its job; the job part opens that job's card when the job is on her list.
       var tp = r.kind === "tailored" ? view(r.for_posting) : null, what = tp && tp.title && tp.company ? tp.title + " at " + tp.company : null;
