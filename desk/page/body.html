@@ -849,7 +849,7 @@
 
   // ---------- Scan sources ----------
   var GROUPS_SRC = [
-    ["mail", "Alerts and web search", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail. The web search looks for your titles across job boards every morning, at companies you haven't listed."],
+    ["mail", "Alerts, sweep and web search", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail. Every night a free sweep checks about 15,000 companies' job boards for your titles, and every morning a web search looks across job boards, so you see jobs at companies you never listed."],
     ["dream", "Dream companies", "Always checked, and their postings reach you even if they score low."],
     ["boards", "Job boards", "Companies whose job boards the free daily scan reads. No Claude usage."],
     ["search", "Can't be read yet", "No job board the scan can read was found for these, so they are not checked. Paste a company's job board link to fix it, or turn them off."]
@@ -1424,6 +1424,8 @@
     function row(id, group, name, desc, how, found, qual, app, extra) { return Object.assign({ id: id, group: group, name: name, desc: desc, how: how, on: true, cost: false, found: found, qual: qual, app: app }, extra || {}); }
     var sources = { at: iso(0), gaps: [], blocked: [{ company: "Swooped", reason: "Reposting service", system: true }], rows: [
       row("gmail", "mail", "Gmail job alerts", "LinkedIn, Indeed and other alert emails", "Read every run", 0, 0, 0),
+      row("sweep", "mail", "Nightly sweep of public job boards", "About 15,000 companies on Greenhouse, Lever and Ashby, checked for your titles and locations", "Every night, free (no Claude usage)", 9, 2, 0),
+      row("web", "mail", "Web search across job boards", "Your titles on Greenhouse, Lever, Ashby, Workable and other job boards", "Every morning, 5 at a time", 3, 1, 0, { cost: true }),
       row("co-halcyon-reed", "dream", "Halcyon & Reed", "Lever", "Checked daily", 3, 2, 0),
       row("co-marigold", "dream", "Marigold Home", "No job board found", "Checked weekly by web search", 1, 0, 0, { cost: true }),
       row("co-northfold-studio", "boards", "Northfold Studio", "Greenhouse", "Checked daily", 6, 2, 0),
@@ -1439,7 +1441,7 @@
 
   var TOUR = [
     { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning by about 7." },
-    { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
+    { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. Until your first morning run it says \u201cWaiting for the first morning run\u201d. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting, or the company name to visit its website. Jobs at dream companies always show, regardless of score." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
@@ -1451,7 +1453,8 @@
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, never heard back on, or accepted an offer from, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
-    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Email alerts, a morning web search across job boards for your titles, dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
+    { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
+    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
     { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page." }
   ];

@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.3 (2026-10-12)
+- The tour now shows the nightly sweep and the morning web search on Scan sources, and the status line's waiting message before the first morning run.
+
 ## 0.13.2 (2026-10-12)
 - Setup leaves out 19 more countries by default, so remote jobs based abroad stay out of the nightly sweep.
 
