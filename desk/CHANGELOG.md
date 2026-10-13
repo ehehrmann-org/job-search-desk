@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.7 (2026-10-13)
+- New skip reason: Duplicate. Like Job closed, it never counts against your scoring.
+
 ## 0.13.6 (2026-10-13)
 - New skip reason: Job closed, for postings no longer taking applications. It shows under Why you skipped on Stats but never counts against your scoring or its weekly suggestions.
 

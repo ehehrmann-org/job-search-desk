@@ -85,7 +85,9 @@
   ];
   var LABEL = { new: "New", interested: "Interested", skipped: "Skipped", applied: "Applied", screen: "Interviewing", hm: "Interviewing", offer: "Offer", rejected: "Rejected", withdrew: "Withdrew", noresp: "No response", accepted: "Offer accepted" };
   var BUCKET = { must: "Must have", important: "Important", nice: "Nice to have" };
-  var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority", "Job closed"];
+  var REASONS = ["Pay too low", "Company too big or small", "Location", "Industry", "Wrong function", "Wrong seniority", "Job closed", "Duplicate"];
+  // Skip reasons that say nothing about fit: left out of scoring accuracy and suggestions.
+  var NOT_FIT = ["Job closed", "Duplicate"];
   var STAMPED = ["interested", "applied", "screen", "hm", "offer"];
 
   // ---------- Data (filled by the database) ----------
@@ -728,7 +730,7 @@
     var block = el("input", { type: "checkbox", id: "blk-" + p.id, "data-k": "blk-" + p.id, onchange: function () { dr.block = block.checked; } });
     block.checked = !!dr.block;
     return el("div", { class: "drawer wide" }, [
-      el("p", { text: "Why skip it? Pick any that apply. Your reasons feed next week's scoring suggestions; Job closed doesn't count against the score." }),
+      el("p", { text: "Why skip it? Pick any that apply. Your reasons feed next week's scoring suggestions; Job closed and Duplicate don't count against the score." }),
       chips,
       p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
       el("div", { class: "btns", style: "justify-content:flex-start" }, [
@@ -1157,8 +1159,8 @@
       var p = view(id);
       if (p && hidden(p)) return;
       var e = eff(id), d = e.d, dates = d.dates || {};
-      // A job that closed before she decided says nothing about the scoring.
-      var closedFirst = e.status === "skipped" && (d.reasons || []).indexOf("Job closed") > -1;
+      // A job skipped as closed or a duplicate says nothing about the scoring.
+      var closedFirst = e.status === "skipped" && (d.reasons || []).some(function (r) { return NOT_FIT.indexOf(r) > -1; });
       if (p && p.status_hint === "qualified" && !p.added_by_user && !closedFirst) {
         q.qualified++;
         if (dates.interested || dates.applied) q.acted++;
