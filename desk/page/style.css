@@ -20,6 +20,8 @@
   --bar-2: #8c7b62;
   --warn-bg: #fbf0dc;
   --warn-ink: #7a5300;
+  --ok-bg: #e2f1e7;
+  --ok-ink: #1f6b43;
   --on-accent: #ffffff;
   --f-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
   --f-label: var(--f-body);
@@ -33,7 +35,7 @@
     --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
     --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
     --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
-    --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
+    --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --ok-bg: #1c3326; --ok-ink: #8fd3ab; --on-accent: #141413;
   }
 }
 :root[data-theme="dark"] {
@@ -41,7 +43,7 @@
   --bg: #262624; --surface: #30302e; --surface-2: #1f1e1d; --fg: #faf9f5; --fg-2: #c2c0b6;
   --muted: #9c9a92; --line: #3e3e3a; --accent: #d97757; --accent-soft: #3d2b24; --star: #e0a94a;
   --s-interview: #4fae7c; --s-rejected: #e0675a; --s-noresp: #8a8880; --s-withdrew: #d9a432; --s-pending: #57564f;
-  --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --on-accent: #141413;
+  --bar: #d97757; --bar-2: #a39a86; --warn-bg: #3a2e12; --warn-ink: #f0c66a; --ok-bg: #1c3326; --ok-ink: #8fd3ab; --on-accent: #141413;
 }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
 .app { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; display: grid; gap: 14px; }
@@ -114,6 +116,7 @@ a.co:hover { color: var(--accent); text-decoration-color: currentColor; }
 button.tag { cursor: pointer; }
 .tag.act { background: var(--accent-soft); color: var(--accent); }
 .tag.q { background: var(--warn-bg); color: var(--warn-ink); }
+.tag.ok { background: var(--ok-bg); color: var(--ok-ink); }
 .side { display: grid; gap: 8px; justify-items: stretch; }
 .state { font-family: var(--f-label); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); text-align: right; }
 .timer { font-size: 12px; color: var(--muted); text-align: right; }
