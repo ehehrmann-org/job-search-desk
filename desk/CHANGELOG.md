@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.5 (2026-10-13)
+- "Why this score" labels are a neutral grey instead of red.
+- A job scored from its title only now says "Preliminary score. Paste job description."
+
 ## 0.13.4 (2026-10-13)
 - After you paste a job description, its "Description saved" tag shows in green with a check mark.
 

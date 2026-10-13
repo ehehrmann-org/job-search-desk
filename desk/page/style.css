@@ -419,6 +419,7 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 /* Every clickable tag gets the same hover: its own tint, a step deeper */
 button.tag { transition: background-color .12s ease; }
 button.tag.act:hover { background: color-mix(in srgb, var(--accent-soft) 78%, var(--accent) 22%); }
+button.tag.neu:hover { background: color-mix(in srgb, var(--surface-2) 82%, var(--fg-2) 18%); }
 button.tag.q:hover { background: color-mix(in srgb, var(--warn-bg) 78%, var(--warn-ink) 22%); }
 button.tag:not(.act):not(.q):hover { background: color-mix(in srgb, var(--surface-2) 78%, var(--fg) 12%); }
 /* A job card opened from the Resumes tab */

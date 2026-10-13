@@ -594,12 +594,12 @@
     if (p.outside || dec.outside) tags.appendChild(el("span", { class: "tag", text: "Found outside the tool" }));
     if (p.warning) tags.appendChild(el("span", { class: "tag q", text: p.warning }));
     if (p.status_hint === "unscorable") tags.appendChild(el("span", { class: "tag q", text: "Couldn't be scored: the posting couldn't be read" }));
-    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag act", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [ic("chart-bar-horizontal"), drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
+    if (p.ratings && p.ratings.length) tags.appendChild(el("button", { class: "tag neu", "data-k": dk + "why", "aria-expanded": String(drawer[p.id] === "why"), onclick: function () { toggleDrawer(p.id, "why"); } }, [ic("chart-bar-horizontal"), drawer[p.id] === "why" ? "Hide score breakdown" : "Why this score"]));
     if (p.jd === "missing" && p.status_hint !== "unscorable" && !p.pending) {
       var pastedReq = V.described[p.id];
       if (pastedReq && !D.done[pastedReq]) tags.appendChild(el("span", { class: "tag ok" }, [ic("check-circle"), "Description saved: rescored in the next run"]));
-      else if (canWrite) tags.appendChild(el("button", { class: "tag q act-q", "data-k": dk + "desc", "aria-expanded": String(drawer[p.id] === "desc"), title: "The description couldn't be read, so this job was scored from its title only", onclick: function () { toggleDrawer(p.id, "desc"); } }, [ic("warning-circle"), drawer[p.id] === "desc" ? "Scored from the title only · Hide" : "Scored from the title only · Paste the description"]));
-      else tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Scored from the title only: the description couldn't be read"]));
+      else if (canWrite) tags.appendChild(el("button", { class: "tag q act-q", "data-k": dk + "desc", "aria-expanded": String(drawer[p.id] === "desc"), title: "The job description couldn't be read, so this score is based on the title only", onclick: function () { toggleDrawer(p.id, "desc"); } }, [ic("warning-circle"), drawer[p.id] === "desc" ? "Preliminary score. Hide" : "Preliminary score. Paste job description."]));
+      else tags.appendChild(el("span", { class: "tag q" }, [ic("warning-circle"), "Preliminary score: the job description couldn't be read"]));
     }
     if (s === "interested") {
       if (!deep) tags.appendChild(el("span", { class: "tag q", text: "Deep evaluation queued for the next run" }));
