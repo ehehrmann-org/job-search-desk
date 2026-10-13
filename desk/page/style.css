@@ -174,6 +174,15 @@ button.tag { cursor: pointer; }
 .tile .n { font-size: 12.5px; color: var(--fg-2); }
 .tile.thin .v { color: var(--muted); }
 /* Latest run: small figures in a row */
+.hist { display: grid; gap: 8px; margin-top: 8px; }
+.hrow { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 12px; align-items: start; }
+.hrow .hd { font-size: 13px; line-height: 18px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.hrow .hb { min-width: 0; display: grid; gap: 3px; padding-top: 5px; }
+.hrow .track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.hrow .track span { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
+.hrow .hn { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hrow .hn b { color: var(--fg-2); font-weight: 600; }
+#runhist { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px 22px; margin-top: 4px; }
 .mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; border-left: 3px solid var(--line); }
 .mini .v { font-size: 24px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }

@@ -84,6 +84,8 @@ const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8'))
 const writeJson = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 2) + '\n'); };
 const nowIso = () => new Date().toISOString();
 const text = (v, max = 200) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').trim().slice(0, max);
+// Morning runs kept in the run document's history (Stats shows them).
+export const HISTORY_DAYS = 30;
 const state = () => readJson(P.state, { pushed: {}, sources_hash: null, last_good_run: null, search_start: null });
 
 /** One collection from the dump as { id: body }, only ids that are safe as file names. null when the folder is absent. */
@@ -502,6 +504,32 @@ async function push(args) {
       requests: Object.values(readDir(P.done) || {}).filter(d => after(d?.at)).length,
       sites: sitesFound,
     };
+    // Daily history for the Stats page: one entry per morning run (Run now is left out),
+    // counted since the morning run before it. A copy without history starts from its scores.
+    if (!Array.isArray(st.history)) {
+      const byDay = {};
+      sysScores.forEach(s => {
+        const d = String(s.scored_at || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d >= todayIso) return;
+        const e = byDay[d] = byDay[d] || { at: d + 'T12:00:00.000Z', found: null, scored: 0, to_review: 0, backfilled: true };
+        e.scored++;
+        if (s.verdict.status === 'qualified' || s.verdict.dream) e.to_review++;
+      });
+      st.history = Object.keys(byDay).sort().map(d => byDay[d]);
+    }
+    if (!args.quick) {
+      const prevDaily = st.last_daily_at || prevAt;
+      const afterDaily = t => !prevDaily || String(t || '') > prevDaily;
+      const scans = scanRuns.filter(r => afterDaily(r[0]));
+      st.history.push({
+        at,
+        found: scans.reduce((n, r) => n + (Number(r[13]) || 0), 0) + alertsAdded(todayIso),
+        scored: scores.filter(x => afterDaily(x.scored_at) && x.verdict.status !== 'unscorable').length,
+        to_review: newPostings,
+      });
+      st.history = st.history.slice(-HISTORY_DAYS);
+      st.last_daily_at = at;
+    }
     if (ok) st.last_good_run = at;
     st.last_run_at = at;
     add('runs', runId(new Date(at)), {
@@ -521,6 +549,7 @@ async function push(args) {
       },
       today: { scored: scoredToday.length, qualified: scoredToday.filter(s => s.verdict.status === 'qualified').length },
       last,
+      history: st.history.slice(-HISTORY_DAYS),
     });
   }
 

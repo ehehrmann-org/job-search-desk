@@ -407,6 +407,12 @@ test('push: the run document counts what this run did since the run before', () 
   assert.equal(run.last.dealbreakers, 1);
   assert.equal(run.last.to_review, 1);
   assert.equal(run.last.started, '2026-10-12T11:27:00Z');
+  assert.equal(run.history.length, 1);
+  assert.deepEqual([run.history[0].found, run.history[0].scored, run.history[0].to_review], [7, 2, 1]);
+  sh(d, 'page-sync.mjs', 'ack', out.batches[0]);
+  const quick = json(d, 'page-sync.mjs', 'push', '--quick');
+  const qrun = JSON.parse(read(JSON.parse(read(quick.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.equal(qrun.history.length, 1, 'Run now adds no morning run');
 });
 
 test('web-queries: a rotating window of the enabled searches, capped per day, off with the switch', async () => {

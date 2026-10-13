@@ -29,6 +29,11 @@
       <p class="sub" id="lastrun-sub"></p>
       <div class="minis" id="lastrun-minis"></div>
       <p class="sub" id="lastrun-more"></p>
+      <div id="runhist" hidden>
+        <h3 class="sec">Morning runs</h3>
+        <p class="sub">Jobs each morning run sent to To review, newest first. Run now isn't counted.</p>
+        <div class="hist" id="runhist-rows"></div>
+      </div>
     </div>
     <div class="tiles" id="tiles"></div>
     <div class="panel">
@@ -1206,11 +1211,34 @@
       more.textContent = "The full breakdown shows after the next run.";
     }
   }
+  // One row per morning run: date, a bar for the jobs sent to To review, and the counts behind it.
+  function renderHistory(r) {
+    var box = document.getElementById("runhist"), rows = document.getElementById("runhist-rows");
+    rows.textContent = "";
+    var H = (r && Array.isArray(r.history) ? r.history : []).filter(function (h) { return h && h.at && !isNaN(new Date(h.at)); }).slice(-14).reverse();
+    box.hidden = !H.length;
+    if (!H.length) return;
+    var max = Math.max.apply(null, H.map(function (h) { return Number(h.to_review) || 0; }).concat([1]));
+    H.forEach(function (h) {
+      var n = Number(h.to_review) || 0, bits = [];
+      if (h.found !== null && h.found !== undefined) bits.push(fmt(h.found) + " found");
+      if (h.scored !== null && h.scored !== undefined) bits.push(fmt(h.scored) + " scored");
+      var d = new Date(h.at);
+      rows.appendChild(el("div", { class: "hrow" }, [
+        el("div", { class: "hd", text: d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) }),
+        el("div", { class: "hb" }, [
+          el("div", { class: "track" }, [el("span", { style: "width:" + (n ? Math.max(n / max * 100, 3) : 0) + "%" })]),
+          el("div", { class: "hn" }, [el("b", { text: fmt(n) + " to review" }), bits.length ? " · " + bits.join(" · ") : ""])
+        ])
+      ]));
+    });
+  }
   function renderStats() {
     var S = computeStats(), q = S.q, you = S.you, dec = S.dec, r = D.run || {};
     var thr = r.scoring && num(r.scoring.threshold);
     var decided = dec.interview + dec.rejected + dec.noresp + dec.withdrew;
     renderLastRun(r);
+    renderHistory(r);
     var tiles = document.getElementById("tiles"); tiles.textContent = "";
     function tile(k, v, n, thin) { tiles.appendChild(el("div", { class: "tile" + (thin ? " thin" : "") }, [el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "n", text: n })])); }
     tile("Scoring accuracy", q.qualified ? Math.round(q.acted / q.qualified * 100) + "%" : "–", "You acted on " + q.acted + " of " + q.qualified + " qualified postings.", q.qualified < 10);
@@ -1438,7 +1466,8 @@
       row("co-quietbrook", "boards", "Quietbrook", "Greenhouse", "Checked daily", 0, 0, 0),
       row("co-studio-vale", "search", "Studio Vale", "No job board found", "Not checked: needs a careers or job board link", 0, 0, 0)
     ] };
-    var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 }, last: { since: iso(1), started: new Date(Date.now() - 20 * 60000).toISOString(), scans: 2, companies: 48, listed: 1240, found: 14, scored: 10, dealbreakers: 2, to_review: 3, deep: 1, requests: 0, sites: 5 } };
+    var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 }, last: { since: iso(1), started: new Date(Date.now() - 20 * 60000).toISOString(), scans: 2, companies: 48, listed: 1240, found: 14, scored: 10, dealbreakers: 2, to_review: 3, deep: 1, requests: 0, sites: 5 },
+      history: [[6, 11, 9, 2], [5, 18, 10, 4], [4, 9, 7, 1], [3, 15, 10, 3], [2, 7, 6, 0], [1, 12, 10, 2], [0, 14, 10, 3]].map(function (x) { return { at: iso(x[0]), found: x[1], scored: x[2], to_review: x[3] }; }) };
     var suggestions = { week: "sample", items: [{ id: "pay-floor", title: "Set your minimum pay to $140K", why: "You skipped 3 jobs for pay; the best-paid of them topped out at $135K.", change: "Jobs whose posted range tops out under $140K are skipped before scoring." }] };
     return { postings: postings, decisions: decisions, deep: deep, requests: {}, done: {}, resumes: resumes, switches: {}, rescores: {}, prefs: {}, run: run, sources: sources, suggestions: suggestions };
   }
@@ -1459,7 +1488,7 @@
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
     { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
-    { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
+    { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, Morning runs shows the same for each morning of the last two weeks. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page." }
   ];
   // Tour text: **word** shows in bold.

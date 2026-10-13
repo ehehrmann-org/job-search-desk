@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.8 (2026-10-13)
+- Stats: Morning runs, under Latest run, shows each morning run of the last two weeks with how many jobs it sent to To review, found and scored. Run now isn't counted. Earlier days are filled in from your scores the first time it runs.
+
 ## 0.13.7 (2026-10-13)
 - New skip reason: Duplicate. Like Job closed, it never counts against your scoring.
 
