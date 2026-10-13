@@ -24,6 +24,12 @@ test('raises the bar halfway between the best skip and the lowest pick', () => {
   assert.equal(s.patch.value, 4.2); // (4.0 + 4.4) / 2
 });
 
+test('jobs skipped as Job closed do not raise the bar', () => {
+  const recs = [rec('a', 4.6, 'qualified', applied), rec('b', 4.4, 'qualified', applied),
+    ...[3.6, 3.7, 3.8, 3.9, 4.0, 3.6].map((sc, i) => rec('s' + i, sc, 'qualified', skip('Job closed')))];
+  assert.ok(!analyze(cfg, recs).some(x => x.id === 'threshold-up'));
+});
+
 test('no suggestion without 3 decisions behind it', () => {
   const recs = [rec('a', 4.6, 'qualified', applied), rec('s1', 3.6, 'qualified', skip('Pay too low'), { base_top: 140000 })];
   assert.equal(analyze(cfg, recs).length, 0);

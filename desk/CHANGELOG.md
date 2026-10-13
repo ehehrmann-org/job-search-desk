@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.6 (2026-10-13)
+- New skip reason: Job closed, for postings no longer taking applications. It shows under Why you skipped on Stats but never counts against your scoring or its weekly suggestions.
+
 ## 0.13.5 (2026-10-13)
 - "Why this score" labels are a neutral grey instead of red.
 - A job scored from its title only now says "Preliminary score. Paste job description."

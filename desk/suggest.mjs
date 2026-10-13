@@ -57,9 +57,12 @@ const acted = r => r.decision && r.decision.status !== 'skipped' && !!(r.decisio
 const skipped = (r, reason) => r.decision?.status === 'skipped' && (!reason || (r.decision.reasons || []).includes(reason));
 
 /** Candidate suggestions, best first. Each carries plain-language text and a machine patch. */
+// A job skipped because it had closed says nothing about fit, so it is left out of every signal.
+const closedFirst = r => r.decision?.status === 'skipped' && (r.decision.reasons || []).includes('Job closed');
+
 export function analyze(cfg, recs) {
   const out = [];
-  const recent = recs.filter(r => r.recent);
+  const recent = recs.filter(r => r.recent && !closedFirst(r));
   const qual = recent.filter(r => r.verdict.status === 'qualified' && !r.verdict.dream);
 
   // 1. The bar: too low (most qualified postings get skipped) or too high (she applied to ones below it).
