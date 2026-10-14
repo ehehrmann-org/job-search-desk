@@ -14,6 +14,9 @@ try {
   if (m && m[1].trim()) title = m[1].trim().replace(/[<>&]/g, '');
 } catch {}
 const head = `<title>${title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=swap">
 <style>
 ${css}</style>
 `;
