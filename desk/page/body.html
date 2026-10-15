@@ -71,7 +71,7 @@
       <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
-  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
+  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button><span aria-hidden="true">·</span><button class="status" id="kb-btn" data-k="kb-btn" aria-haspopup="dialog" title="Keyboard shortcuts (?)"><span class="ic-host" id="kb-ic"></span>Keyboard shortcuts</button></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -104,9 +104,9 @@
   var db = null, downloads = null, mcp = null, canWrite = true, writeConfirmed = false, loaded = false, runBusy = false;
 
   // ---------- View state (per viewer, this browser only) ----------
-  var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE, q: "" };
+  var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE, q: "", sel: null, selIdx: 0 };
   try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
-  var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
+  var drawer = {}, addOpen = false, helpOpen = false, kbOpen = false, lastVerdict = "", focusNext = null;
   // Unsent typing and picks survive the page redrawing when new data arrives.
   var drafts = { addText: "", addApplied: "no", skip: {}, res: {}, board: {}, src: "", desc: {} };
   var V = null;   // per-render indexes, rebuilt in draw()
@@ -441,6 +441,7 @@
     var hh = document.getElementById("help-host"); hh.textContent = "";
     var ub = updateBanner(); if (ub) hh.appendChild(ub);
     if (tour.on) hh.appendChild(el("div", { class: "note tourbanner" }, [el("span", { text: "Tour: these are sample jobs. They disappear when the tour ends, and your own jobs come back." })]));
+    if (kbOpen) hh.appendChild(shortcutsDialog());
     if (!helpOpen) return;
     var msg = helpMessage();
     var email = (r && r.help_email) || "";
@@ -504,7 +505,7 @@
     var c = stageCounts(pool);
     var steps = document.getElementById("steps"); steps.textContent = "";
     STAGES.forEach(function (s) {
-      steps.appendChild(el("button", { class: "step", "data-k": "stage-" + s.k, "aria-pressed": String(!searching && state.stage === s.k), onclick: function () { clearSearch(); state.stage = s.k; state.closedLimit = CLOSED_PAGE; drawer = {}; render(); } },
+      steps.appendChild(el("button", { class: "step", "data-k": "stage-" + s.k, "aria-pressed": String(!searching && state.stage === s.k), onclick: function () { clearSearch(); state.stage = s.k; state.closedLimit = CLOSED_PAGE; state.sel = null; drawer = {}; render(); } },
         [el("span", { class: "sl", text: s.label }), el("span", { class: "sn", text: String(c[s.k]) })]));
     });
     renderSuggestions();
@@ -1343,6 +1344,76 @@
     });
   }
 
+  // ---------- Keyboard shortcuts ----------
+  var KEYS = [
+    ["/", "Search jobs in every stage"],
+    ["j  k", "Next or previous job"],
+    ["o", "Open the selected job's posting"],
+    ["i", "Interested"],
+    ["s", "Skip (opens the reasons)"],
+    ["a", "Applied (opens the resume picker)"],
+    ["w", "Why this score"],
+    ["1 – 5", "Go to To review, Interested, Applied, Interviewing or Closed"],
+    ["?", "Show or hide this list"],
+    ["Esc", "Close this list, or clear the search"]
+  ];
+  function shortcutsDialog() {
+    function close() { kbOpen = false; focusNext = "kb-btn"; render(); }
+    var rows = el("div", { class: "kbrows" });
+    KEYS.forEach(function (k) {
+      rows.appendChild(el("div", { class: "kbrow" }, [el("span", { class: "kbkeys" }, k[0].split(/\s+/).map(function (x) { return x === "–" ? el("span", { class: "kbsep", text: "to" }) : el("kbd", { text: x }); })), el("span", { text: k[1] })]));
+    });
+    return el("div", { class: "dlg-back", onclick: function (e) { if (e.target === e.currentTarget) close(); } }, [
+      el("div", { class: "panel dlg kbdlg", role: "dialog", "aria-modal": "true", "aria-labelledby": "kb-title" }, [
+        el("div", { class: "dlg-head" }, [el("h2", { id: "kb-title", text: "Keyboard shortcuts" }), el("button", { class: "dlg-x", "data-k": "kb-x", "aria-label": "Close", onclick: close }, [ic("x")])]),
+        rows,
+        el("p", { class: "sub", text: "They work once you've clicked anywhere on this page, and not while you're typing in a field. Job keys act on the highlighted job; press j to start." })
+      ])
+    ]);
+  }
+  function triageRows() { return Array.prototype.slice.call(document.querySelectorAll("#list .row[data-id]")); }
+  function markSel() {
+    var rows = triageRows(), found = false;
+    rows.forEach(function (r, i) { var on = r.getAttribute("data-id") === state.sel; if (on) { found = true; state.selIdx = i; } r.classList.toggle("kbsel", on); });
+    // The selected job moved to another stage: keep the place in the list.
+    if (state.sel && !found && rows.length) { var r = rows[Math.min(state.selIdx, rows.length - 1)]; state.sel = r.getAttribute("data-id"); r.classList.add("kbsel"); }
+    else if (!found) state.sel = null;
+  }
+  function moveSel(step) {
+    if (state.tab !== "triage") return;
+    var rows = triageRows(); if (!rows.length) return;
+    var i = rows.findIndex(function (r) { return r.getAttribute("data-id") === state.sel; });
+    i = i < 0 ? (step > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, i + step));
+    state.sel = rows[i].getAttribute("data-id"); state.selIdx = i;
+    markSel(); rows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function selAction(key, name) {
+    if (state.tab !== "triage") return;
+    if (!state.sel) { moveSel(1); if (!state.sel) return; }
+    var esc = window.CSS && CSS.escape ? CSS.escape(state.sel) : state.sel;
+    var row = document.querySelector('#list .row[data-id="' + esc + '"]'); if (!row) return;
+    var b = key === "open" ? row.querySelector("a.title") : row.querySelector('[data-k="d-' + esc + '-' + key + '"]');
+    if (!b || b.disabled) { toast(name + " isn't available for this job" + (key === "open" ? ": it has no link." : " in its stage.")); return; }
+    b.click();
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || tour.on) return;
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+    if (kbOpen && (e.key === "Escape" || e.key === "?")) { e.preventDefault(); kbOpen = false; focusNext = "kb-btn"; render(); return; }
+    if (e.key === "?") { e.preventDefault(); kbOpen = true; helpOpen = false; focusNext = "kb-x"; render(); return; }
+    if (helpOpen || kbOpen) return;
+    var k = e.key;
+    if (k === "/") { e.preventDefault(); var f = document.getElementById("gsearch"); if (f) { f.focus(); f.select(); } return; }
+    if (k === "Escape" && state.q) { e.preventDefault(); clearSearch(); render(); return; }
+    if (/^[1-5]$/.test(k)) { e.preventDefault(); clearSearch(); state.stage = STAGES[+k - 1].k; state.closedLimit = CLOSED_PAGE; state.sel = null; drawer = {}; setTab("triage"); return; }
+    var map = { j: function () { moveSel(1); }, k: function () { moveSel(-1); }, o: function () { selAction("open", "Opening the posting"); },
+      i: function () { selAction("int", "Interested"); }, s: function () { selAction("skip", "Skip"); }, a: function () { selAction("app", "Applied"); }, w: function () { selAction("why", "Why this score"); } };
+    if (map[k]) { e.preventDefault(); map[k](); }
+  });
+  document.getElementById("kb-btn").addEventListener("click", function () { kbOpen = !kbOpen; if (kbOpen) { helpOpen = false; focusNext = "kb-x"; } render(); });
+  document.getElementById("kb-ic").appendChild(ic("keyboard"));
+
   // ---------- Tabs and render ----------
   function setTab(t) {
     if (TABS.indexOf(t) < 0) return;
@@ -1354,7 +1425,7 @@
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   // The name at the top goes back to To review on Triage.
   document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; clearSearch(); state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
-  document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
+  document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) { kbOpen = false; focusNext = "help-x"; } render(); });
   // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
   function tabKeys(e) {
     if (tour.on || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
@@ -1380,7 +1451,7 @@
   // The status popup: Escape closes it from anywhere, and focus stays inside it while it is open.
   document.addEventListener("keydown", function (e) { if (helpOpen && e.key === "Escape") { helpOpen = false; focusNext = "help-btn"; render(); } });
   document.addEventListener("focusin", function (e) {
-    if (!helpOpen) return;
+    if (!helpOpen && !kbOpen) return;
     var panel = document.querySelector(".panel.dlg"), t = e.target;
     if (!panel || (t && t.closest && t.closest(".panel.dlg"))) return;
     var x = panel.querySelector(".dlg-x"); if (x) x.focus();
@@ -1411,7 +1482,7 @@
     safe("triage", function () { all = items(); });
     safe("header", renderHeader);
     safe("header", function () { renderCounts(all); });
-    if (state.tab === "triage") safe("triage", function () { renderTriage(all); });
+    if (state.tab === "triage") safe("triage", function () { renderTriage(all); markSel(); });
     if (state.tab === "resumes") safe("resumes", renderResumes);
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
@@ -1530,7 +1601,7 @@
     { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
     { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, Morning runs shows the same for each morning of the last two weeks. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
-    { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page." }
+    { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page. Press ? for keyboard shortcuts." }
   ];
   // Tour text: **word** shows in bold.
   function richText(t) { return String(t).split(/\*\*(.+?)\*\*/g).map(function (part, i) { return i % 2 ? el("b", { text: part }) : part; }); }

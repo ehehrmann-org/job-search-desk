@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.12 (2026-10-15)
+- Keyboard shortcuts: / to search, j and k to move between jobs, o to open a posting, i Interested, s Skip, a Applied, w Why this score, 1 to 5 for the stages. "Keyboard shortcuts" in the footer (or ?) lists them.
+
 ## 0.13.11 (2026-10-15)
 - Search jobs in every stage from the field at the right end of the tabs: type a title, company, place or stage and matching jobs from To review to Closed show on Triage. Escape or Clear search goes back.
 
