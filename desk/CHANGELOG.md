@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.11 (2026-10-15)
+- Search jobs in every stage from the field at the right end of the tabs: type a title, company, place or stage and matching jobs from To review to Closed show on Triage. Escape or Clear search goes back.
+
 ## 0.13.10 (2026-10-14)
 - Stats: "got an interview" and "offer accepted" are now blue instead of green, so they stand apart from "rejected" for people with red/green color blindness.
 - All text now meets the 4.5:1 contrast guideline in light and dark mode: the clay accent and the gray label text are a shade deeper.

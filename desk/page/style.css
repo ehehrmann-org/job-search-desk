@@ -379,6 +379,12 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .navrow .tabs { flex: 1 1 auto; min-width: 0; }
 .navrow #run-host { display: flex; align-items: center; flex: none; padding: 0 0 4px 12px; border-bottom: 1px solid var(--line); }
 .navrow #run-host:empty { display: none; }
+/* Search across every stage, in the tab row before Run now */
+.navrow .gsearch { display: flex; align-items: center; flex: 0 1 240px; min-width: 150px; padding: 0 0 4px 12px; border-bottom: 1px solid var(--line); }
+.navrow .gsearch .srcsearch { min-height: 32px; padding-top: 5px; padding-bottom: 5px; font-size: 13px; }
+.navrow .gsearch .srcsearch::placeholder { color: var(--muted); }
+.searchhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; font-size: 13px; color: var(--fg-2); }
+@media (max-width: 600px) { .navrow { flex-wrap: wrap; } .navrow .gsearch { order: 3; flex: 1 1 100%; padding: 8px 0 8px; } }
 @media (max-width: 600px) { .navrow #run-host { align-items: flex-start; padding-top: 3px; } }
 .b.runnow { min-height: 30px; padding: 4px 12px; font-size: 12.5px; }
 .note.runnote { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

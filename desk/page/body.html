@@ -11,6 +11,7 @@
     <button class="tab" role="tab" id="tab-sources" data-tab="sources" aria-controls="view-sources" aria-selected="false">Scan sources<span class="count" id="c-sources"></span></button>
     <button class="tab" role="tab" id="tab-stats" data-tab="stats" aria-controls="view-stats" aria-selected="false">Stats</button>
   </nav>
+  <div class="gsearch"><input type="search" id="gsearch" class="srcsearch" data-k="gsearch" placeholder="Search jobs" aria-label="Search jobs in every stage" autocomplete="off" spellcheck="false"></div>
   <span id="run-host"></span>
   </div>
 
@@ -103,7 +104,7 @@
   var db = null, downloads = null, mcp = null, canWrite = true, writeConfirmed = false, loaded = false, runBusy = false;
 
   // ---------- View state (per viewer, this browser only) ----------
-  var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE };
+  var state = { tab: "triage", stage: "review", closedLimit: CLOSED_PAGE, q: "" };
   try { var t0 = localStorage.getItem("jsd-tab"); if (TABS.indexOf(t0) > -1) state.tab = t0; } catch (e) {}
   var drawer = {}, addOpen = false, helpOpen = false, lastVerdict = "", focusNext = null;
   // Unsent typing and picks survive the page redrawing when new data arrives.
@@ -484,16 +485,44 @@
     document.getElementById("c-sources").textContent = rows.filter(function (s) { return s.group !== "search" && srcOn(s); }).length || "";
   }
 
+  // ---------- Search across every stage ----------
+  function fold(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  // Every word typed must appear somewhere in the job: title, company, location, pay, source, its stage or skip reasons.
+  function matchesSearch(p, q) {
+    var words = fold(q).split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    var e = eff(p.id), d = e.d || {};
+    var hay = fold([p.title, p.company, p.location, p.pay, p.source, LABEL[e.status], (d.reasons || []).join(" ")].join(" "));
+    return words.every(function (w) { return hay.indexOf(w) > -1; });
+  }
+  function clearSearch() { state.q = ""; var f = document.getElementById("gsearch"); if (f) f.value = ""; }
+
   // ---------- Triage ----------
   function renderTriage(all) {
-    var c = stageCounts(all);
+    var q = state.q.trim(), searching = !!q;
+    var pool = searching ? all.filter(function (p) { return matchesSearch(p, q); }) : all;
+    var c = stageCounts(pool);
     var steps = document.getElementById("steps"); steps.textContent = "";
     STAGES.forEach(function (s) {
-      steps.appendChild(el("button", { class: "step", "data-k": "stage-" + s.k, "aria-pressed": String(state.stage === s.k), onclick: function () { state.stage = s.k; state.closedLimit = CLOSED_PAGE; drawer = {}; render(); } },
+      steps.appendChild(el("button", { class: "step", "data-k": "stage-" + s.k, "aria-pressed": String(!searching && state.stage === s.k), onclick: function () { clearSearch(); state.stage = s.k; state.closedLimit = CLOSED_PAGE; drawer = {}; render(); } },
         [el("span", { class: "sl", text: s.label }), el("span", { class: "sn", text: String(c[s.k]) })]));
     });
     renderSuggestions();
     var list = document.getElementById("list"); list.textContent = "";
+    if (searching) {
+      var order = {}; STAGES.forEach(function (s, i) { order[s.k] = i; });
+      pool.sort(function (a, b) {
+        var sa = a.pending ? null : num(a.score), sb = b.pending ? null : num(b.score);
+        return order[stageOf(eff(a.id).status)] - order[stageOf(eff(b.id).status)] || (sb === null ? -1 : sb) - (sa === null ? -1 : sa) || cmpStr(a.id, b.id);
+      });
+      list.appendChild(el("div", { class: "searchhead" }, [
+        el("span", { text: pool.length ? (pool.length === 1 ? "1 job matches" : pool.length + " jobs match") + " “" + q + "” across all stages." : "No job matches “" + q + "” in any stage." }),
+        el("button", { class: "link", "data-k": "search-clear", onclick: function () { clearSearch(); render(); } }, ["Clear search"])
+      ]));
+      pool.slice(0, 100).forEach(function (p) { list.appendChild(card(p)); });
+      if (pool.length > 100) list.appendChild(el("div", { class: "empty", text: "Showing the first 100. Add another word to narrow it down." }));
+      return;
+    }
     var shown = all.filter(function (p) { return stageOf(eff(p.id).status) === state.stage; });
     // Every stage: highest score first; jobs without a score last; then the newest.
     shown.sort(function (a, b) {
@@ -520,7 +549,7 @@
   function renderSuggestions() {
     var host = document.getElementById("suggest-host"); host.textContent = "";
     var sg = D.suggestions;
-    if (!sg || !sg.items || state.stage !== "review") return;
+    if (!sg || !sg.items || state.stage !== "review" || state.q.trim()) return;
     var waiting = sg.items.filter(function (x) { return !V.sugg[sg.week + "/" + x.id]; });
     if (!waiting.length) return;
     var ws = weekStart(sg.week);
@@ -1317,13 +1346,14 @@
   // ---------- Tabs and render ----------
   function setTab(t) {
     if (TABS.indexOf(t) < 0) return;
+    if (t !== "triage") clearSearch();
     state.tab = t; drawer = {}; lastVerdict = ""; boardEdit = null; tip.hidden = true;
     try { localStorage.setItem("jsd-tab", t); } catch (e) {}
     render();
   }
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
   // The name at the top goes back to To review on Triage.
-  document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
+  document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; clearSearch(); state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) focusNext = "help-x"; render(); });
   // Left and right arrows move between the tabs of a tab list (the main tabs and the Scan sources sub-tabs).
   function tabKeys(e) {
@@ -1336,6 +1366,17 @@
     n.focus(); n.click();
   }
   document.querySelector(".tabs").addEventListener("keydown", tabKeys);
+  // Typing in the search field shows matching jobs from every stage on Triage; Escape or emptying it goes back.
+  (function () {
+    var f = document.getElementById("gsearch");
+    f.addEventListener("input", function () {
+      if (tour.on) { f.value = ""; return; }
+      state.q = f.value; drawer = {};
+      if (state.q.trim() && state.tab !== "triage") { state.tab = "triage"; try { localStorage.setItem("jsd-tab", "triage"); } catch (e) {} }
+      render();
+    });
+    f.addEventListener("keydown", function (e) { if (e.key === "Escape" && f.value) { e.preventDefault(); clearSearch(); render(); } });
+  })();
   // The status popup: Escape closes it from anywhere, and focus stays inside it while it is open.
   document.addEventListener("keydown", function (e) { if (helpOpen && e.key === "Escape") { helpOpen = false; focusNext = "help-btn"; render(); } });
   document.addEventListener("focusin", function (e) {
@@ -1475,7 +1516,7 @@
   var TOUR = [
     { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning by about 7." },
     { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. Until your first morning run it says \u201cWaiting for the first morning run\u201d. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
-    { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from." },
+    { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from. To find one job in any stage, type in the search field at the right end of the tabs." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting, or the company name to visit its website. Jobs at dream companies always show, regardless of score." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .side .btns', title: "Decide in one click", text: "**Interested**: Claude writes a deeper evaluation by the next morning and picks the best resume for you to use in your application. **Skip**: pick a reason, and Claude uses it to improve your scoring over time. Try one! Nothing is saved during the tour." },
