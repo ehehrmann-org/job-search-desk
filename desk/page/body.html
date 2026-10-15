@@ -320,7 +320,9 @@
     lines.push("");
     lines.push("Last run: " + (r.at ? niceTime(r.at) : "none yet"));
     lines.push("Last good run: " + (r.last_good_run ? niceTime(r.last_good_run) : "none yet"));
-    lines.push("Tool version: " + (r.version || "unknown"));
+    // The page's own version (shown in the footer) and the one the last run used can differ for a day after an update.
+    lines.push("Page version: " + (JSD_VERSION || "unknown"));
+    if (r.version && r.version !== JSD_VERSION) lines.push("Version the last run used: " + r.version + " (the next run uses " + (JSD_VERSION || "the new one") + ")");
     return lines.join("\n");
   }
   function problems() {

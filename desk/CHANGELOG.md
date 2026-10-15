@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.13 (2026-10-15)
+- The status report shows the same version as the footer. If the last run used an older version, it says so on its own line.
+
 ## 0.13.12 (2026-10-15)
 - Keyboard shortcuts: / to search, j and k to move between jobs, o to open a posting, i Interested, s Skip, a Applied, w Why this score, 1 to 5 for the stages. "Keyboard shortcuts" in the footer (or ?) lists them.
 
