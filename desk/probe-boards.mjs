@@ -72,6 +72,8 @@ export function cleanBoardUrl(raw) {
     if (forSlug && /^[a-z0-9_-]+$/i.test(forSlug)) return `https://job-boards.greenhouse.io/${forSlug}`;
     if (/\/embed\//.test(u.pathname)) return null;
   }
+  // The vendor's own home page ("Powered by Teamtailor") is not anyone's board.
+  if ((/^www\./.test(host) || host.split('.').length === 2) && /^\/?$/.test(u.pathname)) return null;
   u.search = ''; u.hash = '';
   return u.href;
 }
@@ -129,16 +131,24 @@ export async function probe({ limit = 80, fetchPage = getPage } = {}) {
       if (Date.now() - started > BUDGET_MS) return;
       const key = slug(co.name);
       const site = siteOf(co.careers_url);
-      const pages = [...new Set([co.careers_url, site && `${site}careers`, site && `${site}jobs`].filter(Boolean))];
-      let hit = null, reached = false, detail = '';
-      for (const page of pages) {
+      // The careers link, the usual careers addresses, then the home page; from any of them, up to 2 same-site
+      // links that look like a careers page are followed too (5 pages at most).
+      const pages = [...new Set([co.careers_url, site && `${site}careers`, site && `${site}jobs`, site].filter(Boolean))];
+      let hit = null, reached = false, detail = '', followed = 0;
+      for (let i = 0; i < pages.length && i < 6; i++) {
+        const page = pages[i];
         try {
           const r = await fetchPage(page);
           if (r.html) reached = true; else detail = `HTTP ${r.status}`;
           const landed = r.url && hostIsBoard(r.url) ? cleanBoardUrl(r.url) : null;
           if (landed) { const reader = await boardFor(landed); if (reader) { hit = { url: landed, reader, page }; break; } }
-          const b = r.html ? await boardLink(linksIn(r.html, r.url || page)) : null;
+          const links = r.html ? linksIn(r.html, r.url || page) : [];
+          const b = links.length ? await boardLink(links) : null;
           if (b) { hit = { ...b, page }; break; }
+          for (const l of links) {
+            if (followed >= 2 || pages.includes(l)) continue;
+            try { if (siteOf(l) === siteOf(r.url || page) && /career|jobs|join|hiring|work-with-us|openings|positions/i.test(new URL(l).pathname)) { pages.push(l); followed++; } } catch { /* skip */ }
+          }
         } catch (e) { detail = e.name === 'AbortError' ? 'timed out' : String(e.message || e).slice(0, 120); }
       }
       if (hit) { state[key] = { at: today, result: 'found', url: hit.url, reader: hit.reader, page: hit.page }; found++; }

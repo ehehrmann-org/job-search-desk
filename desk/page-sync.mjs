@@ -746,7 +746,7 @@ async function buildSources(counts) {
     const group = co.dream ? 'dream' : board ? 'boards' : 'search';
     const pr = probes[slug(co.name)];
     // Where its own careers page has no job board link the scan can read, say so and when it was looked at.
-    const looked = !board && pr ? (pr.result === 'none' ? `No job board link on its careers page (looked ${pr.at})` : pr.result === 'error' ? `Its careers page didn't open (tried ${pr.at})` : null) : null;
+    const looked = !board && pr ? (pr.result === 'none' ? `No job board link on its careers page (looked ${pr.at})` : pr.result === 'error' ? (/fetch failed|timed out/.test(pr.detail || '') ? `Its website didn't open (tried ${pr.at}); the company may have closed or moved` : `Its careers page didn't open (tried ${pr.at})`) : null) : null;
     const website = /^https?:\/\//i.test(co.website || '') ? co.website : siteOf(co.company_site || '') || siteOf(co.careers_url || '');
     rows.push({
       id: `co-${slug(co.name)}`, group, name: co.name, website: website || undefined,

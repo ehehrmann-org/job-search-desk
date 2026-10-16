@@ -500,6 +500,8 @@ test('board probe: links on the careers page, the website from the careers link,
   const { cleanBoardUrl } = await import('../probe-boards.mjs');
   assert.equal(cleanBoardUrl('https://job-boards.greenhouse.io/embed/job_board?for=acmeco&validityToken=abc'), 'https://job-boards.greenhouse.io/acmeco');
   assert.equal(cleanBoardUrl('https://app.teamtailor.com/companies/x/dashboard'), null);
+  assert.equal(cleanBoardUrl('https://www.teamtailor.com/'), null, 'the vendor home page');
+  assert.equal(cleanBoardUrl('https://acme.teamtailor.com/jobs'), 'https://acme.teamtailor.com/jobs');
   assert.equal(cleanBoardUrl('https://jobs.lever.co/acme?lever-origin=applied'), 'https://jobs.lever.co/acme');
   assert.equal(siteOf('https://job-boards.greenhouse.io/acme'), null);
 

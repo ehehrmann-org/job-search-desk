@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.31 (2026-10-16)
+- Finding job boards: when a careers link is broken, the search also tries the company's home page and follows its careers link. A job board company's own home page ("Powered by ...") no longer counts as a board. Rows say when a company's website didn't open at all, a hint the company may have closed or moved.
+
 ## 0.13.30 (2026-10-16)
 - Finding job boards: cleaner links (a Greenhouse board embedded in a careers page counts; links into a board's admin side don't), and a careers page that didn't open is tried again after 3 days instead of 30.
 
