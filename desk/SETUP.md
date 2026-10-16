@@ -18,13 +18,27 @@ You are setting up the Job Search Desk for one person. Read this whole file befo
 - **Short on time, or on Pro.** On the Pro plan or "Not sure" (step 3), and whenever she or Erik says the session has about an hour, take the fast path: skip step 5 point 6 (the preview), step 6 point 2 (extra suggestions) and step 8 point 2 (first jobs), and in step 7 propose at most 10 companies. Session 1 then takes about 90 minutes. Everything skipped happens on its own later (the morning run scores the first jobs) or in session 2.
 - **Two sessions.** Session 1 (steps 1 to 8, about 2 hours, of which steps 3 to 8 run here) ends with her live: her job page exists and the daily run starts the next morning. Session 2 (steps 9 to 12, about an hour, any day) adds job alert emails, achievements, resumes and a scoring check on her real jobs. Step 8 closes session 1.
 
+## Setting up alone
+
+When `desk.yml` has `guided: self`, nobody is on a call to steer, so you do what Erik would. Everything above still holds.
+
+- **A pause after every step.** After each finished step and its checklist, ask with the question tool: "Next: step <n>, <title>, about <min> minutes." Options: "Go on" and "Stop here for now". Wait for the answer. On "Stop here for now", or whenever she types "pause": save, then say in two lines that nothing is lost and how to come back: a new Claude chat on the same model (Sonnet on Pro, Opus on Max) with "Open my Job Search Desk (<her REPO>) and continue setup".
+- **Screenshots for settings she changes outside this chat.** Ask for a screenshot and check it before going on: GitHub's repository access choice (step 2, "Only select repositories" with just her copy), the daily task's settings (step 8 point 6), the Gmail connection on the daily task (step 9 point 5) and each saved job alert (step 9 point 6). If attaching doesn't work, ask her to describe what she sees.
+- **The checks Erik makes on a call.**
+  - Step 4 point 1: read back `title_filter_full` and drop any single broad word ("Operations", "Marketing"); one of those floods her list.
+  - Step 4 point 5: read back the countries left out; Georgia never goes on the list.
+  - Step 5 point 4: before she approves the anchors, ask her to reword at least one line per dimension in her own words; scoring quality comes from her wording.
+  - Step 8: before closing, tell her the bottom of her page says "Waiting for the first morning run", the lists are mostly empty and Run now is hidden, and that all three are expected.
+- **Usage limits.** On Pro, Claude may stop partway for a usage limit. The app shows when it resets; then "continue setup" in the same chat picks up where it stopped.
+- **After step 8.** Offer step 9 right away (about 15 minutes): alerts take a day to start arriving, and LinkedIn and Indeed jobs reach her page only through them. Steps 10 to 12 wait for the first morning run, because steps 11 and 12 use her real scored jobs. Tell her to come back any day after that with the line above, bringing the session 2 prep: her last 2 or 3 performance reviews, promotion or award emails, 1 or 2 project decks or reports, and her LinkedIn recommendations.
+
 Working folder: the root of her private copy. Every command runs there with `CAREER_OPS_DATA_DIR=profile`.
 
 ---
 
 ## Step 1. Your private copy (about 10 minutes, before this session exists)
 
-This step happens in a normal Claude chat, from the start prompt Erik sends (desk/START-PROMPT.md). By the time you read this file, it is done.
+This step happens in a normal Claude chat, from the start prompt Erik sends (desk/START-PROMPT.md, or desk/START-PROMPT-SOLO.md for someone setting up alone). By the time you read this file, it is done.
 
 ## Step 2. Connect Claude to your copy (about 10 minutes)
 
@@ -34,7 +48,7 @@ npm install --ignore-scripts --no-audit --no-fund
 node desk/setup.mjs init
 node desk/setup.mjs done 1 && node desk/setup.mjs done 2
 ```
-Then greet her, show the checklist, and start step 3.
+If her start message says she is setting up alone (Erik not on a call), or she typed "start setup alone", write `guided: self` to `profile/config/desk.yml` and follow "Setting up alone" above. Then greet her, show the checklist, and start step 3.
 
 ## Step 3. Your Claude plan (about 3 minutes)
 

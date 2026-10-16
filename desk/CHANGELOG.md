@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.14 (2026-10-16)
+- Setting up alone: a start prompt for friends who set up without a call. Claude pauses after every step, checks screenshots of the settings you change, and covers both setup sessions.
+
 ## 0.13.13 (2026-10-15)
 - The status report shows the same version as the footer. If the last run used an older version, it says so on its own line.
 
