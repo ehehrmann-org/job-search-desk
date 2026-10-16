@@ -6,10 +6,10 @@
 
   <div class="navrow">
   <nav class="tabs" role="tablist" aria-label="Views">
-    <button class="tab" role="tab" id="tab-triage" data-tab="triage" aria-controls="view-triage" aria-selected="true">Triage<span class="count" id="c-triage"></span></button>
-    <button class="tab" role="tab" id="tab-resumes" data-tab="resumes" aria-controls="view-resumes" aria-selected="false">Resumes<span class="count" id="c-resumes"></span></button>
+    <button class="tab" role="tab" id="tab-triage" data-tab="triage" aria-controls="view-triage" aria-selected="true">Triage<span class="count badge" id="c-triage" hidden></span></button>
+    <button class="tab" role="tab" id="tab-resumes" data-tab="resumes" aria-controls="view-resumes" aria-selected="false">Resumes</button>
     <button class="tab" role="tab" id="tab-linkedin" data-tab="linkedin" aria-controls="view-linkedin" aria-selected="false">LinkedIn</button>
-    <button class="tab" role="tab" id="tab-sources" data-tab="sources" aria-controls="view-sources" aria-selected="false">Scan sources<span class="count" id="c-sources"></span></button>
+    <button class="tab" role="tab" id="tab-sources" data-tab="sources" aria-controls="view-sources" aria-selected="false">Scan sources</button>
     <button class="tab" role="tab" id="tab-stats" data-tab="stats" aria-controls="view-stats" aria-selected="false">Stats</button>
   </nav>
   <div class="gsearch"><input type="search" id="gsearch" class="srcsearch" data-k="gsearch" placeholder="Search jobs" aria-label="Search jobs in every stage" autocomplete="off" spellcheck="false"></div>
@@ -489,10 +489,10 @@
   // ---------- Counts on the tabs (every render, cheap) ----------
   function stageCounts(all) { var c = {}; STAGES.forEach(function (s) { c[s.k] = 0; }); all.forEach(function (p) { c[stageOf(eff(p.id).status)]++; }); return c; }
   function renderCounts(all) {
-    document.getElementById("c-triage").textContent = stageCounts(all).review;
-    document.getElementById("c-resumes").textContent = Object.keys(D.resumes).filter(function (k) { return D.resumes[k].kind !== "master"; }).length || "";
-    var rows = D.sources ? D.sources.rows || [] : [];
-    document.getElementById("c-sources").textContent = rows.filter(function (s) { return s.group !== "search" && srcOn(s); }).length || "";
+    // Only Triage carries a count: jobs waiting in To review, as a badge; none when nothing waits.
+    var n = stageCounts(all).review, c = document.getElementById("c-triage");
+    c.textContent = n > 99 ? "99+" : String(n); c.hidden = !n;
+    c.setAttribute("aria-label", n + (n === 1 ? " job" : " jobs") + " to review");
   }
 
   // ---------- Search across every stage ----------

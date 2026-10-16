@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.27 (2026-10-16)
+- Tabs: only Triage shows a count, as a red badge with the number of jobs waiting in To review. It disappears when nothing waits.
+
 ## 0.13.26 (2026-10-16)
 - LinkedIn tab: pointing at Copy refresh request (or Copy request for Claude) explains what it does. A refresh shows what changed before anything is updated.
 
