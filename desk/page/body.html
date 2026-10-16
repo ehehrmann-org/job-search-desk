@@ -33,7 +33,7 @@
       <div class="minis" id="lastrun-minis"></div>
       <p class="sub" id="lastrun-more"></p>
       <div id="runhist" hidden>
-        <h3 class="sec">Jobs sent to To review, by morning run</h3>
+        <h3 class="sec">New jobs to review</h3>
         <div class="hchart" id="runhist-chart"></div>
         <details class="htable"><summary>Show as a table</summary><div class="tablewrap"><table><thead><tr><th>Morning run</th><th>To review</th><th>Found</th><th>Scored</th></tr></thead><tbody id="runhist-rows"></tbody></table></div></details>
       </div>
@@ -1743,7 +1743,7 @@
     { tab: "linkedin", target: "#view-linkedin", title: "Your LinkedIn profile", text: "Recruiters look you up on LinkedIn too. Claude writes your headline, About, role descriptions and skills from your master resume, aimed at all the roles you're targeting, so they hold up while your resumes get tailored. **Copy** each field into LinkedIn; ask for a refresh whenever your master resume changes." },
     { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
-    { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, a line shows how many jobs each morning run of the last two weeks sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
+    { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, New jobs to review shows how many jobs each morning run of the last two weeks sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page. Press ? for keyboard shortcuts." }
   ];
   // Tour text: **word** shows in bold.
