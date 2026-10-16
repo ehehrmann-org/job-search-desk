@@ -201,7 +201,7 @@ button.tag { cursor: pointer; }
 #runhist { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 #runhist h3.sec { margin: 0 0 4px; }
 .minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px 22px; margin-top: 4px; }
-.mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; border-left: 3px solid var(--line); }
+div.mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; border-left: 3px solid var(--line); }
 .mini .v { font-size: 24px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .mini .k { font-size: 13px; font-weight: 600; color: var(--fg-2); }
 .mini .s { font-size: 12px; color: var(--muted); }

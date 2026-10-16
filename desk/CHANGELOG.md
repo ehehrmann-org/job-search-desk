@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.17 (2026-10-16)
+- Stats: the small headings under Closed jobs no longer have a gray bar to their left.
+
 ## 0.13.16 (2026-10-16)
 - Stats: Morning runs is now a compact line chart of the last two weeks, with each day's numbers when you point at it and a table view underneath.
 
