@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.21 (2026-10-16)
+- Stats: Latest run shows just its date and time, like "Oct 15, 6:33 AM".
+
 ## 0.13.20 (2026-10-16)
 - Stats: the line of explanation under the morning runs chart is gone; pointing at a day still shows its numbers.
 

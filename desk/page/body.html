@@ -1242,9 +1242,9 @@
     var sub = document.getElementById("lastrun-sub"), minis = document.getElementById("lastrun-minis"), more = document.getElementById("lastrun-more");
     minis.textContent = ""; more.textContent = "";
     if (!r || !r.at) { sub.textContent = loaded ? "Appears after the first morning run." : "Loading…"; return; }
-    var L = r.last || null, took = "";
-    if (L && L.started) { var m = Math.round((new Date(r.at) - new Date(L.started)) / 60000); if (m > 0 && m < 600) took = ", took " + m + (m === 1 ? " minute" : " minutes"); }
-    sub.textContent = (r.quick ? "Run now" : "Morning run") + ", " + niceTime(r.at) + took + "." + (L && L.since ? " Counted since the run before, " + niceTime(L.since) + "." : "");
+    var L = r.last || null, at = new Date(r.at);
+    // Just the run's date and time, "Oct 15, 6:33 AM"; a Run now says so.
+    sub.textContent = (r.quick ? "Run now, " : "") + at.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + ", " + at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
     function mini(k, v, note) { minis.appendChild(el("div", { class: "mini" }, [el("div", { class: "v", text: v === null || v === undefined ? "–" : fmt(v) }), el("div", { class: "k", text: k }), note ? el("div", { class: "s", text: note }) : null])); }
     if (L) {
       if (!r.quick) mini("Listed on your job boards", L.listed, L.companies ? L.companies + " companies checked" : null);
