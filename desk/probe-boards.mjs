@@ -58,9 +58,27 @@ export function linksIn(html, base) {
   return [...out];
 }
 
+/**
+ * A job board link as the scan reads it: Greenhouse embeds become the board's own address, tracking queries go,
+ * and links into a board's admin side (app.teamtailor.com, a dashboard or a login) are not boards at all.
+ */
+export function cleanBoardUrl(raw) {
+  let u;
+  try { u = new URL(raw); } catch { return null; }
+  const host = u.hostname.toLowerCase();
+  if (/^(app|admin|login|dashboard|my)\./.test(host) || /\/(dashboard|login|signin|sign_in|admin)(\/|$)/i.test(u.pathname)) return null;
+  if (/greenhouse\.io$/.test(host)) {
+    const forSlug = u.searchParams.get('for');
+    if (forSlug && /^[a-z0-9_-]+$/i.test(forSlug)) return `https://job-boards.greenhouse.io/${forSlug}`;
+    if (/\/embed\//.test(u.pathname)) return null;
+  }
+  u.search = ''; u.hash = '';
+  return u.href;
+}
+
 /** The first link a job board reader understands, preferring job board hosts over the page's own links. */
 export async function boardLink(links, readerFor = boardFor) {
-  const ordered = [...links].sort((a, b) => (hostIsBoard(b) - hostIsBoard(a)));
+  const ordered = [...new Set(links.map(cleanBoardUrl).filter(Boolean))];
   for (const url of ordered) {
     if (!hostIsBoard(url)) continue;
     const reader = await readerFor(url);
@@ -85,13 +103,14 @@ async function getPage(url) {
 /** Companies the scan can't read yet, oldest check first; skips ones checked in the last 30 days. */
 export async function candidates(portals, state, today = new Date()) {
   const cutoff = new Date(today.getTime() - RETRY_DAYS * 86400000).toISOString().slice(0, 10);
+  const errCutoff = new Date(today.getTime() - 3 * 86400000).toISOString().slice(0, 10);   // a page that didn't open is tried again sooner
   const out = [];
   for (const co of portals.tracked_companies || []) {
     if (!co?.name || co.enabled === false || !co.careers_url || !/^https?:\/\//i.test(co.careers_url)) continue;
     if (co.scan_method !== 'websearch' && await boardFor(co)) continue;
     const prev = state[slug(co.name)];
     if (prev?.result === 'found') continue;
-    if (prev && String(prev.at || '') > cutoff) continue;
+    if (prev && String(prev.at || '') > (prev.result === 'error' ? errCutoff : cutoff)) continue;
     out.push({ co, at: prev?.at || '' });
   }
   return out.sort((a, b) => a.at.localeCompare(b.at)).map(x => x.co);
@@ -116,7 +135,8 @@ export async function probe({ limit = 80, fetchPage = getPage } = {}) {
         try {
           const r = await fetchPage(page);
           if (r.html) reached = true; else detail = `HTTP ${r.status}`;
-          if (r.url && hostIsBoard(r.url)) { const reader = await boardFor(r.url); if (reader) { hit = { url: r.url, reader, page }; break; } }
+          const landed = r.url && hostIsBoard(r.url) ? cleanBoardUrl(r.url) : null;
+          if (landed) { const reader = await boardFor(landed); if (reader) { hit = { url: landed, reader, page }; break; } }
           const b = r.html ? await boardLink(linksIn(r.html, r.url || page)) : null;
           if (b) { hit = { ...b, page }; break; }
         } catch (e) { detail = e.name === 'AbortError' ? 'timed out' : String(e.message || e).slice(0, 120); }

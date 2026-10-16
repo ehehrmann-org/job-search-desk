@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.30 (2026-10-16)
+- Finding job boards: cleaner links (a Greenhouse board embedded in a careers page counts; links into a board's admin side don't), and a careers page that didn't open is tried again after 3 days instead of 30.
+
 ## 0.13.29 (2026-10-16)
 - Scan sources: companies under "Can't be read yet" get their job board found automatically. Every night the scan opens up to 80 of their careers pages, and each one with a job board link moves to Job boards the next morning. Each row says when its careers page was checked.
 - Company names on Scan sources open the company's website.

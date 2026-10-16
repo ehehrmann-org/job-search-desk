@@ -54,7 +54,7 @@ import { applySuggestion, decline as declineSuggestion } from './suggest.mjs';
 import { addPending } from './daily.mjs';
 import { parsePending } from './fetch-pending-jds.mjs';
 import { check as checkLinkedin } from './linkedin.mjs';
-import { PROBE_FILE, siteOf } from './probe-boards.mjs';
+import { PROBE_FILE, siteOf, cleanBoardUrl } from './probe-boards.mjs';
 import crypto from 'node:crypto';
 
 const P = {
@@ -125,7 +125,7 @@ async function applyProbes(summary) {
     const co = (portals.tracked_companies || []).find(c => c?.name && slug(c.name) === key);
     v.applied = day;
     if (!co || (co.scan_method !== 'websearch' && await boardFor(co))) continue;
-    const url = canonicalUrl(v.url);
+    const url = canonicalUrl(cleanBoardUrl(v.url) || '');
     if (!url || !(await boardFor(url))) { v.result = 'none'; delete v.applied; continue; }
     if (!co.website) { const site = siteOf(co.careers_url); if (site) co.website = site; }
     co.careers_url = url; delete co.scan_method; delete co.scan_query; delete co.provider;

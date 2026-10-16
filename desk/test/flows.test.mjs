@@ -497,6 +497,10 @@ test('board probe: links on the careers page, the website from the careers link,
   assert.equal(hit.url, 'https://boards.greenhouse.io/nowhereco/jobs/123');
   assert.equal(await boardLink(['https://nowhere.example.com/about'], async () => 'x'), null, 'the page itself is never a board');
   assert.equal(siteOf('https://www.acme.com/careers/open-roles'), 'https://www.acme.com/');
+  const { cleanBoardUrl } = await import('../probe-boards.mjs');
+  assert.equal(cleanBoardUrl('https://job-boards.greenhouse.io/embed/job_board?for=acmeco&validityToken=abc'), 'https://job-boards.greenhouse.io/acmeco');
+  assert.equal(cleanBoardUrl('https://app.teamtailor.com/companies/x/dashboard'), null);
+  assert.equal(cleanBoardUrl('https://jobs.lever.co/acme?lever-origin=applied'), 'https://jobs.lever.co/acme');
   assert.equal(siteOf('https://job-boards.greenhouse.io/acme'), null);
 
   const d = profile();
