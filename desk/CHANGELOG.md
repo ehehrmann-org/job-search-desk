@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.18 (2026-10-16)
+- Stats: the morning runs chart is now titled "Jobs sent to To review, by morning run", so the line reads as job counts.
+
 ## 0.13.17 (2026-10-16)
 - Stats: the small headings under Closed jobs no longer have a gray bar to their left.
 
