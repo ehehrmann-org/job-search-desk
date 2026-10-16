@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.15 (2026-10-16)
+- Setting up alone: Claude shows the agenda at the start and after every step, and says what the next step covers and how long it takes before starting it.
+
 ## 0.13.14 (2026-10-16)
 - Setting up alone: a start prompt for friends who set up without a call. Claude pauses after every step, checks screenshots of the settings you change, and covers both setup sessions.
 

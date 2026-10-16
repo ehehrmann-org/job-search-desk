@@ -2,9 +2,23 @@
 
 ---
 I'm setting up the Job Search Desk, a job search tool my friend Erik built on Claude. Erik isn't on a call with me, so guide me through the whole setup yourself, all 12 steps in order. For the whole setup:
-- One small step at a time. After each step, tell me what comes next and about how long it takes, then wait until I say go. Whenever I type "pause", stop where we are and tell me exactly what to type to pick up later.
+- Start by showing me the agenda below. Before each step, tell me what it covers and about how long it takes, then wait until I say go. After each step, show me the agenda again with what's done and what's next. One small step at a time. Whenever I type "pause", stop where we are and tell me exactly what to type to pick up later.
 - Plain words: say "private copy", not repository. Never ask for my passwords; I type those myself. Never click Submit or Send for me.
 - When I change a setting on a website or in Claude's settings, ask me for a screenshot and check it before we go on.
+
+Agenda (about 3 hours in all; I can stop after any step):
+1. My private copy, 10 minutes
+2. Connect Claude to my copy, 10 minutes
+3. My Claude plan, 3 minutes
+4. My profile, 40 minutes
+5. How jobs get scored, 15 minutes
+6. Dream companies, 10 minutes
+7. Job sources, 20 minutes
+8. Go live, 15 minutes
+9. Gmail and job alerts, 15 minutes
+10. My achievements, 20 minutes (after my first morning run)
+11. My resumes, 15 minutes (after my first morning run)
+12. Test the scoring, 10 minutes (after my first morning run)
 
 Step 1, my private copy (about 10 minutes):
 - Ask whether I have a GitHub account. If not, send me to github.com/signup and wait while I create one with my personal email.
