@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.22 (2026-10-16)
+- New LinkedIn tab: your headline, About, role descriptions, skills and open-to-work settings, written by Claude from your master resume for all the roles you're targeting, each with a copy button and LinkedIn's character limit. To fill it, click "Copy request for Claude" on the tab and paste it into a Claude chat.
+- Setup step 11 now includes your LinkedIn profile text.
+
 ## 0.13.21 (2026-10-16)
 - Stats: Latest run shows just its date and time, like "Oct 15, 6:33 AM".
 

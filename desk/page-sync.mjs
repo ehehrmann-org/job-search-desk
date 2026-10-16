@@ -19,7 +19,7 @@
  *
  *   node desk/page-sync.mjs push [--problem "what|fix|detail"]... [--problems-file <file>] [--no-run] [--quick] [--update-file <update.mjs check output>]
  *       Writes batch files to data/page/outbox/: new postings, rescores, suggestions,
- *       deep evaluations, handled requests, resumes, the source list (when changed) and
+ *       deep evaluations, handled requests, resumes, the LinkedIn profile text (when changed), the source list (when changed) and
  *       the run document (left out with --no-run, for pushes outside the daily run).
  *       Prints the batch file paths. Every write is a create (no version needed).
  *
@@ -53,6 +53,8 @@ import { DATA, ROOT, isMain, safeId, dict, readYamlStrict } from './lib/env.mjs'
 import { applySuggestion, decline as declineSuggestion } from './suggest.mjs';
 import { addPending } from './daily.mjs';
 import { parsePending } from './fetch-pending-jds.mjs';
+import { check as checkLinkedin } from './linkedin.mjs';
+import crypto from 'node:crypto';
 
 const P = {
   page: path.join(DATA, 'data', 'page'),
@@ -74,6 +76,7 @@ const P = {
   desk: path.join(DATA, 'config', 'desk.yml'),
   scoring: path.join(DATA, 'config', 'scoring.yml'),
   resumes: path.join(DATA, 'resumes', 'index.yml'),
+  linkedin: path.join(DATA, 'linkedin.yml'),
 };
 const VERSION = fs.readFileSync(path.join(ROOT, 'desk', 'VERSION'), 'utf8').trim();
 const BATCH_MAX = 45;               // ArtifactData allows 50 writes per batch
@@ -445,6 +448,11 @@ async function push(args) {
   for (const r of resumes) if (r?.id && safeId(r.id) && !doneRes.has(r.id)) add('resumes', r.id, resumeDoc(r, at));
   // The master resume (cv.md), once; later changes go through the resume update step (resume-doc master).
   if (!doneRes.has('master') && !resumes.some(r => r?.id === 'master')) { const m = masterDoc(); if (m) add('resumes', 'master', m); }
+  // LinkedIn profile text: a new create-only document each time profile/linkedin.yml changes; the page shows the newest.
+  try {
+    const li = linkedinDoc(at);
+    if (li && li.body.hash !== st.linkedin_hash) add('linkedin', li.id, li.body);
+  } catch (e) { problem({ what: 'Your LinkedIn profile text has a problem.', fix: 'Ask Claude to "write my LinkedIn profile" again, or copy the message for Erik.', detail: text(e.message, 300), since: at }); }
 
   // Sources snapshot
   const decisions = readJson(P.decisions, {});
@@ -582,6 +590,27 @@ function alertsAdded(since) {
     .map(l => l.split('\t')).filter(c => (/^gmail:|^web/.test(c[2] || '') || /-full$/.test(c[2] || '')) && c[5] === 'added' && (c[1] || '') >= since).length;
 }
 
+// linkedin/<YYYYMMDDHHMMSS>: profile/linkedin.yml as the page shows it; null when there is none yet.
+function linkedinDoc(at = new Date().toISOString()) {
+  if (!fs.existsSync(P.linkedin)) return null;
+  const d = readYamlStrict(yaml, P.linkedin, null);
+  const cv = fs.existsSync(path.join(DATA, 'cv.md')) ? fs.readFileSync(path.join(DATA, 'cv.md'), 'utf8') : '';
+  const problems = checkLinkedin(d, cv);
+  if (problems.length) throw new Error(problems.slice(0, 3).join(' '));
+  const s = v => (typeof v === 'string' ? v.trim() : '');
+  const list = v => (Array.isArray(v) ? v.map(s).filter(Boolean) : []);
+  const otw = d.open_to_work || {};
+  const body = {
+    updated: s(d.updated) || at.slice(0, 10), aims_at: s(d.aims_at), headline: s(d.headline), about: s(d.about),
+    experience: d.experience.map(r => ({ company: s(r.company), title: s(r.title), dates: s(r.dates), description: s(r.description) })),
+    skills: list(d.skills),
+    open_to_work: { titles: list(otw.titles), locations: list(otw.locations), workplaces: list(otw.workplaces) },
+  };
+  body.hash = crypto.createHash('sha1').update(JSON.stringify(body)).digest('hex').slice(0, 12);
+  body.at = at;
+  return { id: at.replace(/[^0-9]/g, '').slice(0, 14), body };
+}
+
 // A resume document as push writes it.
 function resumeDoc(r, at = new Date().toISOString()) {
   const textFile = r.text_file ? path.resolve(DATA, 'resumes', r.text_file) : null;
@@ -701,6 +730,7 @@ function ack(file) {
   st.pushed ||= {};
   for (const w of b.writes) {
     if (w.collection === 'rescores') { const body = readJson(w.file_path, null); if (body?.posting_id) (st.rescores ||= {})[body.posting_id] = body.at; }
+    if (w.collection === 'linkedin') { const body = readJson(w.file_path, null); if (body?.hash) st.linkedin_hash = body.hash; }
     if (['postings', 'deep', 'requests_done', 'resumes', 'suggestions'].includes(w.collection)) {
       const set = new Set(st.pushed[w.collection] || []); set.add(w.doc_id); st.pushed[w.collection] = [...set];
     }

@@ -193,6 +193,7 @@ desk/lib/page-docs.mjs
 desk/lib/scoring.mjs
 desk/lib/sites.mjs
 desk/lib/urls.mjs
+desk/linkedin.mjs
 desk/lists/reposting-services.md
 desk/packs/agencies.yml
 desk/page-sync.mjs

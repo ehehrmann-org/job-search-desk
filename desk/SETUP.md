@@ -16,7 +16,7 @@ You are setting up the Job Search Desk for one person. Read this whole file befo
 - **Files she attaches.** If attaching a file doesn't work in this session, ask her to paste the text instead (for LinkedIn: her profile's About and Experience sections).
 - **Her job page in a new session.** Before uploading a file to her job page or publishing it, read it first (Artifact `read` on `desk.yml` `page_url`); the Artifact tool refuses a write to a page this conversation hasn't read.
 - **Short on time, or on Pro.** On the Pro plan or "Not sure" (step 3), and whenever she or Erik says the session has about an hour, take the fast path: skip step 5 point 6 (the preview), step 6 point 2 (extra suggestions) and step 8 point 2 (first jobs), and in step 7 propose at most 10 companies. Session 1 then takes about 90 minutes. Everything skipped happens on its own later (the morning run scores the first jobs) or in session 2.
-- **Two sessions.** Session 1 (steps 1 to 8, about 2 hours, of which steps 3 to 8 run here) ends with her live: her job page exists and the daily run starts the next morning. Session 2 (steps 9 to 12, about an hour, any day) adds job alert emails, achievements, resumes and a scoring check on her real jobs. Step 8 closes session 1.
+- **Two sessions.** Session 1 (steps 1 to 8, about 2 hours, of which steps 3 to 8 run here) ends with her live: her job page exists and the daily run starts the next morning. Session 2 (steps 9 to 12, about 70 minutes, any day) adds job alert emails, achievements, resumes, her LinkedIn profile text and a scoring check on her real jobs. Step 8 closes session 1.
 
 ## Setting up alone
 
@@ -145,7 +145,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
    - She's live: her first jobs arrive tomorrow morning by about 7 on her job page, and every morning after that. The tour is always one click away from the status line at the bottom of the page.
    - The first days will score rough. Every Skip with a reason and every Interested teaches it.
    - Besides her listed companies, it sweeps about 15,000 companies' public job boards every night for free, and does a few web searches each morning. The Daily limits panel on Scan sources turns the Claude part up or down if her plan runs short or she wants more.
-   - Session 2 (about an hour, any day) adds her job alert emails, her achievements, her resumes and a check of the scoring on her real jobs. To come back: in a new Claude chat, type "Open my Job Search Desk (<her REPO>) and continue setup". The prep list for it is in Erik's message.
+   - Session 2 (about 70 minutes, any day) adds her job alert emails, her achievements, her resumes, her LinkedIn profile text and a check of the scoring on her real jobs. To come back: in a new Claude chat, type "Open my Job Search Desk (<her REPO>) and continue setup". The prep list for it is in Erik's message.
    - "Change my scoring", "add a dream company" and "help" work anytime in a new Claude chat, starting with "Open my Job Search Desk (<her REPO>) and ...". The buttons on her page copy requests that already start that way.
 
 ## Step 9. Gmail and job alerts (about 15 minutes)
@@ -169,7 +169,7 @@ Every "not sure" goes into `profile.yml` `not_sure` as a short label; step 12 se
 5. Write approved bullets into `profile/cv.md` under the right role. Write one story per theme to `profile/interview-prep/story-bank.md` (situation, what she did, result, and `**Provenance:** user-stated <date>`).
 6. `node desk/setup.mjs done 10`
 
-## Step 11. Your resumes (about 15 minutes)
+## Step 11. Your resumes and LinkedIn (about 25 minutes)
 
 Her page calls these her standard resumes: one per kind of role, used whenever a posting needs no tailoring.
 
@@ -179,7 +179,8 @@ Her page calls these her standard resumes: one per kind of role, used whenever a
 4. Show each in chat: the summary and the top 3 bullets per role, and send the PDF as a file. She edits in plain words; rebuild after each change until she approves.
 5. Add each to `profile/resumes/index.yml`: `{ id, name, kind: default, updated, pdf: <id>.pdf, text_file: <id>.txt, summary: <one line on what it leads with> }`. `name` is the kind of role in her words ("Chief of Staff"); her page shows it as the resume's title.
 6. **On her page.** Upload each resume PDF as an asset of her job page (Artifact publish with `url` = `desk.yml` `page_url`, `asset: true`, `file_paths`). Save each asset id to its `index.yml` entry as `asset_id`. Then `node desk/page-sync.mjs push --no-run`, ArtifactData `batch` per printed file, `node desk/page-sync.mjs ack <file>`. If a PDF upload failed and the resume was already pushed, upload it, add the asset_id, and use the resume update step in desk/CLAUDE-DESK.md; push skips resumes already on the page.
-7. `node desk/setup.mjs done 11`
+7. **Her LinkedIn profile.** Say in one sentence that recruiters look her up on LinkedIn too, so Claude writes her profile text from the same master resume, aimed at all her target titles. Do "write my LinkedIn profile" in desk/CLAUDE-DESK.md with her. She copies the fields into LinkedIn later, from the LinkedIn tab on her page; she can skip this point.
+8. `node desk/setup.mjs done 11`
 
 ## Step 12. Test the scoring (about 10 minutes)
 
@@ -191,4 +192,4 @@ Her page calls these her standard resumes: one per kind of role, used whenever a
 6. Settle her step 4 "not sure" items with what the 8 answers showed; ask only when they don't.
 7. Stop when 3 in 4 agree (6 of 8) or after 3 changes. Remaining gaps go to the weekly suggestions.
 8. `node desk/suggest.mjs rescore`, save, then `node desk/setup.mjs done 12`.
-9. **Close.** Tell her setup is complete: her page now suggests a resume for each job, alert emails come in every morning, and her open jobs get the new scores in the next morning run.
+9. **Close.** Tell her setup is complete: her page now suggests a resume for each job, the LinkedIn tab holds her profile text to copy in, alert emails come in every morning, and her open jobs get the new scores in the next morning run.

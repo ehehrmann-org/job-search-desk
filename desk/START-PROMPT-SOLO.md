@@ -6,7 +6,7 @@ I'm setting up the Job Search Desk, a job search tool my friend Erik built on Cl
 - Plain words: say "private copy", not repository. Never ask for my passwords; I type those myself. Never click Submit or Send for me.
 - When I change a setting on a website or in Claude's settings, ask me for a screenshot and check it before we go on.
 
-Agenda (about 3 hours in all; I can stop after any step):
+Agenda (about 3 hours 10 minutes in all; I can stop after any step):
 1. My private copy, 10 minutes
 2. Connect Claude to my copy, 10 minutes
 3. My Claude plan, 3 minutes
@@ -17,7 +17,7 @@ Agenda (about 3 hours in all; I can stop after any step):
 8. Go live, 15 minutes
 9. Gmail and job alerts, 15 minutes
 10. My achievements, 20 minutes (after my first morning run)
-11. My resumes, 15 minutes (after my first morning run)
+11. My resumes and LinkedIn profile, 25 minutes (after my first morning run)
 12. Test the scoring, 10 minutes (after my first morning run)
 
 Step 1, my private copy (about 10 minutes):

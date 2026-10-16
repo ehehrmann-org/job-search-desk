@@ -34,7 +34,7 @@ export const STEPS = [
   { n: 8, title: 'Go live', min: 15, session: 1 },
   { n: 9, title: 'Gmail and job alerts', min: 15, session: 2 },
   { n: 10, title: 'Your achievements', min: 20, session: 2 },
-  { n: 11, title: 'Your resumes', min: 15, session: 2 },
+  { n: 11, title: 'Your resumes and LinkedIn', min: 25, session: 2 },
   { n: 12, title: 'Test the scoring', min: 10, session: 2 },
 ];
 

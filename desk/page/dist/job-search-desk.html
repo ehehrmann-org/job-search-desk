@@ -490,10 +490,31 @@ html { scrollbar-gutter: stable; }
 .kbkeys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 kbd { display: inline-block; min-width: 1.6em; padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--surface-2); font-family: var(--f-mono); font-size: 12px; text-align: center; color: var(--fg); }
 .kbsep { font-size: 12px; color: var(--muted); }
+
+/* LinkedIn: one row per profile field, with where it goes, its length against LinkedIn's limit and a copy button */
+.lfield { padding: 12px 14px; border-top: 1px solid var(--line); display: grid; gap: 8px; min-width: 0; }
+.lfield:first-child { border-top: 0; }
+.lfh { display: flex; align-items: flex-start; gap: 12px; }
+.lfl { flex: 1 1 auto; min-width: 0; }
+.lfl .t { font-weight: 600; }
+.lfl .s { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.lfn { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 7px; }
+.lft { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; color: var(--fg); max-width: 78ch; }
+.lfield .rchips .b { font-weight: 400; }
+#view-linkedin .sechead { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+#view-linkedin .sechead .btns { flex-wrap: wrap; }
+.li-empty .btns { display: flex; gap: 6px; }
+a.b { color: var(--fg); text-decoration: none; }
+@media (max-width: 600px) {
+  .lfh { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px; }
+  .lfh > .lfl { grid-column: 1; grid-row: 1; }
+  .lfh > .b { grid-column: 2; grid-row: 1; }
+  .lfh > .lfn { grid-column: 1; grid-row: 2; padding-top: 0; }
+}
 </style>
 
 <script>
-var JSD_VERSION = "0.13.21";
+var JSD_VERSION = "0.13.22";
 // Phosphor Icons (regular weight), MIT license (see desk/page/PHOSPHOR-LICENSE.txt), https://phosphoricons.com. Generated from @phosphor-icons/core 2.1.1.
 var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,144H32V64H224V192Zm-16-64a8,8,0,0,1-8,8H56a8,8,0,0,1,0-16H200A8,8,0,0,1,208,128Zm0-32a8,8,0,0,1-8,8H56a8,8,0,0,1,0-16H200A8,8,0,0,1,208,96ZM72,160a8,8,0,0,1-8,8H56a8,8,0,0,1,0-16h8A8,8,0,0,1,72,160Zm96,0a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,160Zm40,0a8,8,0,0,1-8,8h-8a8,8,0,0,1,0-16h8A8,8,0,0,1,208,160Z\"/>","minus":"<path d=\"M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z\"/>","warning":"<path d=\"M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z\"/>","thumbs-up":"<path d=\"M234,80.12A24,24,0,0,0,216,72H160V56a40,40,0,0,0-40-40,8,8,0,0,0-7.16,4.42L75.06,96H32a16,16,0,0,0-16,16v88a16,16,0,0,0,16,16H204a24,24,0,0,0,23.82-21l12-96A24,24,0,0,0,234,80.12ZM32,112H72v88H32ZM223.94,97l-12,96a8,8,0,0,1-7.94,7H88V105.89l36.71-73.43A24,24,0,0,1,144,56V80a8,8,0,0,0,8,8h64a8,8,0,0,1,7.94,9Z\"/>","arrow-square-out":"<path d=\"M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z\"/>","sparkle":"<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>","check-circle":"<path d=\"M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-up-right":"<path d=\"M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z\"/>","lightning":"<path d=\"M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z\"/>","file-text":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z\"/>","bookmark-simple":"<path d=\"M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z\"/>","paper-plane-tilt":"<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>","x":"<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>","chats-circle":"<path d=\"M232.07,186.76a80,80,0,0,0-62.5-114.17A80,80,0,1,0,23.93,138.76l-7.27,24.71a16,16,0,0,0,19.87,19.87l24.71-7.27a80.39,80.39,0,0,0,25.18,7.35,80,80,0,0,0,108.34,40.65l24.71,7.27a16,16,0,0,0,19.87-19.86ZM62,159.5a8.28,8.28,0,0,0-2.26.32L32,168l8.17-27.76a8,8,0,0,0-.63-6,64,64,0,1,1,26.26,26.26A8,8,0,0,0,62,159.5Zm153.79,28.73L224,216l-27.76-8.17a8,8,0,0,0-6,.63,64.05,64.05,0,0,1-85.87-24.88A79.93,79.93,0,0,0,174.7,89.71a64,64,0,0,1,41.75,92.48A8,8,0,0,0,215.82,188.23Z\"/>","thumbs-down":"<path d=\"M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z\"/>","sign-out":"<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>","handshake":"<path d=\"M254.3,107.91,228.78,56.85a16,16,0,0,0-21.47-7.15L182.44,62.13,130.05,48.27a8.14,8.14,0,0,0-4.1,0L73.56,62.13,48.69,49.7a16,16,0,0,0-21.47,7.15L1.7,107.9a16,16,0,0,0,7.15,21.47l27,13.51,55.49,39.63a8.06,8.06,0,0,0,2.71,1.25l64,16a8,8,0,0,0,7.6-2.1l55.07-55.08,26.42-13.21a16,16,0,0,0,7.15-21.46Zm-54.89,33.37L165,113.72a8,8,0,0,0-10.68.61C136.51,132.27,116.66,130,104,122L147.24,80h31.81l27.21,54.41ZM41.53,64,62,74.22,36.43,125.27,16,115.06Zm116,119.13L99.42,168.61l-49.2-35.14,28-56L128,64.28l9.8,2.59-45,43.68-.08.09a16,16,0,0,0,2.72,24.81c20.56,13.13,45.37,11,64.91-5L188,152.66Zm62-57.87-25.52-51L214.47,64,240,115.06Zm-87.75,92.67a8,8,0,0,1-7.75,6.06,8.13,8.13,0,0,1-1.95-.24L80.41,213.33a7.89,7.89,0,0,1-2.71-1.25L51.35,193.26a8,8,0,0,1,9.3-13l25.11,17.94L126,208.24A8,8,0,0,1,131.82,217.94Z\"/>","x-circle":"<path d=\"M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z\"/>","arrow-bend-up-left":"<path d=\"M232,200a8,8,0,0,1-16,0,88.1,88.1,0,0,0-88-88H51.31l34.35,34.34a8,8,0,0,1-11.32,11.32l-48-48a8,8,0,0,1,0-11.32l48-48A8,8,0,0,1,85.66,61.66L51.31,96H128A104.11,104.11,0,0,1,232,200Z\"/>","arrow-counter-clockwise":"<path d=\"M224,128a96,96,0,0,1-94.71,96H128A95.38,95.38,0,0,1,62.1,197.8a8,8,0,0,1,11-11.63A80,80,0,1,0,71.43,71.39a3.07,3.07,0,0,1-.26.25L44.59,96H72a8,8,0,0,1,0,16H24a8,8,0,0,1-8-8V56a8,8,0,0,1,16,0V85.8L60.25,60A96,96,0,0,1,224,128Z\"/>","chart-bar-horizontal":"<path d=\"M224,96H184V56a8,8,0,0,0-8-8H56V40a8,8,0,0,0-16,0V216a8,8,0,0,0,16,0v-8h88a8,8,0,0,0,8-8V160h72a8,8,0,0,0,8-8V104A8,8,0,0,0,224,96ZM168,64V96H56V64ZM136,192H56V160h80Zm80-48H56V112H216Z\"/>","file-magnifying-glass":"<path d=\"M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-45.54-48.85a36.05,36.05,0,1,0-11.31,11.31l11.19,11.2a8,8,0,0,0,11.32-11.32ZM104,148a20,20,0,1,1,20,20A20,20,0,0,1,104,148Z\"/>","copy":"<path d=\"M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z\"/>","compass":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z\"/>","download-simple":"<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>","plus":"<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>","lock-simple-open":"<path d=\"M208,80H96V56a32,32,0,0,1,32-32c15.37,0,29.2,11,32.16,25.59a8,8,0,0,0,15.68-3.18C171.32,24.15,151.2,8,128,8A48.05,48.05,0,0,0,80,56V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm0,128H48V96H208V208Z\"/>","check":"<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>","clock":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>","link":"<path d=\"M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z\"/>","power":"<path d=\"M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z\"/>","hourglass-medium":"<path d=\"M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z\"/>","warning-circle":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>","info":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>","prohibit":"<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.56,87.56,0,0,1-20.41,56.28L71.72,60.4A88,88,0,0,1,216,128ZM40,128A87.56,87.56,0,0,1,60.41,71.72L184.28,195.6A88,88,0,0,1,40,128Z\"/>"};
 </script>
@@ -507,6 +528,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
   <nav class="tabs" role="tablist" aria-label="Views">
     <button class="tab" role="tab" id="tab-triage" data-tab="triage" aria-controls="view-triage" aria-selected="true">Triage<span class="count" id="c-triage"></span></button>
     <button class="tab" role="tab" id="tab-resumes" data-tab="resumes" aria-controls="view-resumes" aria-selected="false">Resumes<span class="count" id="c-resumes"></span></button>
+    <button class="tab" role="tab" id="tab-linkedin" data-tab="linkedin" aria-controls="view-linkedin" aria-selected="false">LinkedIn</button>
     <button class="tab" role="tab" id="tab-sources" data-tab="sources" aria-controls="view-sources" aria-selected="false">Scan sources<span class="count" id="c-sources"></span></button>
     <button class="tab" role="tab" id="tab-stats" data-tab="stats" aria-controls="view-stats" aria-selected="false">Stats</button>
   </nav>
@@ -522,6 +544,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     <div class="list" id="list"></div>
   </section>
   <section class="view" id="view-resumes" role="tabpanel" aria-labelledby="tab-resumes" hidden></section>
+  <section class="view" id="view-linkedin" role="tabpanel" aria-labelledby="tab-linkedin" hidden></section>
   <section class="view" id="view-sources" role="tabpanel" aria-labelledby="tab-sources" hidden></section>
   <section class="view" id="view-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
     <div class="panel" id="lastrun">
@@ -580,7 +603,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
   // ---------- Constants ----------
   var DAY = 86400000;
   var NO_RESPONSE_DAYS = 21, AFTER_INTERVIEW_DAYS = 14, CLOSED_PAGE = 50;
-  var TABS = ["triage", "resumes", "sources", "stats"];
+  var TABS = ["triage", "resumes", "linkedin", "sources", "stats"];
   var STAGES = [
     { k: "review", label: "To review", has: ["new"] },
     { k: "interested", label: "Interested", has: ["interested"] },
@@ -597,7 +620,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
 
   // ---------- Data (filled by the database) ----------
   // R is her real data; D is what the page shows: R, or the sample data while the tour runs.
-  var R = { postings: Object.create(null), decisions: Object.create(null), deep: Object.create(null), requests: Object.create(null), done: Object.create(null), resumes: Object.create(null), switches: Object.create(null), rescores: Object.create(null), prefs: Object.create(null), run: null, sources: null, suggestions: null };
+  var R = { postings: Object.create(null), decisions: Object.create(null), deep: Object.create(null), requests: Object.create(null), done: Object.create(null), resumes: Object.create(null), switches: Object.create(null), rescores: Object.create(null), prefs: Object.create(null), run: null, sources: null, suggestions: null, linkedin: null };
   var D = R;
   var tour = { on: false, step: 0, prevTab: null, offered: false };
   var db = null, downloads = null, mcp = null, canWrite = true, writeConfirmed = false, loaded = false, runBusy = false;
@@ -1405,6 +1428,76 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     });
   }
 
+  // ---------- LinkedIn ----------
+  // Profile text Claude wrote from her master resume for all her target titles ("write my LinkedIn profile"), one copy button per field.
+  var LI_OPEN = "https://www.linkedin.com/in/me/";
+  function renderLinkedIn() {
+    var v = document.getElementById("view-linkedin"); v.textContent = "";
+    var li = D.linkedin;
+    var ask = function (label, req, done) { return el("button", { class: "b", "data-k": "li-ask", onclick: function () { copy(deskPrompt(req), done); } }, [ic("copy"), label]); };
+    if (!li || !li.headline) {
+      v.appendChild(el("div", { class: "panel li-empty" }, [
+        el("h3", { class: "sec", text: "Your LinkedIn profile" }),
+        el("p", { class: "banner", text: "Recruiters look you up on LinkedIn before and after they read your resume. Claude can write your headline, About, role descriptions and skills from your master resume, aimed at all the roles you're targeting, so they hold up while your resumes get tailored. Each field then gets a copy button here." }),
+        el("div", { class: "btns", style: "justify-content:flex-start" }, [ask("Copy request for Claude", "write my LinkedIn profile", "Copied. Paste it into a new Claude chat; Claude writes your profile text and puts it here.")])
+      ]));
+      return;
+    }
+    var head = el("div", { class: "sechead" }, [
+      el("p", { class: "banner", text: (li.aims_at ? "Written for " + li.aims_at + ". " : "") + "Updated " + niceDate(li.updated || li.at) + ". Copy each field into LinkedIn; your resumes can be tailored per job, this stays the same." }),
+      el("div", { class: "btns" }, [
+        ask("Copy refresh request", "refresh my LinkedIn profile", "Copied. Paste it into a new Claude chat to rewrite your profile text from your latest master resume and jobs."),
+        el("a", { class: "b", href: LI_OPEN, target: "_blank", rel: "noopener" }, [ic("arrow-square-out"), "Open LinkedIn"])
+      ])
+    ]);
+    v.appendChild(head);
+    function field(label, where, text, max, what, k) {
+      var n = String(text || "").length;
+      return el("div", { class: "lfield" }, [
+        el("div", { class: "lfh" }, [
+          el("div", { class: "lfl" }, [el("div", { class: "t", text: label }), where ? el("div", { class: "s", text: where }) : null]),
+          max ? el("span", { class: "lfn", text: n.toLocaleString("en-US") + " / " + max.toLocaleString("en-US") }) : null,
+          el("button", { class: "b", "data-k": "li-copy-" + k, onclick: function () { copy(String(text || ""), "Copied " + what + "."); } }, [ic("copy"), "Copy"])
+        ]),
+        el("div", { class: "lft", text: text || "" })
+      ]);
+    }
+    v.appendChild(el("h3", { class: "sec", text: "Intro" }));
+    v.appendChild(el("div", { class: "ledger" }, [
+      field("Headline", "Your profile: the pencil next to your name, then Headline.", li.headline, 220, "your headline", "headline"),
+      field("About", "Your profile: About, then the pencil.", li.about, 2600, "your About section", "about")
+    ]));
+    var exp = Array.isArray(li.experience) ? li.experience : [];
+    if (exp.length) {
+      v.appendChild(el("h3", { class: "sec", text: "Experience" }));
+      v.appendChild(el("p", { class: "banner", text: "For each role: Experience on your profile, the pencil on that role, then Description. Titles and dates match your master resume." }));
+      v.appendChild(el("div", { class: "ledger" }, exp.map(function (r, i) {
+        return field(r.title + " · " + r.company, r.dates || "", r.description, 2000, "the " + r.company + " description", "exp-" + i);
+      })));
+    }
+    var skills = Array.isArray(li.skills) ? li.skills : [];
+    if (skills.length) {
+      v.appendChild(el("h3", { class: "sec", text: "Skills" }));
+      var chips = el("div", { class: "rchips" }, skills.map(function (sk, i) { return el("button", { class: "b", "data-k": "li-skill-" + i, title: "Copy this skill", onclick: function () { copy(sk, "Copied \u201c" + sk + "\u201d."); } }, [sk]); }));
+      v.appendChild(el("div", { class: "ledger" }, [el("div", { class: "lfield" }, [
+        el("div", { class: "lfh" }, [
+          el("div", { class: "lfl" }, [el("div", { class: "t", text: skills.length + " skills, most important first" }), el("div", { class: "s", text: "Your profile: Skills, then +. LinkedIn takes one at a time and shows your first ones on top, so add them in this order. Click a skill to copy it." })]),
+          el("button", { class: "b", "data-k": "li-copy-skills", onclick: function () { copy(skills.join("\n"), "Copied all " + skills.length + " skills, one per line."); } }, [ic("copy"), "Copy all"])
+        ]),
+        chips
+      ])]));
+    }
+    var o = li.open_to_work || {}, rows = [];
+    if ((o.titles || []).length) rows.push(field("Job titles", "Up to 5.", o.titles.join("\n"), 0, "the job titles", "otw-titles"));
+    if ((o.locations || []).length) rows.push(field("Locations", "Up to 5.", o.locations.join("\n"), 0, "the locations", "otw-loc"));
+    if ((o.workplaces || []).length) rows.push(field("Workplace", "Tick these.", o.workplaces.join(", "), 0, "the workplace types", "otw-work"));
+    if (rows.length) {
+      v.appendChild(el("h3", { class: "sec", text: "Open to work" }));
+      v.appendChild(el("p", { class: "banner", text: "Your profile: Open to, then Finding a new job. Choose \u201cRecruiters only\u201d if your current employer shouldn't see it." }));
+      v.appendChild(el("div", { class: "ledger" }, rows));
+    }
+  }
+
   // ---------- Scan sources ----------
   var GROUPS_SRC = [
     ["mail", "Alerts, sweep and web search", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail. Every night a free sweep checks about 15,000 companies' job boards for your titles, and every morning a web search looks across job boards, so you see jobs at companies you never listed."],
@@ -2044,6 +2137,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     safe("header", function () { renderCounts(all); });
     if (state.tab === "triage") safe("triage", function () { renderTriage(all); markSel(); });
     if (state.tab === "resumes") safe("resumes", renderResumes);
+    if (state.tab === "linkedin") safe("linkedin", renderLinkedIn);
     if (state.tab === "sources") safe("sources", renderSources);
     if (state.tab === "stats") safe("stats", renderStats);
     showTab();
@@ -2141,7 +2235,13 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     var run = { at: iso(0), ok: true, problems: [], last_good_run: iso(0), version: (R.run && R.run.version) || "", plan: (R.run && R.run.plan) || "Pro", daily_cap: (R.run && R.run.daily_cap) || 10, help_email: (R.run && R.run.help_email) || "", scoring: { threshold: 4, dims: dims.map(function (d) { return { id: d[0], name: d[1], bucket: d[2] }; }) }, funnel: { since: day(30), open_today: 1240, passed_filters: 310, scored: 140, qualified: 26 }, today: { scored: 10, qualified: 3 }, last: { since: iso(1), started: new Date(Date.now() - 20 * 60000).toISOString(), scans: 2, companies: 48, listed: 1240, found: 14, scored: 10, dealbreakers: 2, to_review: 3, deep: 1, requests: 0, sites: 5 },
       history: [[6, 11, 9, 2], [5, 18, 10, 4], [4, 9, 7, 1], [3, 15, 10, 3], [2, 7, 6, 0], [1, 12, 10, 2], [0, 14, 10, 3]].map(function (x) { return { at: iso(x[0]), found: x[1], scored: x[2], to_review: x[3] }; }) };
     var suggestions = { week: "sample", items: [{ id: "pay-floor", title: "Set your minimum pay to $140K", why: "You skipped 3 jobs for pay; the best-paid of them topped out at $135K.", change: "Jobs whose posted range tops out under $140K are skipped before scoring." }] };
-    return { postings: postings, decisions: decisions, deep: deep, requests: {}, done: {}, resumes: resumes, switches: {}, rescores: {}, prefs: {}, run: run, sources: sources, suggestions: suggestions };
+    var linkedin = { at: iso(2), updated: day(2), aims_at: "Head of Creative Production and Studio Director roles",
+      headline: "Head of Creative Production · I run in-house studios that ship campaign work on time and on budget",
+      about: "I run creative production for brands that make most of their work in house.\n\nFor the last six years I've led a studio of about 30 producers, editors and designers, and I care most about two things: work the creative team is proud of, and a production process nobody has to think about.\n\nI'm looking for a Head of Creative Production or Studio Director role at a consumer brand.",
+      experience: [{ company: "Sample Brand Co.", title: "Director, Creative Production", dates: "2019 – Present", description: "Lead the in-house studio: production, post and design.\n- Built the intake and scheduling process the studio still runs on.\n- Cut average turnaround on campaign assets by a third." }],
+      skills: ["Creative production", "Studio operations", "Production budgeting", "Vendor management", "Team leadership"],
+      open_to_work: { titles: ["Head of Creative Production", "Studio Director"], locations: ["New York City Metropolitan Area"], workplaces: ["Hybrid", "Remote"] } };
+    return { postings: postings, decisions: decisions, deep: deep, requests: {}, done: {}, resumes: resumes, switches: {}, rescores: {}, prefs: {}, run: run, sources: sources, suggestions: suggestions, linkedin: linkedin };
   }
 
   var TOUR = [
@@ -2158,6 +2258,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     { tab: "triage", stage: "interviewing", target: ".list .row .side .btns", title: "Interviewing", text: "Jobs where you're interviewing. Click **Offer** when one comes in, or close it as **Rejected** or **Withdrew**." },
     { tab: "triage", stage: "closed", target: "#list", title: "Closed", text: "Jobs you skipped, were rejected from, withdrew from, never heard back on, or accepted an offer from, each with how it ended. **Reopen** brings one back. Stats sums up why jobs closed." },
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
+    { tab: "linkedin", target: "#view-linkedin", title: "Your LinkedIn profile", text: "Recruiters look you up on LinkedIn too. Claude writes your headline, About, role descriptions and skills from your master resume, aimed at all the roles you're targeting, so they hold up while your resumes get tailored. **Copy** each field into LinkedIn; ask for a refresh whenever your master resume changes." },
     { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
     { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
     { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, a line shows how many jobs each morning run of the last two weeks sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
@@ -2311,6 +2412,7 @@ var JSD_ICONS = {"keyboard":"<path d=\"M224,48H32A16,16,0,0,0,16,64V192a16,16,0,
     watch("prefs", "prefs", "your settings");
     db.collection("runs").orderBy("at", "desc").limit(1).onSnapshot(function (s) { R.run = s.empty ? null : s.docs[0].data(); ready("runs"); render(); }, onErr("runs", "the run status"));
     db.collection("sources").orderBy("at", "desc").limit(1).onSnapshot(function (s) { R.sources = s.empty ? null : s.docs[0].data(); ready("sources"); render(); }, onErr("sources", "sources"));
+    db.collection("linkedin").orderBy("at", "desc").limit(1).onSnapshot(function (s) { R.linkedin = s.empty ? null : s.docs[0].data(); render(); }, onErr("linkedin", "your LinkedIn profile text"));
     db.collection("suggestions").orderBy("week", "desc").limit(1).onSnapshot(function (s) { R.suggestions = s.empty ? null : s.docs[0].data(); render(); }, onErr("suggestions", "suggestions"));
   })();
 })();

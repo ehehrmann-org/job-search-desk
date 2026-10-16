@@ -451,3 +451,36 @@ test('pull: daily limit requests set desk.yml within bounds; the web and sweep s
   assert.match(desk, /^board_sweep: false/m);
   assert.match(read(path.join(d, 'data', 'page', 'done', 'r2.json')), /isn't allowed/);
 });
+
+test('linkedin: cv.md roles in both shapes, check catches limits and invented numbers, push sends a new version only on change', () => {
+  const d = profile();
+  write(path.join(d, 'cv.md'), '# Pat Doe\n## Experience\n### Acme, Chicago, IL\n**Head of Ops**\nJan 2020 – Present\n- Cut cycle time 30%\n### Director | Beta Co (Remote)\n**March 2015 -- December 2019**\n- Grew the team to 12\n## Earlier Experience\n### Old Place, NY\n**Analyst**\n2010 – 2014\n');
+  const b = json(d, 'linkedin.mjs', 'brief');
+  assert.deepEqual(b.roles.map(r => [r.company, r.title, r.dates]), [['Acme', 'Head of Ops', 'Jan 2020 – Present'], ['Beta Co', 'Director', 'March 2015 – December 2019']]);
+  assert.equal(b.limits.headline, 220);
+  const good = 'updated: 2026-10-16\naims_at: Head of Operations roles\nheadline: Head of Operations who cut cycle time 30%\nabout: |\n  I run operations.\nexperience:\n  - { company: Acme, title: Head of Ops, dates: Jan 2020 – Present, description: "Cut cycle time 30%." }\n  - { company: Beta Co, title: Director, dates: 2015 – 2019, description: "Grew the team to 12." }\nskills: [Operations, Hiring]\nopen_to_work: { titles: [Head of Operations], locations: [Chicago], workplaces: [Remote] }\n';
+  write(path.join(d, 'linkedin.yml'), good);
+  assert.equal(json(d, 'linkedin.mjs', 'check').ok, true);
+  write(path.join(d, 'bad.yml'), good.replace('cut cycle time 30%', 'cut cycle time 45% \u2014 fast').replace('Beta Co', 'Gamma'));
+  let bad;
+  try { sh(d, 'linkedin.mjs', 'check', path.join(d, 'bad.yml')); } catch (e) { bad = JSON.parse(e.stdout); }
+  assert.equal(bad.ok, false);
+  assert.ok(bad.problems.some(p => /45%/.test(p)), 'invented number');
+  assert.ok(bad.problems.some(p => /em dash/.test(p)), 'em dash');
+  assert.ok(bad.problems.some(p => /Gamma.*no role/.test(p)), 'unknown role');
+  write(path.join(d, 'long.yml'), good.replace(/^headline: .*$/m, 'headline: ' + 'x'.repeat(221)));
+  let long; try { sh(d, 'linkedin.mjs', 'check', path.join(d, 'long.yml')); } catch (e) { long = e.stdout; }
+  assert.match(long, /221 characters/);
+  let out = json(d, 'page-sync.mjs', 'push', '--no-run');
+  const li = out.batches.flatMap(f => JSON.parse(read(f)).writes).filter(w => w.collection === 'linkedin');
+  assert.equal(li.length, 1);
+  const doc = JSON.parse(read(li[0].file_path));
+  assert.equal(doc.headline, 'Head of Operations who cut cycle time 30%');
+  assert.deepEqual(doc.open_to_work.workplaces, ['Remote']);
+  for (const f of out.batches) sh(d, 'page-sync.mjs', 'ack', f);
+  out = json(d, 'page-sync.mjs', 'push', '--no-run');
+  assert.equal(out.writes, 0, 'unchanged profile text is not sent again');
+  write(path.join(d, 'linkedin.yml'), good.replace('I run operations.', 'I run operations for agencies.'));
+  out = json(d, 'page-sync.mjs', 'push', '--no-run');
+  assert.equal(out.batches.flatMap(f => JSON.parse(read(f)).writes).filter(w => w.collection === 'linkedin').length, 1, 'a change sends a new version');
+});
