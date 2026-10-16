@@ -1016,6 +1016,7 @@
   }
   function renderSources() {
     var v = document.getElementById("view-sources"); v.textContent = "";
+    v.appendChild(limitsPanel());
     var snap = D.sources;
     var rows = snap ? snap.rows || [] : [];
     if (V.pendingAdds) v.appendChild(el("div", { class: "note" }, [el("span", { text: V.pendingAdds + (V.pendingAdds === 1 ? " job you added is" : " jobs you added are") + " checked against your sources in the next run. Any the scan never saw get flagged here with a suggestion to add their company." })]));
@@ -1095,7 +1096,6 @@
       });
       if (!keys.length) bl.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "Nothing blocked matches." : "Nothing blocked. Type a company or website in the field above and click Add, or skip a job with “Never show jobs from this company”." })]));
       v.appendChild(bl);
-      v.appendChild(limitsPanel());
       return;
     }
 
@@ -1126,7 +1126,6 @@
     }
     if (!l.childNodes.length) l.appendChild(el("div", { class: "lrow" }, [el("div", { class: "m", text: q ? "No company here matches “" + srcQuery.trim() + "”." + (canWrite && !addSrcOpen ? " Press Enter or click Add to add it." : "") : view.k === "dream" ? "No dream companies yet. Type a company name in the field above and click Add." : "Nothing here yet." })]));
     v.appendChild(l);
-    v.appendChild(limitsPanel());
   }
   // Daily limits: how much Claude does each morning. Changes go in as one request per number and apply from the next run.
   var LIMITS = [
@@ -1746,7 +1745,7 @@
     { tab: "resumes", target: "#view-resumes", title: "Your resumes", text: "Your standard resumes come first, one per kind of role. Your master resume holds every fact they draw on. Save a PDF or copy plain text for application forms. Tailored versions show up here when you ask Claude for one; click a tailored resume's job to open it." },
     { tab: "linkedin", target: "#view-linkedin", title: "Your LinkedIn profile", text: "Recruiters look you up on LinkedIn too. Claude writes your headline, About, role descriptions and skills from your master resume, aimed at all the roles you're targeting, so they hold up while your resumes get tailored. **Copy** each field into LinkedIn; ask for a refresh whenever your master resume changes." },
     { tab: "sources", src: "mail", target: "#view-sources .ledger", title: "Jobs at companies you never listed", text: "Every night a free sweep checks about 15,000 companies' job boards for your titles and locations. Every morning Claude also searches the web for your titles across job boards. Job alert emails from LinkedIn, Indeed and others arrive through Gmail once it's connected." },
-    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the bottom. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
+    { tab: "sources", src: "boards", target: [".segtabs", ".srctools", "#view-sources .lrow.src"], title: "Where jobs come from", text: "Alerts, the sweep and the web search, your dream companies, and the job boards the free daily scan reads. Each company shows how many jobs it found and how many reached your bar. Turn any source off with its switch, and set how much Claude does each morning under Daily limits at the top. The field finds a company; type one that isn't there and click **Add** to add it as a dream company or job board, or to block it." },
     { tab: "stats", target: ["#lastrun", "#tiles"], title: "How it's going", text: "Latest run, at the top, shows what the most recent run did: jobs found, scored and sent to To review. Below it, New jobs to review shows how many jobs each morning run of the last two weeks sent to To review. Scoring accuracy shows whether the jobs that reach your bar are ones you want. The other tiles follow your applications from applied to offer. Further down, charts show how far your applications got and why jobs closed." },
     { title: "That's it", text: "Click Finish and the sample jobs go away. Your page may ask once for permission to save your clicks: allow it. You can take this tour again from the status line at the bottom of the page. Press ? for keyboard shortcuts." }
   ];

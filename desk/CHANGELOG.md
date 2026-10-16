@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.28 (2026-10-16)
+- Scan sources: Daily limits moved to the top of the tab.
+
 ## 0.13.27 (2026-10-16)
 - Tabs: only Triage shows a count, as a red badge with the number of jobs waiting in To review. It disappears when nothing waits.
 
