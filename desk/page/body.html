@@ -32,8 +32,9 @@
       <p class="sub" id="lastrun-more"></p>
       <div id="runhist" hidden>
         <h3 class="sec">Morning runs</h3>
-        <p class="sub">Jobs each morning run sent to To review, newest first. Run now isn't counted.</p>
-        <div class="hist" id="runhist-rows"></div>
+        <p class="sub">Jobs each morning run sent to To review, last two weeks. Run now isn't counted. Point at a day for its numbers.</p>
+        <div class="hchart" id="runhist-chart"></div>
+        <details class="htable"><summary>Show as a table</summary><div class="tablewrap"><table><thead><tr><th>Morning run</th><th>To review</th><th>Found</th><th>Scored</th></tr></thead><tbody id="runhist-rows"></tbody></table></div></details>
       </div>
     </div>
     <div class="tiles" id="tiles"></div>
@@ -1245,24 +1246,62 @@
   }
   // One row per morning run: date, a bar for the jobs sent to To review, and the counts behind it.
   function renderHistory(r) {
-    var box = document.getElementById("runhist"), rows = document.getElementById("runhist-rows");
-    rows.textContent = "";
-    var H = (r && Array.isArray(r.history) ? r.history : []).filter(function (h) { return h && h.at && !isNaN(new Date(h.at)); }).slice(-14).reverse();
+    var box = document.getElementById("runhist"), chart = document.getElementById("runhist-chart"), rows = document.getElementById("runhist-rows");
+    chart.textContent = ""; rows.textContent = "";
+    var H = (r && Array.isArray(r.history) ? r.history : []).filter(function (h) { return h && h.at && !isNaN(new Date(h.at)); }).slice(-14);
     box.hidden = !H.length;
     if (!H.length) return;
-    var max = Math.max.apply(null, H.map(function (h) { return Number(h.to_review) || 0; }).concat([1]));
-    H.forEach(function (h) {
-      var n = Number(h.to_review) || 0, bits = [];
-      if (h.found !== null && h.found !== undefined) bits.push(fmt(h.found) + " found");
-      if (h.scored !== null && h.scored !== undefined) bits.push(fmt(h.scored) + " scored");
-      var d = new Date(h.at);
-      rows.appendChild(el("div", { class: "hrow" }, [
-        el("div", { class: "hd", text: d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) }),
-        el("div", { class: "hb" }, [
-          el("div", { class: "track" }, [el("span", { style: "width:" + (n ? Math.max(n / max * 100, 3) : 0) + "%" })]),
-          el("div", { class: "hn" }, [el("b", { text: fmt(n) + " to review" }), bits.length ? " · " + bits.join(" · ") : ""])
-        ])
-      ]));
+    var has = function (v) { return v !== null && v !== undefined; };
+    var day = function (h, long) { return new Date(h.at).toLocaleDateString("en-US", long ? { weekday: "short", month: "short", day: "numeric" } : { month: "short", day: "numeric" }); };
+    var line = function (h) {
+      var bits = [fmt(h.to_review) + " to review"];
+      if (has(h.found)) bits.push(fmt(h.found) + " found");
+      if (has(h.scored)) bits.push(fmt(h.scored) + " scored");
+      return bits.join(" · ");
+    };
+    var n = H.length, vals = H.map(function (h) { return Number(h.to_review) || 0; });
+    var max = Math.max.apply(null, vals.concat([1]));
+    var X = function (i) { return n === 1 ? 50 : i / (n - 1) * 100; }, Y = function (v) { return 100 - v / max * 100; };
+    var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 100 100"); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("aria-hidden", "true");
+    var pl = document.createElementNS(NS, "polyline");
+    pl.setAttribute("points", vals.map(function (v, i) { return X(i) + "," + Y(v); }).join(" "));
+    pl.setAttribute("vector-effect", "non-scaling-stroke");
+    svg.appendChild(pl);
+    var cross = el("span", { class: "hx", hidden: true });
+    var dots = vals.map(function (v, i) { return el("span", { class: "hdot", style: "left:" + X(i) + "%;top:" + Y(v) + "%" }); });
+    var last = el("span", { class: "hlast", text: fmt(vals[n - 1]), style: "left:" + X(n - 1) + "%;top:" + Y(vals[n - 1]) + "%" });
+    var tip = el("div", { class: "htip", role: "status", hidden: true });
+    var inner = el("div", { class: "hin" }, [svg, cross].concat(dots, [last, tip]));
+    var plot = el("div", { class: "hplot", tabindex: "0", "aria-label": "To review per morning run, last " + n + " runs. Use the arrow keys to read each day." }, [inner]);
+    var active = -1;
+    function show(i) {
+      active = Math.max(0, Math.min(n - 1, i));
+      dots.forEach(function (d, k) { d.classList.toggle("on", k === active); });
+      cross.hidden = false; cross.style.left = X(active) + "%";
+      tip.hidden = false; tip.textContent = "";
+      tip.appendChild(el("b", { text: day(H[active], true) })); tip.appendChild(document.createTextNode(" · " + line(H[active])));
+      var x = X(active);
+      tip.style.left = x + "%";
+      tip.style.transform = x < 20 ? "translateX(0)" : x > 80 ? "translateX(-100%)" : "translateX(-50%)";
+    }
+    function hide() { active = -1; cross.hidden = true; tip.hidden = true; dots.forEach(function (d) { d.classList.remove("on"); }); }
+    plot.addEventListener("mousemove", function (e) {
+      var rc = inner.getBoundingClientRect(); if (!rc.width) return;
+      show(n === 1 ? 0 : Math.round((e.clientX - rc.left) / rc.width * (n - 1)));
+    });
+    plot.addEventListener("mouseleave", function () { if (document.activeElement !== plot) hide(); });
+    plot.addEventListener("focus", function () { show(active < 0 ? n - 1 : active); });
+    plot.addEventListener("blur", hide);
+    plot.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); e.stopPropagation(); show((active < 0 ? n - 1 : active) + (e.key === "ArrowLeft" ? -1 : 1)); }
+      else if (e.key === "Home" || e.key === "End") { e.preventDefault(); show(e.key === "Home" ? 0 : n - 1); }
+    });
+    var yax = el("div", { class: "hy", "aria-hidden": "true" }, [el("span", { class: "top", text: fmt(max) }), el("span", { class: "bot", text: "0" })]);
+    var xax = el("div", { class: "hxl", "aria-hidden": "true" }, n === 1 ? [el("span", { text: day(H[0]) })] : [el("span", { text: day(H[0]) }), el("span", { text: day(H[n - 1]) })]);
+    chart.appendChild(yax); chart.appendChild(plot); chart.appendChild(el("span")); chart.appendChild(xax);
+    H.slice().reverse().forEach(function (h) {
+      rows.appendChild(el("tr", null, [el("td", { text: day(h, true) }), el("td", { text: fmt(h.to_review) }), el("td", { text: has(h.found) ? fmt(h.found) : "–" }), el("td", { text: has(h.scored) ? fmt(h.scored) : "–" })]));
     });
   }
   function renderStats() {
