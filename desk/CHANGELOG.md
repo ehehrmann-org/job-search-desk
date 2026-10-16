@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.26 (2026-10-16)
+- LinkedIn tab: pointing at Copy refresh request (or Copy request for Claude) explains what it does. A refresh shows what changed before anything is updated.
+
 ## 0.13.25 (2026-10-16)
 - Stats: the morning runs chart is titled "New jobs to review".
 

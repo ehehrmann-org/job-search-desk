@@ -914,19 +914,23 @@
   function renderLinkedIn() {
     var v = document.getElementById("view-linkedin"); v.textContent = "";
     var li = D.linkedin;
-    var ask = function (label, req, done) { return el("button", { class: "b", "data-k": "li-ask", onclick: function () { copy(deskPrompt(req), done); } }, [ic("copy"), label]); };
+    var ask = function (label, req, done, why) {
+      var bt = el("button", { class: "b", "data-k": "li-ask", "aria-describedby": "tip", onclick: function () { hideTip(); copy(deskPrompt(req), done); } }, [ic("copy"), label]);
+      explain(bt, why);
+      return bt;
+    };
     if (!li || !li.headline) {
       v.appendChild(el("div", { class: "panel li-empty" }, [
         el("h3", { class: "sec", text: "Your LinkedIn profile" }),
         el("p", { class: "banner", text: "Recruiters look you up on LinkedIn before and after they read your resume. Claude can write your headline, About, role descriptions and skills from your master resume, aimed at all the roles you're targeting, so they hold up while your resumes get tailored. Each field then gets a copy button here." }),
-        el("div", { class: "btns", style: "justify-content:flex-start" }, [ask("Copy request for Claude", "write my LinkedIn profile", "Copied. Paste it into a new Claude chat; Claude writes your profile text and puts it here.")])
+        el("div", { class: "btns", style: "justify-content:flex-start" }, [ask("Copy request for Claude", "write my LinkedIn profile", "Copied. Paste it into a new Claude chat; Claude writes your profile text and puts it here.", "Copies a request for Claude. Paste it into a new Claude chat: Claude writes your headline, About, role descriptions and skills from your master resume and your target roles, shows you the draft, and puts the text here once you approve it.")])
       ]));
       return;
     }
     var head = el("div", { class: "sechead" }, [
       el("p", { class: "banner", text: (li.aims_at ? "Written for " + li.aims_at + ". " : "") + "Updated " + niceDate(li.updated || li.at) + ". Copy each field into LinkedIn; your resumes can be tailored per job, this stays the same." }),
       el("div", { class: "btns" }, [
-        ask("Copy refresh request", "refresh my LinkedIn profile", "Copied. Paste it into a new Claude chat to rewrite your profile text from your latest master resume and jobs."),
+        ask("Copy refresh request", "refresh my LinkedIn profile", "Copied. Paste it into a new Claude chat to rewrite your profile text from your latest master resume and jobs.", "Copies a request for Claude. Paste it into a new Claude chat: Claude rewrites the text below from your current master resume, target roles and the wording your recent jobs repeat, shows you what changed, and updates this tab once you approve. It can't read your live LinkedIn profile, so if you changed something there, tell Claude what. Use it after you update your master resume or change the roles you're targeting."),
         el("a", { class: "b", href: LI_OPEN, target: "_blank", rel: "noopener" }, [ic("arrow-square-out"), "Open LinkedIn"])
       ])
     ]);
