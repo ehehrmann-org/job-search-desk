@@ -203,6 +203,7 @@ desk/page/build.mjs
 desk/page/dist/job-search-desk.html
 desk/page/icons.js
 desk/page/style.css
+desk/probe-boards.mjs
 desk/resume.mjs
 desk/save.sh
 desk/score.mjs

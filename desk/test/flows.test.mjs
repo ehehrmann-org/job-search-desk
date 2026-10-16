@@ -484,3 +484,38 @@ test('linkedin: cv.md roles in both shapes, check catches limits and invented nu
   out = json(d, 'page-sync.mjs', 'push', '--no-run');
   assert.equal(out.batches.flatMap(f => JSON.parse(read(f)).writes).filter(w => w.collection === 'linkedin').length, 1, 'a change sends a new version');
 });
+
+test('board probe: links on the careers page, the website from the careers link, found boards applied in the morning', async () => {
+  const { linksIn, siteOf, boardLink } = await import('../probe-boards.mjs');
+  const html = '<a href="/about">About</a><a href="https://boards.greenhouse.io/nowhereco/jobs/123">Ops lead</a><iframe src="https://jobs.lever.co/other"></iframe><script>var u="https://jobs.ashbyhq.com/nowhere";</script><a href="mailto:x@y.z">mail</a>';
+  const links = linksIn(html, 'https://nowhere.example.com/careers');
+  assert.ok(links.includes('https://nowhere.example.com/about'));
+  assert.ok(links.includes('https://boards.greenhouse.io/nowhereco/jobs/123'));
+  assert.ok(links.includes('https://jobs.ashbyhq.com/nowhere'));
+  assert.ok(!links.some(l => l.startsWith('mailto')));
+  const hit = await boardLink(links, async u => (/greenhouse/.test(u) ? 'greenhouse' : null));
+  assert.equal(hit.url, 'https://boards.greenhouse.io/nowhereco/jobs/123');
+  assert.equal(await boardLink(['https://nowhere.example.com/about'], async () => 'x'), null, 'the page itself is never a board');
+  assert.equal(siteOf('https://www.acme.com/careers/open-roles'), 'https://www.acme.com/');
+  assert.equal(siteOf('https://job-boards.greenhouse.io/acme'), null);
+
+  const d = profile();
+  write(path.join(d, 'data', 'board-probe.json'), { 'nowhere-co': { at: '2026-10-16', result: 'found', url: 'https://job-boards.greenhouse.io/nowhereco', reader: 'greenhouse' }, ghost: { at: '2026-10-16', result: 'found', url: 'https://job-boards.greenhouse.io/ghost' } });
+  const dump = path.join(d, 'dump'); fs.mkdirSync(dump, { recursive: true });
+  const out = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.deepEqual(out.boards_found, ['Nowhere Co']);
+  const portals = read(path.join(d, 'portals.yml'));
+  assert.match(portals, /careers_url: https:\/\/job-boards\.greenhouse\.io\/nowhereco/);
+  assert.match(portals, /website: https:\/\/nowhere\.example\.com\//);
+  const probe = JSON.parse(read(path.join(d, 'data', 'board-probe.json')));
+  assert.ok(probe['nowhere-co'].applied);
+  const again = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.equal(again.boards_found, undefined, 'applied once');
+  const push = json(d, 'page-sync.mjs', 'push', '--no-run');
+  const src = push.batches.flatMap(f => JSON.parse(read(f)).writes).find(w => w.collection === 'sources');
+  const rows = JSON.parse(read(src.file_path)).rows;
+  const nowhere = rows.find(r => r.name === 'Nowhere Co');
+  assert.equal(nowhere.group, 'boards');
+  assert.equal(nowhere.website, 'https://nowhere.example.com/');
+  assert.equal(rows.find(r => r.name === 'Glossier').website, undefined, 'a job board link is not a website');
+});

@@ -26,6 +26,8 @@
  * covered board failed 3 days running; the scoring task then scores from the title
  * and company alone and says so. "gone" means a covered board answered that the
  * posting was taken down; the scoring task never scores it.
+ *
+ * Afterwards it runs desk/probe-boards.mjs (up to 80 companies a night, within 6 minutes; DESK_NO_PROBE=1 skips it).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -130,4 +132,11 @@ async function main(args) {
   console.log(`fetch-pending-jds: ${todo.length} new postings, ${saved} descriptions saved, ${noFeed} on boards with no description feed (LinkedIn and similar, nothing failed), ${missing} unreadable after ${MAX_TRIES} tries, ${takenDown} taken down, ${later} to retry tomorrow`);
 }
 
-if (isMain(import.meta.url)) main(process.argv.slice(2)).catch(e => { console.error(`fetch-pending-jds: ${e.message}`); process.exit(1); });
+// After the descriptions: look for the job boards behind careers pages the scan can't read yet (a few dozen a night).
+async function probeAfter() {
+  if (process.env.DESK_NO_PROBE) return;
+  try { const { probe } = await import('./probe-boards.mjs'); console.log(`probe-boards: ${JSON.stringify(await probe({ limit: 80 }))}`); }
+  catch (e) { console.error(`probe-boards: ${e.message}`); }
+}
+
+if (isMain(import.meta.url)) main(process.argv.slice(2)).then(probeAfter).catch(e => { console.error(`fetch-pending-jds: ${e.message}`); process.exit(1); });

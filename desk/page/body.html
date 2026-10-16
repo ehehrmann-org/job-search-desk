@@ -987,7 +987,7 @@
     ["mail", "Alerts, sweep and web search", "Job alerts you set up on LinkedIn, Indeed and other sites arrive through Gmail. Every night a free sweep checks about 15,000 companies' job boards for your titles, and every morning a web search looks across job boards, so you see jobs at companies you never listed."],
     ["dream", "Dream companies", "Always checked, and their postings reach you even if they score low."],
     ["boards", "Job boards", "Companies whose job boards the free daily scan reads. No Claude usage."],
-    ["search", "Can't be read yet", "No job board the scan can read was found for these, so they are not checked. Paste a company's job board link to fix it, or turn them off."]
+    ["search", "Can't be read yet", "No job board the scan can read is known for these yet, so they are not checked. Every night the scan opens a few dozen of their careers pages looking for one, and moves each company it finds to Job boards. Paste a company's job board link to fix one right away, or turn them off."]
   ];
   var srcTab = null, quietOpen = {}, srcQuery = "", boardEdit = null, addSrcOpen = false, srcBusy = false, swBusy = {};
   try { srcTab = localStorage.getItem("jsd-src-tab"); } catch (e) {}
@@ -1226,7 +1226,9 @@
   function srcRow(s) {
     var on = srcOn(s);
     var fixing = V.board[s.id];
-    var t = el("div", null, [el("div", { class: "t" }, [s.name, s.cost ? el("span", { class: "pill", text: "Uses Claude" }) : null]), el("div", { class: "s", text: [s.desc, s.how].filter(Boolean).join(" · ") })]);
+    // The company name opens its own website when the source list knows it.
+    var nm = isLink(s.website) ? el("a", { class: "colink", href: s.website, target: "_blank", rel: "noopener", title: "Open " + s.name + "'s website" }, [s.name]) : s.name;
+    var t = el("div", null, [el("div", { class: "t" }, [nm, s.cost ? el("span", { class: "pill", text: "Uses Claude" }) : null]), el("div", { class: "s", text: [s.desc, s.how].filter(Boolean).join(" · ") })]);
     var y;
     if (fixing) y = el("div", { class: "m low", text: "Checking the link you pasted in the next run" });
     else if (!on) y = el("div", { class: "m", text: "Off" });

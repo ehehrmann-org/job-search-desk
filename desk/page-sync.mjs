@@ -54,6 +54,7 @@ import { applySuggestion, decline as declineSuggestion } from './suggest.mjs';
 import { addPending } from './daily.mjs';
 import { parsePending } from './fetch-pending-jds.mjs';
 import { check as checkLinkedin } from './linkedin.mjs';
+import { PROBE_FILE, siteOf } from './probe-boards.mjs';
 import crypto from 'node:crypto';
 
 const P = {
@@ -109,6 +110,30 @@ function allJds() {
     try { out.push({ file: f, id: f.slice(0, -3), ...readFrontMatter(path.join(P.jds, f)).meta }); } catch { /* unreadable: skipped */ }
   }
   return out;
+}
+
+// Job boards the nightly scan found on companies' own careers pages (desk/probe-boards.mjs): the company
+// is checked daily from now on, and its careers page stays on as its website.
+async function applyProbes(summary) {
+  const found = readJson(PROBE_FILE, {});
+  const due = Object.entries(found).filter(([, v]) => v?.result === 'found' && v.url && !v.applied);
+  if (!due.length) return;
+  const portals = readPortals();
+  const day = new Date().toISOString().slice(0, 10);
+  let changed = false;
+  for (const [key, v] of due) {
+    const co = (portals.tracked_companies || []).find(c => c?.name && slug(c.name) === key);
+    v.applied = day;
+    if (!co || (co.scan_method !== 'websearch' && await boardFor(co))) continue;
+    const url = canonicalUrl(v.url);
+    if (!url || !(await boardFor(url))) { v.result = 'none'; delete v.applied; continue; }
+    if (!co.website) { const site = siteOf(co.careers_url); if (site) co.website = site; }
+    co.careers_url = url; delete co.scan_method; delete co.scan_query; delete co.provider;
+    changed = true;
+    (summary.boards_found ||= []).push(co.name);
+  }
+  if (changed) writePortals(portals);
+  writeJson(PROBE_FILE, found);
 }
 
 // portals.yml keeps its leading comment block when rewritten.
@@ -223,6 +248,7 @@ async function pull(dumpDir) {
     if (portalsChanged) writePortals(portals);
     writeJson(P.switchesApplied, applied);
   }
+  try { await applyProbes(summary); } catch (e) { summary.errors.push(`job boards found overnight: ${e.message}`); }
   if (!summary.errors.length) delete summary.errors;
   console.log(JSON.stringify(summary, null, 2));
 }
@@ -260,6 +286,7 @@ async function handle(rid, r, summary, ctx) {
       (summary.boards_not_readable ||= []).push(co.name);
       return done(rid, `That link isn't a job board the scan can read. Try the link of one job posting from ${co.name}'s careers page.`);
     }
+    if (!co.website) { const site = siteOf(co.careers_url); if (site) co.website = site; }
     co.careers_url = url; co.enabled = true; delete co.scan_method; delete co.scan_query; delete co.provider;
     writePortals(portals);
     if (ctx.boardAt) ctx.boardAt[r.source] = String(r.at || '');
@@ -712,14 +739,19 @@ async function buildSources(counts) {
     const perDay = Math.min(Number.isInteger(desk.web_cap) ? desk.web_cap : 5, webList.length);
     rows.push({ id: 'web', group: 'mail', name: 'Web search across job boards', desc: `${webList.length} searches for your titles on Greenhouse, Lever, Ashby and other job boards, finding companies you haven't listed`, how: `Every morning, ${perDay} at a time`, on: desk.web_search !== false, cost: true, found: 0, qual: 0, app: 0 });
   }
+  const probes = readJson(PROBE_FILE, {});
   for (const co of portals.tracked_companies || []) {
     if (!co?.name) continue;
     const board = co.scan_method === 'websearch' ? null : await boardFor(co);
     const group = co.dream ? 'dream' : board ? 'boards' : 'search';
+    const pr = probes[slug(co.name)];
+    // Where its own careers page has no job board link the scan can read, say so and when it was looked at.
+    const looked = !board && pr ? (pr.result === 'none' ? `No job board link on its careers page (looked ${pr.at})` : pr.result === 'error' ? `Its careers page didn't open (tried ${pr.at})` : null) : null;
+    const website = /^https?:\/\//i.test(co.website || '') ? co.website : siteOf(co.company_site || '') || siteOf(co.careers_url || '');
     rows.push({
-      id: `co-${slug(co.name)}`, group, name: co.name,
-      desc: board ? board.replace(/(^|-)(\w)/g, (m, a, b) => (a ? ' ' : '') + b.toUpperCase()) : 'No job board found',
-      how: board ? 'Checked daily' : co.dream ? 'Checked weekly by web search' : 'Not checked: needs a careers or job board link',
+      id: `co-${slug(co.name)}`, group, name: co.name, website: website || undefined,
+      desc: board ? board.replace(/(^|-)(\w)/g, (m, a, b) => (a ? ' ' : '') + b.toUpperCase()) : looked || 'Looking for its job board: a few dozen companies each night',
+      how: board ? 'Checked daily' : co.dream ? 'Checked weekly by web search' : 'Not checked until a job board is found',
       on: co.enabled !== false, cost: !board && !!co.dream, ...c(co.name),
     });
   }
