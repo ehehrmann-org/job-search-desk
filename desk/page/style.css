@@ -237,6 +237,8 @@ div.mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; bo
 .tip { position: fixed; z-index: 20; pointer-events: none; background: var(--fg); color: var(--bg); font-size: 12.5px; padding: 6px 9px; border-radius: 6px; max-width: 260px; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: calc(100% - 32px); }
 .toast:not(.show) { opacity: 0; pointer-events: none; }
+.toast .tact { margin-left: 12px; background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.toast .tact:focus-visible { outline: 2px solid var(--bg); outline-offset: 2px; }
 
 @media (max-width: 760px) {
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }

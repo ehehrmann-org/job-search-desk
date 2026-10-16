@@ -153,7 +153,12 @@
     return n;
   }
   var toastT;
-  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove("show"); t.textContent = ""; }, Math.min(12000, Math.max(3600, 55 * String(msg).length))); }
+  function toast(msg, action) {
+    var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT);
+    var hide = function () { t.classList.remove("show"); t.textContent = ""; };
+    if (action) t.appendChild(el("button", { class: "tact", "data-k": "toast-act", onclick: function () { clearTimeout(toastT); hide(); action.fn(); } }, [action.label]));
+    toastT = setTimeout(hide, Math.min(12000, Math.max(action ? 8000 : 3600, 55 * String(msg).length)));
+  }
   function num(v) { if (v === null || v === undefined || v === "") return null; var n = Number(v); return isFinite(n) ? n : null; }
   function one(v) { var n = num(v); return n === null ? "–" : n.toFixed(1); }
   function pct(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
@@ -757,31 +762,46 @@
     ]);
   }
 
+  // Skipping takes one click: a reason (or "No reason") skips the job right away, and the toast offers Undo (also the u key).
+  var lastUndo = null;
+  async function undoLast() {
+    var u = lastUndo; lastUndo = null;
+    if (!u) { toast("Nothing to undo."); return; }
+    var back = u.before ? JSON.parse(JSON.stringify(u.before)) : { status: "new", dates: {}, reasons: [] };
+    if (!writable()) { toast("Not connected. Nothing was undone."); return; }
+    back.at = new Date().toISOString();
+    var cur = D.decisions[u.id], where = stageOf(back.status) === "review" || back.status === "new" ? "To review" : LABEL[back.status] || "its stage";
+    D.decisions[u.id] = back; render();
+    try {
+      await persist("decisions/" + u.id, back);
+      toast((u.blocked ? "Back in " + where + ". " + u.blocked + " is still blocked; unblock it on Scan sources." : "Back in " + where + ".") + (tour.on ? " (sample job, nothing saved)" : ""));
+    } catch (e) { lostWrite(e); D.decisions[u.id] = cur; render(); toast("Not undone: " + errText(e)); }
+  }
   function skipDrawer(p) {
-    var dr = drafts.skip[p.id] = drafts.skip[p.id] || { reasons: {}, block: false };
+    var dr = drafts.skip[p.id] = drafts.skip[p.id] || { block: false };
     var off = !canWrite || !!writing[p.id];
+    async function skip(reasons) {
+      var before = D.decisions[p.id] ? JSON.parse(JSON.stringify(D.decisions[p.id])) : null;
+      var blockIt = !!dr.block && p.company && !p.pending;
+      var ok = await saveDecision(p.id, { status: "skipped", reasons: reasons }, null);
+      if (!ok) return;
+      delete drafts.skip[p.id];
+      lastUndo = { id: p.id, before: before, blocked: blockIt ? p.company : null };
+      if (blockIt) await saveRequest({ kind: "block_company", company: p.company, reason: reasons.length ? "Skipped: " + reasons.join(", ") : "Skipped from the job page" }, null);
+      var msg = blockIt ? "Skipped, and " + p.company + " is blocked from now on." : "Moved to Closed as Skipped" + (reasons.length ? ": " + reasons[0] : "") + ".";
+      toast(msg + (tour.on ? " (sample job, nothing saved)" : ""), { label: "Undo", fn: undoLast });
+    }
     var chips = el("div", { class: "rchips" });
     REASONS.forEach(function (r, i) {
-      var b = el("button", { class: "b" + (dr.reasons[r] ? " on" : ""), "data-k": "skip-" + p.id + "-" + i, "aria-pressed": String(!!dr.reasons[r]), onclick: function () { dr.reasons[r] = !dr.reasons[r]; b.className = "b" + (dr.reasons[r] ? " on" : ""); b.setAttribute("aria-pressed", String(!!dr.reasons[r])); } }, [r]);
-      chips.appendChild(b);
+      chips.appendChild(el("button", { class: "b", "data-k": "skip-" + p.id + "-" + i, disabled: off, onclick: function () { skip([r]); } }, [r]));
     });
+    chips.appendChild(el("button", { class: "b", "data-k": "skip-" + p.id + "-none", disabled: off, onclick: function () { skip([]); } }, ["No reason"]));
     var block = el("input", { type: "checkbox", id: "blk-" + p.id, "data-k": "blk-" + p.id, onchange: function () { dr.block = block.checked; } });
     block.checked = !!dr.block;
     return el("div", { class: "drawer wide" }, [
-      el("p", { text: "Why skip it? Pick any that apply. Your reasons feed next week's scoring suggestions; Job closed and Duplicate don't count against the score." }),
-      chips,
-      p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Never show jobs from " + p.company, el("small", { text: "undo any time on Scan sources" })]) : null,
-      el("div", { class: "btns", style: "justify-content:flex-start" }, [
-        el("button", { class: "b", onclick: function () { delete drafts.skip[p.id]; toggleDrawer(p.id, "skip"); } }, ["Cancel"]),
-        el("button", { class: "b primary", "data-k": "d-" + p.id + "-skipgo", disabled: off, onclick: async function () {
-          var reasons = REASONS.filter(function (k) { return dr.reasons[k]; });
-          var blockIt = !!dr.block && p.company && !p.pending;
-          var ok = await saveDecision(p.id, { status: "skipped", reasons: reasons }, blockIt ? null : "Moved to Closed as Skipped");
-          if (!ok) return;
-          delete drafts.skip[p.id];
-          if (blockIt) await saveRequest({ kind: "block_company", company: p.company, reason: reasons.length ? "Skipped: " + reasons.join(", ") : "Skipped from the job page" }, "Skipped, and " + p.company + " is blocked from now on.");
-        } }, ["Skip it"])
-      ])
+      el("p", { text: "Why skip it? Click a reason and it's skipped right away; Undo appears at the bottom of the page. Your reasons feed next week's scoring suggestions; Job closed and Duplicate don't count against the score." }),
+      p.company && !p.pending ? el("label", { class: "resopt", for: "blk-" + p.id }, [block, "Also never show jobs from " + p.company, el("small", { text: "tick this first; undo any time on Scan sources" })]) : null,
+      chips
     ]);
   }
 
@@ -1391,7 +1411,8 @@
     ["j  k", "Next or previous job"],
     ["o", "Open the selected job's posting"],
     ["i", "Interested"],
-    ["s", "Skip (opens the reasons)"],
+    ["s", "Skip (opens the reasons; a reason skips it)"],
+    ["u", "Undo the last skip"],
     ["a", "Applied (opens the resume picker)"],
     ["w", "Why this score"],
     ["1 – 5", "Go to To review, Interested, Applied, Interviewing or Closed"],
@@ -1449,7 +1470,7 @@
     if (k === "Escape" && state.q) { e.preventDefault(); clearSearch(); render(); return; }
     if (/^[1-5]$/.test(k)) { e.preventDefault(); clearSearch(); state.stage = STAGES[+k - 1].k; state.closedLimit = CLOSED_PAGE; state.sel = null; drawer = {}; setTab("triage"); return; }
     var map = { j: function () { moveSel(1); }, k: function () { moveSel(-1); }, o: function () { selAction("open", "Opening the posting"); },
-      i: function () { selAction("int", "Interested"); }, s: function () { selAction("skip", "Skip"); }, a: function () { selAction("app", "Applied"); }, w: function () { selAction("why", "Why this score"); } };
+      i: function () { selAction("int", "Interested"); }, s: function () { selAction("skip", "Skip"); }, a: function () { selAction("app", "Applied"); }, w: function () { selAction("why", "Why this score"); }, u: function () { undoLast(); } };
     if (map[k]) { e.preventDefault(); map[k](); }
   });
   document.getElementById("kb-btn").addEventListener("click", function () { kbOpen = !kbOpen; if (kbOpen) { helpOpen = false; focusNext = "kb-x"; } render(); });

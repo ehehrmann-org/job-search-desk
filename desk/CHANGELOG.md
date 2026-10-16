@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.19 (2026-10-16)
+- Skip takes one click: after Skip, click a reason (or No reason) and the job moves to Closed right away. The message at the bottom has Undo, and the u key undoes the last skip.
+
 ## 0.13.18 (2026-10-16)
 - Stats: the morning runs chart is now titled "Jobs sent to To review, by morning run", so the line reads as job counts.
 
