@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.24 (2026-10-16)
+- Setting up alone: when the start message's agenda is older than the tool, Claude follows the current steps (which now include your LinkedIn profile in step 11) and says so.
+
 ## 0.13.23 (2026-10-16)
 - Stats, Latest run: Scored can be bigger than New jobs found, because scoring also takes jobs found on earlier days. The notes now say how many of the scored jobs were found earlier, and how many found jobs are still waiting to be scored.
 
