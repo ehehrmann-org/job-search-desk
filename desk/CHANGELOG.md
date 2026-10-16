@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.23 (2026-10-16)
+- Stats, Latest run: Scored can be bigger than New jobs found, because scoring also takes jobs found on earlier days. The notes now say how many of the scored jobs were found earlier, and how many found jobs are still waiting to be scored.
+
 ## 0.13.22 (2026-10-16)
 - New LinkedIn tab: your headline, About, role descriptions, skills and open-to-work settings, written by Claude from your master resume for all the roles you're targeting, each with a copy button and LinkedIn's character limit. To fill it, click "Copy request for Claude" on the tab and paste it into a Claude chat.
 - Setup step 11 now includes your LinkedIn profile text.

@@ -1320,8 +1320,10 @@
     function mini(k, v, note) { minis.appendChild(el("div", { class: "mini" }, [el("div", { class: "v", text: v === null || v === undefined ? "–" : fmt(v) }), el("div", { class: "k", text: k }), note ? el("div", { class: "s", text: note }) : null])); }
     if (L) {
       if (!r.quick) mini("Listed on your job boards", L.listed, L.companies ? L.companies + " companies checked" : null);
-      mini("New jobs found", r.quick ? null : L.found, r.quick ? "Run now doesn't scan" : "passed your title and location filters");
-      mini("Scored", L.scored, L.dealbreakers ? L.dealbreakers + " hit a deal-breaker" : null);
+      // Found and scored are different batches, so Scored can be bigger than New jobs found; the notes say why.
+      var q = num(L.queued), early = num(L.scored_earlier);
+      mini("New jobs found", r.quick ? null : L.found, r.quick ? "Run now doesn't scan" : "passed your title and location filters" + (q ? "; " + fmt(q) + " still waiting to be scored" : ""));
+      mini("Scored", L.scored, [early ? fmt(early) + " found on earlier days" : null, L.dealbreakers ? L.dealbreakers + " hit a deal-breaker" : null].filter(Boolean).join(" · ") || null);
       mini("Sent to To review", L.to_review, "reached your bar, or a dream company");
       var bits = [];
       if (L.deep) bits.push(L.deep + (L.deep === 1 ? " deep evaluation" : " deep evaluations") + " written");

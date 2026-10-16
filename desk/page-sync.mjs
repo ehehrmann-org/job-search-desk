@@ -45,7 +45,7 @@ import * as yaml from 'js-yaml';
 import { postingDoc, belongsOnPage, runId, sourcesDoc, sourceCounts, slug } from './lib/page-docs.mjs';
 import { loadScoringConfig } from './lib/scoring.mjs';
 import { readFrontMatter } from './lib/frontmatter.mjs';
-import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist, websiteOf } from './lib/blocklist.mjs';
+import { loadBlocklist, listBlocked, addToBlacklist, removeFromBlacklist, websiteOf, blockedBy } from './lib/blocklist.mjs';
 import { boardFor } from './lib/boards.mjs';
 import { loadSites, saveSites, fillKnown, dueLookups, recordLookups, pageSites } from './lib/sites.mjs';
 import { canonicalUrl, urlKey, seenKeys } from './lib/urls.mjs';
@@ -499,6 +499,15 @@ async function push(args) {
     let started = null;
     try { started = (fs.readFileSync(path.join(P.page, 'last-run.md'), 'utf8').match(/^started:\s*(\S+)/m) || [])[1] || null; } catch { /* no run log */ }
     const sitesFound = Object.values(loadSites(DATA)).filter(e => e?.how === 'search' && e.url && e.at === todayIso).length;
+    // Found and scored are different batches: scoring takes jobs found on earlier days too (the daily limit), and jobs from
+    // alerts and web searches wait for the nightly scan to save their descriptions. These two numbers say so on the page.
+    const isAdded = m => m.added === true || m.added === 'true';
+    const scoredEarlier = scoredSince.filter(s => { const m = jdMeta(s.verdict.id); return !isAdded(m) && m.found && String(m.found) < todayIso; }).length;
+    const scoredIds = new Set(scores.map(s => s.verdict.id));
+    const ageCut = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+    // Saved postings the daily limit has not reached yet (the same ones daily.mjs todo would hand out).
+    const lists = loadBlocklist(DATA);
+    const queued = allJds().filter(j => !scoredIds.has(j.id) && j.jd !== 'gone' && (isAdded(j) || (String(j.found || '') >= ageCut && !blockedBy(lists, j.company, j.url)))).length;
     const last = {
       since: prevAt, started: started && !Number.isNaN(Date.parse(started)) ? started : null,
       scans: scansSince.length,
@@ -506,6 +515,8 @@ async function push(args) {
       listed: scansSince.length ? Number(scansSince.at(-1)[4]) || 0 : 0,
       found: scansSince.reduce((n, r) => n + (Number(r[13]) || 0), 0) + (args.quick ? 0 : alertsAdded(todayIso)),
       scored: scoredSince.length,
+      scored_earlier: scoredEarlier,
+      queued,
       dealbreakers: scoredSince.filter(s => s.verdict.status === 'dealbreaker').length,
       to_review: newPostings,
       deep: Object.values(readDir(P.deep) || {}).filter(d => after(d?.at)).length,
