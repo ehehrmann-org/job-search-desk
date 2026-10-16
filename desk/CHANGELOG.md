@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.20 (2026-10-16)
+- Stats: the line of explanation under the morning runs chart is gone; pointing at a day still shows its numbers.
+
 ## 0.13.19 (2026-10-16)
 - Skip takes one click: after Skip, click a reason (or No reason) and the job moves to Closed right away. The message at the bottom has Undo, and the u key undoes the last skip.
 
