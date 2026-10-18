@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.33 (2026-10-17)
+- The stages above your jobs are arrows again, with the selected stage filled in clay.
+
 ## 0.13.32 (2026-10-17)
 - A refreshed look from Erik's design system. The stages above your jobs are now a row of tabs on a light track, each job's state uses one color per meaning (New clay, Interested amber, Applied and Interviewing blue, Offer green, Rejected red), notes are colored by what they mean, and small text is a little larger and easier to read.
 
