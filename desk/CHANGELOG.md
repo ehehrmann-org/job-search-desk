@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.32 (2026-10-17)
+- A refreshed look from Erik's design system. The stages above your jobs are now a row of tabs on a light track, each job's state uses one color per meaning (New clay, Interested amber, Applied and Interviewing blue, Offer green, Rejected red), notes are colored by what they mean, and small text is a little larger and easier to read.
+
 ## 0.13.31 (2026-10-16)
 - Finding job boards: when a careers link is broken, the search also tries the company's home page and follows its careers link. A job board company's own home page ("Powered by ...") no longer counts as a board. Rows say when a company's website didn't open at all, a hint the company may have closed or moved.
 

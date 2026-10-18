@@ -49,13 +49,13 @@
       <div class="panel">
         <h2>Found by the system</h2>
         <p class="sub" id="funnel-sys-sub"></p>
-        <div class="legend"><span><i style="background:var(--bar)"></i>Postings at each stage</span></div>
+        <div class="legend"><span><i style="background:var(--cat-1)"></i>Postings at each stage</span></div>
         <div id="funnel-sys" style="display:grid;gap:6px"></div>
       </div>
       <div class="panel">
         <h2>Your applications</h2>
         <p class="sub" id="funnel-you-sub"></p>
-        <div class="legend"><span><i style="background:var(--bar-2)"></i>Applications at each stage</span></div>
+        <div class="legend"><span><i style="background:var(--cat-6)"></i>Applications at each stage</span></div>
         <div id="funnel-you" style="display:grid;gap:6px"></div>
       </div>
     </div>
@@ -542,7 +542,7 @@
     var EMPTY = { review: !loaded ? "Loading your postings…" : !db ? "Not connected. Open the page in Claude while signed in." : "Nothing new to review. Come back tomorrow.", interested: "Mark postings “Interested” in the “To review” queue to shortlist them and get a deep evaluation.", applied: "No open applications.", interviewing: "No interviews in progress yet.", closed: "Closed jobs (skipped, rejected, ghosted, or withdrawn) will show here." };
     if (state.stage === "interested") {
       var waitingDeep = shown.filter(function (p) { return !D.deep[p.id]; }).length, rs = runState();
-      if (waitingDeep && rs.ok) list.appendChild(el("div", { class: "note runnote" }, [
+      if (waitingDeep && rs.ok) list.appendChild(el("div", { class: "note info runnote" }, [
         el("span", { text: (waitingDeep === 1 ? "1 job is" : waitingDeep + " jobs are") + " waiting for a deep evaluation. The morning run writes them, or start one now (up to " + rs.deepCap + " per run, about 10 minutes)." }),
         runButton("Run now", "note")]));
     }
@@ -713,11 +713,11 @@
   }
 
   // The job's state as a colored pill with an icon.
-  var PILL = { new: ["yellow", "sparkle"], interested: ["amber", "bookmark-simple"], applied: ["blue", "paper-plane-tilt"], screen: ["blue", "chats-circle"], hm: ["blue", "chats-circle"],
-    offer: ["green", "handshake"], accepted: ["green", "check-circle"], skipped: ["gray", "x"], rejected: ["red", "thumbs-down"], withdrew: ["amber", "sign-out"], noresp: ["gray", "hourglass-medium"] };
+  var PILL = { new: ["accent", "sparkle"], interested: ["warn", "bookmark-simple"], applied: ["info", "paper-plane-tilt"], screen: ["info", "chats-circle"], hm: ["info", "chats-circle"],
+    offer: ["ok", "handshake"], accepted: ["ok", "check-circle"], skipped: ["neutral", "x"], rejected: ["bad", "thumbs-down"], withdrew: ["warn", "sign-out"], noresp: ["neutral", "hourglass-medium"] };
   function statePill(s, e) {
     var declined = s === "withdrew" && e && e.lost_at === "offer";
-    var k = declined ? ["amber", "x-circle"] : (PILL[s] || ["gray", "info"]);
+    var k = declined ? ["warn", "x-circle"] : (PILL[s] || ["neutral", "info"]);
     return el("div", { class: "state" }, [el("span", { class: "pill2 p-" + k[0] }, [ic(k[1]), declined ? "Offer declined" : LABEL[s]])]);
   }
 
@@ -1019,11 +1019,11 @@
     v.appendChild(limitsPanel());
     var snap = D.sources;
     var rows = snap ? snap.rows || [] : [];
-    if (V.pendingAdds) v.appendChild(el("div", { class: "note" }, [el("span", { text: V.pendingAdds + (V.pendingAdds === 1 ? " job you added is" : " jobs you added are") + " checked against your sources in the next run. Any the scan never saw get flagged here with a suggestion to add their company." })]));
+    if (V.pendingAdds) v.appendChild(el("div", { class: "note info" }, [el("span", { text: V.pendingAdds + (V.pendingAdds === 1 ? " job you added is" : " jobs you added are") + " checked against your sources in the next run. Any the scan never saw get flagged here with a suggestion to add their company." })]));
     (snap && snap.gaps || []).forEach(function (g) {
       var handled = Object.keys(D.requests).some(function (rid) { var r = D.requests[rid]; return (r.kind === "dismiss_gap" || r.kind === "add_source") && r.gap === g.id; });
       if (handled) return;
-      v.appendChild(el("div", { class: "note" }, [
+      v.appendChild(el("div", { class: "note warn" }, [
         el("span", { text: "Missed by the scan: " + g.note }),
         el("button", { class: "b", disabled: !canWrite, onclick: function () { saveRequest({ kind: "dismiss_gap", gap: g.id }, "Dismissed"); } }, ["Dismiss"]),
         el("button", { class: "b primary", disabled: !canWrite, onclick: function () { saveRequest({ kind: "add_source", text: g.url || g.company, gap: g.id, dream: true }, "Added as a dream company. The next run sets it up."); } }, ["Add as dream company"])
@@ -1419,7 +1419,7 @@
     document.getElementById("split-sub").textContent = decided ? decided + (decided === 1 ? " application has" : " applications have") + " an outcome. " + dec.pending + " more " + (dec.pending === 1 ? "is" : "are") + " still waiting and " + (dec.pending === 1 ? "isn't" : "aren't") + " counted." : "No application has an outcome yet.";
     var split = document.getElementById("split"); split.textContent = "";
     var labels = document.getElementById("split-labels"); labels.textContent = "";
-    var parts = [{ k: "interview", label: "Got an interview", color: "var(--s-interview)" }, { k: "rejected", label: "Rejected", color: "var(--s-rejected)" }, { k: "noresp", label: "No response", color: "var(--s-noresp)" }, { k: "withdrew", label: "You withdrew", color: "var(--s-withdrew)" }];
+    var parts = [{ k: "interview", label: "Got an interview", color: "var(--info-mark)" }, { k: "rejected", label: "Rejected", color: "var(--bad-mark)" }, { k: "noresp", label: "No response", color: "var(--muted)" }, { k: "withdrew", label: "You withdrew", color: "var(--warn-mark)" }];
     split.setAttribute("aria-label", parts.map(function (pt) { return pt.label + " " + dec[pt.k]; }).join(", "));
     parts.forEach(function (pt) {
       var n = dec[pt.k];
@@ -1432,9 +1432,9 @@
       { k: "Passed filters", n: f.passed_filters || 0 },
       { k: "Scored", n: f.scored || 0 },
       { k: "Qualified", n: f.qualified || 0 }
-    ], "var(--bar)", "of passed");
+    ], "var(--cat-1)", "of passed");
     document.getElementById("funnel-you-sub").textContent = "Of " + q.qualified + " qualified postings: " + q.applied + " applied, " + q.skipped + " skipped by you, " + Math.max(0, q.qualified - q.applied - q.skipped) + " not decided yet.";
-    funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Interviewing", n: you.screen }, { k: "Offer", n: you.offer }], "var(--bar-2)", "of applied");
+    funnel(document.getElementById("funnel-you"), [{ k: "Applied", n: you.applied }, { k: "Interviewing", n: you.screen }, { k: "Offer", n: you.offer }], "var(--cat-6)", "of applied");
     renderClosed();
   }
   function bars(host, rows, color, emptyText) {
@@ -1460,14 +1460,14 @@
     var total = how.skipped + how.rejected + how.noresp + how.withdrew + how.accepted;
     document.getElementById("closed-sub").textContent = total ? total + (total === 1 ? " job" : " jobs") + " closed so far. No response means nothing came back within 21 days of applying, or 14 days after an interview." : "Nothing closed yet.";
     bars(document.getElementById("closed-how"), [
-      { k: "Skipped by you", n: how.skipped, color: "var(--s-pending)" }, { k: "Rejected", n: how.rejected, color: "var(--s-rejected)" },
-      { k: "No response", n: how.noresp, color: "var(--s-noresp)" }, { k: "You withdrew", n: how.withdrew, color: "var(--s-withdrew)" },
-      { k: "Offer accepted", n: how.accepted, color: "var(--s-interview)" }
-    ], "var(--bar)", "None yet.");
-    bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--bar)", "No skips yet.");
+      { k: "Skipped by you", n: how.skipped, color: "var(--faint)" }, { k: "Rejected", n: how.rejected, color: "var(--bad-mark)" },
+      { k: "No response", n: how.noresp, color: "var(--muted)" }, { k: "You withdrew", n: how.withdrew, color: "var(--warn-mark)" },
+      { k: "Offer accepted", n: how.accepted, color: "var(--info-mark)" }
+    ], "var(--cat-1)", "None yet.");
+    bars(document.getElementById("closed-why"), Object.keys(why).map(function (k) { return { k: k, n: why[k] }; }), "var(--cat-1)", "No skips yet.");
     bars(document.getElementById("closed-where"), [
       { k: "After applying", n: where.applied }, { k: "After interviewing", n: where.screen + where.hm }, { k: "At the offer", n: where.offer }
-    ], "var(--bar-2)", "No applications closed yet.");
+    ], "var(--cat-6)", "No applications closed yet.");
   }
   function funnel(host, stages, color, shareLabel) {
     host.textContent = "";
@@ -1605,7 +1605,7 @@
     catch (e) {
       try { console.error(e); } catch (x) {}
       var host = document.getElementById("view-" + name) || document.getElementById("help-host");
-      host.appendChild(el("div", { class: "note rerr" }, [el("span", { text: "Part of this page couldn't be shown. Reload the page; if it stays, copy the message for Erik from the status line at the bottom of the page." })]));
+      host.appendChild(el("div", { class: "note bad rerr" }, [el("span", { text: "Part of this page couldn't be shown. Reload the page; if it stays, copy the message for Erik from the status line at the bottom of the page." })]));
     }
   }
   var raf = 0, stageShown = null;
