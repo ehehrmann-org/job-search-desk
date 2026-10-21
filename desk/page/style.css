@@ -247,7 +247,6 @@ div.mini { display: grid; gap: 2px; align-content: start; padding-left: 12px; bo
   .ctrl, .lrow .btns { justify-content: flex-start; }
 }
 @media (max-width: 600px) {
-  .tabs { flex-wrap: wrap; }
   button.tag { min-height: 32px; padding: 5px 10px; }
   .link { min-height: 32px; padding: 5px 0; }
   .row { grid-template-columns: 44px minmax(0, 1fr); }
@@ -403,8 +402,27 @@ h3.mini { margin: 0 0 6px; font-family: var(--f-label); font-weight: 600; font-s
 .navrow .gsearch .srcsearch { min-height: 32px; padding-top: 5px; padding-bottom: 5px; font-size: 13px; }
 .navrow .gsearch .srcsearch::placeholder { color: var(--muted); }
 .searchhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; font-size: 13px; color: var(--fg-2); }
-@media (max-width: 600px) { .navrow { flex-wrap: wrap; } .navrow .gsearch { order: 3; flex: 1 1 100%; padding: 8px 0 8px; } }
-@media (max-width: 600px) { .navrow #run-host { align-items: flex-start; padding-top: 3px; } }
+/* Phones: the tabs fold into a menu that names the open view, the search sits beside it,
+   and Run now moves up next to the name, so the whole bar takes one row. */
+.navmenu, #run-host-top { display: none; }
+@media (max-width: 600px) {
+  .top { flex-wrap: nowrap; }
+  .brand { font-size: 24px; min-width: 0; }
+  #run-host-top { display: flex; flex: none; }
+  #run-host-top:empty, .navrow #run-host { display: none; }
+  .navrow { position: relative; flex-wrap: nowrap; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .navmenu { display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: var(--size-touch); padding: 0 10px 0 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); color: var(--fg); font-family: var(--f-label); font-weight: 600; font-size: 15px; }
+  .navmenu #navmenu-caret { color: var(--muted); transition: transform .15s ease; }
+  .navrow.menu-open .navmenu #navmenu-caret { transform: rotate(180deg); }
+  .navmenu .count.badge { display: inline-block; min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--radius-pill); background: var(--badge-bg); color: var(--badge-fg); font-size: 12px; font-weight: 600; line-height: 18px; text-align: center; box-sizing: border-box; }
+  .navmenu .count.badge[hidden] { display: none; }
+  .navrow .gsearch { flex: 1 1 auto; min-width: 0; padding: 0; border-bottom: 0; }
+  .navrow .gsearch .srcsearch { width: 100%; min-height: var(--size-touch); }
+  .navrow .tabs { display: none; position: absolute; top: calc(var(--size-touch) + 6px); left: 0; z-index: 15; flex-direction: column; gap: 2px; min-width: 220px; padding: 6px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-float); overflow: visible; }
+  .navrow.menu-open .tabs { display: flex; }
+  .navrow .tab { display: flex; align-items: center; min-height: var(--size-touch); margin: 0; padding: 0 12px; border-bottom: 0; border-radius: var(--radius-md); text-align: left; }
+  .navrow .tab[aria-selected="true"] { box-shadow: inset 3px 0 0 var(--accent); background: var(--bg); }
+}
 .b.runnow { min-height: var(--size-control); padding: 4px 12px; font-size: 13px; }
 .note.runnote { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .panel.update { border-color: var(--accent); gap: 8px; }

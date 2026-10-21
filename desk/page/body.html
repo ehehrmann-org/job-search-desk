@@ -1,11 +1,13 @@
 <div class="app">
   <header class="top">
     <button class="brand" id="brand" data-k="brand" title="Go to To review">Job Search Desk</button>
+    <span id="run-host-top"></span>
   </header>
   <div id="help-host"></div>
 
-  <div class="navrow">
-  <nav class="tabs" role="tablist" aria-label="Views">
+  <div class="navrow" id="navrow">
+  <button class="navmenu" id="navmenu" data-k="navmenu" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="tabs-nav"><span id="navmenu-ic"></span><span id="navmenu-label">Triage</span><span class="count badge" id="c-menu" hidden></span><span id="navmenu-caret"></span></button>
+  <nav class="tabs" id="tabs-nav" role="tablist" aria-label="Views">
     <button class="tab" role="tab" id="tab-triage" data-tab="triage" aria-controls="view-triage" aria-selected="true">Triage<span class="count badge" id="c-triage" hidden></span></button>
     <button class="tab" role="tab" id="tab-resumes" data-tab="resumes" aria-controls="view-resumes" aria-selected="false">Resumes</button>
     <button class="tab" role="tab" id="tab-linkedin" data-tab="linkedin" aria-controls="view-linkedin" aria-selected="false">LinkedIn</button>
@@ -377,10 +379,10 @@
       }
     } finally { runBusy = false; render(); }
   }
-  function runButton(label, key) {
+  function runButton(label, key, short) {
     var st = runState(); if (!st.ok) return null;
     var b = el("button", { class: "b runnow", "data-k": "runnow-" + key, "aria-describedby": "tip", disabled: st.running, onclick: function () { hideTip(); runNow(); } },
-      [ic(st.running ? "hourglass-medium" : "lightning"), st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
+      [ic(st.running ? "hourglass-medium" : "lightning"), st.running && short ? "Running" : st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
     explain(b, st.running ? "A short run is going. This page updates by itself when it's done." : "Don't want to wait for tomorrow morning? This reads your clicks, writes deep evaluations for jobs you marked Interested (up to " + st.deepCap + "), scores descriptions you pasted, and updates this page. Takes about 10 minutes. The job scan itself still runs each morning.");
     return b;
   }
@@ -432,6 +434,8 @@
   function renderHeader() {
     renderVersion();
     var rh = document.getElementById("run-host"); rh.textContent = ""; var rb = runButton("Run now", "head"); if (rb) rh.appendChild(rb);
+    // On a phone the tabs fold into a menu and Run now moves up next to the name (CSS shows one of the two).
+    var rt = document.getElementById("run-host-top"); rt.textContent = ""; var rb2 = runButton("Run now", "top", true); if (rb2) rt.appendChild(rb2);
     var r = D.run;
     var meta = [];
     if (r && r.plan) meta.push(r.plan + (r.daily_cap ? ", up to " + r.daily_cap + " scored a day" : ""));
@@ -493,6 +497,8 @@
     var n = stageCounts(all).review, c = document.getElementById("c-triage");
     c.textContent = n > 99 ? "99+" : String(n); c.hidden = !n;
     c.setAttribute("aria-label", n + (n === 1 ? " job" : " jobs") + " to review");
+    var m = document.getElementById("c-menu");
+    m.textContent = c.textContent; m.hidden = !n || state.tab === "triage"; m.setAttribute("aria-label", c.getAttribute("aria-label"));
   }
 
   // ---------- Search across every stage ----------
@@ -1562,7 +1568,27 @@
     try { localStorage.setItem("jsd-tab", t); } catch (e) {}
     render();
   }
-  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.addEventListener("click", function () { var wasOpen = menuOpen(); setMenu(false); setTab(b.getAttribute("data-tab")); if (wasOpen) focusNext = "navmenu"; }); });
+  // On a phone the main tabs fold into a menu under this button; it names the tab that is showing.
+  var navrow = document.getElementById("navrow"), navmenu = document.getElementById("navmenu");
+  document.getElementById("navmenu-ic").appendChild(ic("list"));
+  document.getElementById("navmenu-caret").appendChild(ic("caret-down"));
+  function menuOpen() { return navrow.classList.contains("menu-open"); }
+  function setMenu(open) { navrow.classList.toggle("menu-open", open); navmenu.setAttribute("aria-expanded", String(open)); }
+  navmenu.addEventListener("click", function () {
+    if (tour.on) return;
+    setMenu(!menuOpen());
+    if (menuOpen()) { var cur = document.querySelector('.tab[aria-selected="true"]'); if (cur) cur.focus(); }
+  });
+  document.addEventListener("click", function (e) { if (menuOpen() && !navrow.contains(e.target)) setMenu(false); });
+  document.addEventListener("keydown", function (e) { if (menuOpen() && e.key === "Escape") { e.preventDefault(); setMenu(false); navmenu.focus(); } }, true);
+  // Up and down arrows move through the open menu, like left and right on the tab row.
+  document.getElementById("tabs-nav").addEventListener("keydown", function (e) {
+    if (!menuOpen() || (e.key !== "ArrowDown" && e.key !== "ArrowUp")) return;
+    var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab")), i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault(); tabs[(i + (e.key === "ArrowDown" ? 1 : tabs.length - 1)) % tabs.length].focus();
+  });
   // The name at the top goes back to To review on Triage.
   document.getElementById("brand").addEventListener("click", function () { if (tour.on) return; clearSearch(); state.stage = "review"; state.closedLimit = CLOSED_PAGE; setTab("triage"); window.scrollTo(0, 0); });
   document.getElementById("help-btn").addEventListener("click", function () { helpOpen = !helpOpen; if (helpOpen) { kbOpen = false; focusNext = "help-x"; } render(); });
@@ -1598,6 +1624,9 @@
   });
   function showTab() {
     Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { b.setAttribute("aria-selected", String(b.getAttribute("data-tab") === state.tab)); });
+    var cur = document.getElementById("tab-" + state.tab);
+    document.getElementById("navmenu-label").textContent = cur ? cur.firstChild.textContent : "";
+    navmenu.setAttribute("aria-label", "Views: " + document.getElementById("navmenu-label").textContent);
     TABS.forEach(function (t) { document.getElementById("view-" + t).hidden = t !== state.tab; });
   }
   function safe(name, fn) {
