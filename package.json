@@ -99,10 +99,13 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "dotenv": "^18.0.4",
-    "js-yaml": "^5.3.0",
+    "@google/generative-ai": "0.24.1",
+    "dotenv": "18.0.9",
+    "js-yaml": "5.5.0",
     "playwright": "1.63.0",
-    "undici": "^6.28.1"
+    "undici": "6.29.1"
+  },
+  "overrides": {
+    "argparse": "3.0.4"
   }
 }

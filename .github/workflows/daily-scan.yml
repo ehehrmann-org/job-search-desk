@@ -22,6 +22,8 @@ on:
   push:
     branches: [scan-now]
 
+# contents: write is needed by the Commit results step only; the checkout keeps no
+# credentials, so the install and scan steps run without the token.
 permissions:
   contents: write
 
@@ -44,9 +46,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
+      # The token is not left in .git/config: the npm packages installed below and the
+      # scan steps never see it. Only the Commit results step gets it, for its own pull and push.
       - uses: actions/checkout@v4
         with:
           ref: main
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -86,7 +91,13 @@ jobs:
           node desk/fetch-pending-jds.mjs 2>&1 | tee -a profile/data/last-scan.log
       - name: Commit results
         if: always() && steps.ready.outputs.go == 'true'
+        env:
+          PUSH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # The token is passed per command (git -c), never written to .git/config.
+          AUTH=$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          g() { git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" "$@"; }
           git config user.name "job-search-desk-bot"
           git config user.email "actions@users.noreply.github.com"
           git add profile/data profile/jds || true
@@ -96,7 +107,7 @@ jobs:
           fi
           git commit -qm "scan: $(date -u +%F) results"
           for i in 1 2 3; do
-            if git pull -q --rebase origin main && git push -q origin HEAD:main; then exit 0; fi
+            if g pull -q --rebase origin main && g push -q origin HEAD:main; then exit 0; fi
             git rebase --abort 2>/dev/null || true
             sleep $((i * 10))
           done

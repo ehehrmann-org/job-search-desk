@@ -2,6 +2,10 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.35 (2026-10-31)
+- Safer installs: the tool's add-on packages are now fixed to exact, checked versions, so an update or the daily scan never picks up a newer package nobody has looked at yet.
+- The daily scan no longer leaves its GitHub access where the add-on packages could read it; only the step that saves the scan results gets it. Erik updates this part of your copy himself.
+
 ## 0.13.34 (2026-10-21)
 - On a phone, the tabs fold into a menu that names the view you're on, the search sits next to it, and Run now moves up beside the page's name. The top of the page is three rows shorter.
 
