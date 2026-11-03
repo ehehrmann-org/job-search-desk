@@ -135,7 +135,7 @@ test('score: one broken extraction never stops the others', () => {
 
 test('score: an extraction with an unrated judged dimension is not recorded', () => {
   const d = profile();
-  jd(d, 'u1', { company: 'U', title: 'Ops', found: '2026-10-10', jd: 'saved' }, 'Remote. Pay $250,000.');
+  jd(d, 'u1', { company: 'U', title: 'Ops', found: new Date().toISOString().slice(0, 10), jd: 'saved' }, 'Remote. Pay $250,000.');
   write(path.join(d, 'data', 'extractions', 'u1.json'), { company: 'U', title: 'Ops', facts: { base_top: 250000, work_mode: 'remote' }, ratings: [{ id: 'role_fit', score: 5 }] });
   const out = json(d, 'daily.mjs', 'score');
   assert.match(out.find(x => x.id === 'u1').error, /not rated/);
