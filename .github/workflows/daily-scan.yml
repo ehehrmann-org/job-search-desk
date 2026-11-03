@@ -57,10 +57,12 @@ jobs:
           node-version: 22
       - name: Install dependencies (no browsers)
         run: npm install --ignore-scripts --no-audit --no-fund
-      - name: Check that setup has started
+      - name: Check that setup has started and the search isn't paused
         id: ready
         run: |
-          if [ -f profile/.setup-state.json ] || [ -f profile/cv.md ]; then echo "go=true" >> "$GITHUB_OUTPUT"; else echo "Setup has not started yet; nothing to scan."; fi
+          # Paused from her job page (desk.yml paused: true): no scan until she resumes.
+          if grep -Eq '^paused:[[:space:]]*true' profile/config/desk.yml 2>/dev/null; then echo "Job search paused; nothing to scan."
+          elif [ -f profile/.setup-state.json ] || [ -f profile/cv.md ]; then echo "go=true" >> "$GITHUB_OUTPUT"; else echo "Setup has not started yet; nothing to scan."; fi
       # A failed scan is recorded (scan-runs.tsv, last-scan.log) and shown on the job page;
       # the run itself still succeeds, so GitHub doesn't email her about it.
       - name: Scan job boards

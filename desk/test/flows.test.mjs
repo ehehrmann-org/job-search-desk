@@ -229,6 +229,39 @@ test('push: a source list over the document limit is a problem that stays until 
   assert.equal(json(d, 'page-sync.mjs', 'push').ok, false);
 });
 
+test('pause: the footer switch reaches desk.yml through pull, once per click; push reports it and stays quiet about the scan', () => {
+  const d = profile();
+  const dump = path.join(d, 'dump');
+  write(path.join(dump, 'prefs', 'pause.json'), { paused: true, at: '2026-11-02T20:00:00.000Z' });
+  let out = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.equal(out.paused, true);
+  const desk = () => read(path.join(d, 'config', 'desk.yml'));
+  assert.match(desk(), /^paused: true$/m);
+  assert.match(desk(), /^paused_since: "2026-11-02"$/m);
+  assert.match(desk(), /^gmail_alerts: true\s+# step 8$/m, 'other settings untouched');
+  // A run while paused: no "the daily scan hasn't run" problem, and the run document says paused
+  const push = json(d, 'page-sync.mjs', 'push');
+  const run = JSON.parse(read(JSON.parse(read(push.batches[0])).writes.find(w => w.collection === 'runs').file_path));
+  assert.equal(run.paused, true);
+  assert.equal(run.paused_since, '2026-11-02');
+  assert.ok(!run.problems.some(p => /daily scan/.test(p.what)), 'no scan problem while paused');
+  sh(d, 'page-sync.mjs', 'ack', push.batches[0]);
+  // The same click read again changes nothing (she may have edited desk.yml by hand since)
+  fs.writeFileSync(path.join(d, 'config', 'desk.yml'), desk().replace('paused: true', 'paused: false'));
+  out = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.equal(out.paused, false);
+  // Back on
+  write(path.join(dump, 'prefs', 'pause.json'), { paused: false, at: '2026-11-03T20:00:00.000Z' });
+  write(path.join(d, 'config', 'desk.yml'), desk().replace('paused: false', 'paused: true'));
+  out = json(d, 'page-sync.mjs', 'pull', dump);
+  assert.equal(out.paused, false);
+  assert.match(desk(), /^paused: false$/m);
+  assert.match(desk(), /^paused_since: ""$/m);
+  // A junk value is ignored
+  write(path.join(dump, 'prefs', 'pause.json'), { paused: 'yes', at: '2026-11-04T20:00:00.000Z' });
+  assert.equal(json(d, 'page-sync.mjs', 'pull', dump).paused, false);
+});
+
 test('run mode: a recent Run now click picks the quick run once; anything else is the normal run', async () => {
   const { runMode } = await import('../page-sync.mjs');
   const now = Date.parse('2026-10-12T11:30:00Z'), ago = m => new Date(now - m * 60000).toISOString();

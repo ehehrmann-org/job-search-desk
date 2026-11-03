@@ -75,7 +75,7 @@
       <span>An application counts as decided 21 days after you applied, 14 days after your last interview, or sooner if the employer answered. Rates on fewer than 10 are shown in grey.</span>
     </div>
   </section>
-  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button><span aria-hidden="true">·</span><button class="status" id="kb-btn" data-k="kb-btn" aria-haspopup="dialog" title="Keyboard shortcuts (?)"><span class="ic-host" id="kb-ic"></span>Keyboard shortcuts</button></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
+  <footer class="pagefoot"><span class="footl"><span class="ver" id="ver"></span><span aria-hidden="true">·</span><button class="status" id="help-btn" data-k="help-btn" aria-expanded="false" aria-controls="help-host" data-state="loading"><span id="status-ic"></span><span id="status-text">Checking</span></button><span aria-hidden="true">·</span><button class="status" id="kb-btn" data-k="kb-btn" aria-haspopup="dialog" title="Keyboard shortcuts (?)"><span class="ic-host" id="kb-ic"></span>Keyboard shortcuts</button><span class="pausehost" id="pause-host"></span></span><span class="meta-line" id="meta-line">Connecting…</span></footer>
 </div>
 <div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -345,6 +345,51 @@
     if (hrs > 30) out.push({ what: "The daily run hasn't finished since " + niceTime(r.at) + ".", fix: "Open Claude and check that your scheduled task is turned on. If it is, copy the message for Erik." });
     return out;
   }
+  // ---------- Pause (the switch in the footer: stops the daily scan and the morning run until she turns it back on) ----------
+  // Her latest click (prefs/pause) wins; before the first click, what the last run reported.
+  function pausedNow() {
+    var p = D.prefs && D.prefs.pause;
+    if (p && typeof p.paused === "boolean") return p.paused;
+    return !!(D.run && D.run.paused);
+  }
+  function pausedSince() {
+    var p = D.prefs && D.prefs.pause;
+    var d = p && p.paused && p.at ? p.at : D.run && D.run.paused_since ? D.run.paused_since + "T12:00:00Z" : null;
+    return d ? new Date(d).toLocaleDateString([], { month: "short", day: "numeric" }) : "";
+  }
+  var pauseBusy = false;
+  async function togglePause() {
+    if (pauseBusy) return;
+    var next = !pausedNow(), doc = { paused: next, at: new Date().toISOString() };
+    if (tour.on) { D.prefs = Object.assign({}, D.prefs, { pause: doc }); render(); toast(next ? "Paused (tour sample: nothing really changes)." : "Back on (tour sample)."); return; }
+    if (!db || !canWrite) return;
+    pauseBusy = true; render();
+    try { await db.doc("prefs/pause").set(doc); R.prefs = Object.assign({}, R.prefs, { pause: doc }); }
+    catch (e) { lostWrite(e); pauseBusy = false; render(); toast("Not changed: " + errText(e)); return; }
+    pauseBusy = false; render();
+    // A short run carries the change to the daily scan now; without one it applies at tomorrow morning's run.
+    var soon = next ? "Paused. Within about 10 minutes the daily scan and the morning run stop, until you turn this back on." : "Back on. New jobs start showing again within a day.";
+    var later = next ? "Paused from tomorrow morning's run. The daily scan and the morning run stay off until you turn this back on." : "Back on from tomorrow morning's run. New jobs show again the day after.";
+    var st = runState();
+    if (st.ok && !st.running) await runNow({ force: true, okMsg: soon, failMsg: later });
+    else toast(later);
+  }
+  function renderPause() {
+    var host = document.getElementById("pause-host"); host.textContent = "";
+    if (!tour.on && (!loaded || !db || !canWrite)) return;
+    var p = pausedNow();
+    host.appendChild(el("span", { "aria-hidden": "true", text: "·" }));
+    var b = el("button", { class: "status pausebtn", id: "pause-btn", "data-k": "pause-btn", role: "switch", "aria-checked": String(!p), "aria-describedby": "tip", disabled: pauseBusy, onclick: function () { hideTip(); togglePause(); } },
+      [el("span", { class: "swm", "aria-hidden": "true" }), p ? "Job search paused" : "Daily scan on"]);
+    explain(b, p ? "Paused" + (pausedSince() ? " since " + pausedSince() : "") + ": nothing is searched or scored. Click to turn the daily scan back on." : "Taking a break? Click to pause your job search: the daily scan and the morning run stop until you turn this back on. Your jobs, clicks and resumes stay as they are.");
+    host.appendChild(b);
+  }
+  function pauseNote() {
+    if (!pausedNow() || (!tour.on && (!db || !canWrite))) return null;
+    return el("div", { class: "note warn pausenote" }, [
+      el("span", { text: "Your job search is paused" + (pausedSince() ? " since " + pausedSince() : "") + ". Nothing new is searched or scored until you turn the daily scan back on." }),
+      el("button", { class: "b", "data-k": "pause-resume", disabled: pauseBusy, onclick: togglePause }, [ic("power"), "Turn it back on"])]);
+  }
   // ---------- Run now (starts the daily task in quick mode: reads clicks, writes deep evaluations, updates the page) ----------
   var RUN_MAX_MIN = 45;
   function runState() {
@@ -353,8 +398,11 @@
     var running = runBusy || (started > last && Date.now() - started < RUN_MAX_MIN * 60000);
     return { ok: !!(mcp && task && canWrite && db && !tour.on), task: task, running: running, started: started, deepCap: (r && r.deep_cap) || 1 };
   }
-  async function runNow() {
-    var st = runState(); if (!st.ok || st.running) return;
+  // opts.force: start even while paused (the pause switch uses it so the change reaches the scan within minutes);
+  // opts.okMsg, opts.failMsg: its own messages instead of Run now's.
+  async function runNow(opts) {
+    opts = opts || {};
+    var st = runState(); if (!st.ok || st.running || (pausedNow() && !opts.force)) return;
     runBusy = true; render();
     // The click is saved first: the run reads it to know which kind of run to do.
     var doc = { at: new Date().toISOString(), kind: "quick" };
@@ -363,24 +411,25 @@
     try {
       await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: st.task, text: "MODE = quick" });
       R.prefs = Object.assign({}, R.prefs, { run_now: doc });
-      toast("Started. It takes about 10 minutes, and this page updates by itself when it's done.");
+      toast(opts.okMsg || "Started. It takes about 10 minutes, and this page updates by itself when it's done.");
     } catch (e) {
       var code = e && e.code;
       // server_unavailable and upstream_error are ambiguous: the trigger may already have fired. Keep the saved click
       // as it is (no failed flag) so a run that did start stays a quick run, and show Running until a run document arrives.
       if (code === "server_unavailable" || code === "upstream_error") {
         R.prefs = Object.assign({}, R.prefs, { run_now: doc });
-        toast("It may have started. This page updates by itself when it's done. If nothing changes in 45 minutes, click Run now again.");
+        toast(opts.okMsg || "It may have started. This page updates by itself when it's done. If nothing changes in 45 minutes, click Run now again.");
       } else {
         try { await db.doc("prefs/run_now").set(Object.assign({}, doc, { failed: true })); } catch (e2) {}
-        toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
+        if (opts.failMsg) toast(opts.failMsg);
+        else toast(code === "not_in_manifest" || code === "consent_required" || code === "approval_required" ? "Not started: this page needs your permission to start the run. Click Run now again and allow it."
           : code === "server_not_connected" || code === "needs_reauth" ? "Not started: Claude's connection for scheduled tasks isn't available here. Type “run my desk now” in Claude instead."
           : "Not started: the run couldn't be reached. Type “run my desk now” in Claude instead.");
       }
     } finally { runBusy = false; render(); }
   }
   function runButton(label, key, short) {
-    var st = runState(); if (!st.ok) return null;
+    var st = runState(); if (!st.ok || pausedNow()) return null;
     var b = el("button", { class: "b runnow", "data-k": "runnow-" + key, "aria-describedby": "tip", disabled: st.running, onclick: function () { hideTip(); runNow(); } },
       [ic(st.running ? "hourglass-medium" : "lightning"), st.running && short ? "Running" : st.running ? "Running since " + new Date(st.started || Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : label]);
     explain(b, st.running ? "A short run is going. This page updates by itself when it's done." : "Don't want to wait for tomorrow morning? This reads your clicks, writes deep evaluations for jobs you marked Interested (up to " + st.deepCap + "), scores descriptions you pasted, and updates this page. Takes about 10 minutes. The job scan itself still runs each morning.");
@@ -453,6 +502,8 @@
     document.getElementById("status-text").textContent = !loaded ? "Checking" : hstate === "waiting" ? "Waiting for the first morning run" : probs.length ? (probs.length === 1 ? "1 problem" : probs.length + " problems") + ": see details" : "All working";
     var hh = document.getElementById("help-host"); hh.textContent = "";
     var ub = updateBanner(); if (ub) hh.appendChild(ub);
+    renderPause();
+    var pn = pauseNote(); if (pn) hh.appendChild(pn);
     if (tour.on) hh.appendChild(el("div", { class: "note tourbanner" }, [el("span", { text: "Tour: these are sample jobs. They disappear when the tour ends, and your own jobs come back." })]));
     if (kbOpen) hh.appendChild(shortcutsDialog());
     if (!helpOpen) return;
@@ -1763,6 +1814,7 @@
   var TOUR = [
     { title: "Welcome to your job page", text: "Click through this two-minute tour of sample jobs, so that you can familiarize yourself with the interface. The sample jobs disappear at the end of this tour, to be replaced with jobs found that match your search criteria. New jobs arrive every morning by about 7." },
     { target: "#help-btn", title: "Is everything working?", text: "This line at the bottom says \u201cAll working\u201d with a thumbs up when the morning run went fine. Until your first morning run it says \u201cWaiting for the first morning run\u201d. If something breaks, it shows a warning sign instead: click it to see what to do, with a ready-made message for Erik." },
+    { target: "#pause-btn", title: "Taking a break", text: "This switch pauses your job search: the daily scan and the morning run stop, and nothing new is scored. Your jobs, clicks and resumes stay as they are. Click it again to start back up." },
     { tab: "triage", stage: "review", target: "#steps", title: "Your jobs, by stage", text: "**To review** holds new jobs that cleared your minimum requirements. **Interested** has jobs you picked for a deeper evaluation. **Applied** has jobs you submitted an application for. **Interviewing** lists jobs where you were invited to interviews. And **Closed** holds jobs you skipped, lost or withdrew from. To find one job in any stage, type in the search field at the right end of the tabs." },
     { tab: "triage", stage: "review", target: '.row[data-id="s2"]', title: "A job posting", text: "The number is its score from 0 to 5, built from the scoring criteria you developed during onboarding/setup. Click the title to open the posting, or the company name to visit its website. Jobs at dream companies always show, regardless of score." },
     { tab: "triage", stage: "review", target: '.row[data-id="s1"] .drawer', open: "why", title: "Score breakdown", text: "Every score shows its reasons: each thing you care about, how the job rated on it, and how much it counts. If something looks wrong, tell Claude to \u201cchange my scoring\u201d." },

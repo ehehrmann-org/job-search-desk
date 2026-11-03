@@ -147,6 +147,12 @@ function writePortals(obj) {
 // The daily limits she can change on her page: [lowest, highest, plain name].
 const CAP_LIMITS = { web_cap: [0, 30, 'Web searches each morning'], daily_cap: [1, 100, 'Jobs scored each day'], deep_cap: [0, 10, 'Deep evaluations each day'] };
 
+/** desk.yml says the job search is paused: the scan and the daily run skip their work until she resumes it. */
+export function isPaused() {
+  const raw = fs.existsSync(P.desk) ? fs.readFileSync(P.desk, 'utf8') : '';
+  return /^paused:[ \t]*true\b/m.test(raw);
+}
+
 function setDeskKey(key, value) {
   const raw = fs.existsSync(P.desk) ? fs.readFileSync(P.desk, 'utf8') : '';
   const line = `${key}: ${JSON.stringify(value)}`;
@@ -184,9 +190,17 @@ async function pull(dumpDir) {
   }
   const mode = runMode(prefs.run_now, st0.last_run_at, Date.now(), st0.run_now_seen);
   if (mode === 'quick') st0.run_now_seen = prefs.run_now.at;   // this run takes the click; another session that reads the same click runs normal
+  // Pause or resume from the page's footer switch: desk.yml `paused` is what the daily scan (GitHub) and this task read.
+  const pz = prefs.pause;
+  if (pz && typeof pz.paused === 'boolean' && pz.at && st0.pause_seen !== pz.at) {
+    setDeskKey('paused', pz.paused);
+    setDeskKey('paused_since', pz.paused ? String(pz.at).slice(0, 10) : '');
+    st0.pause_seen = pz.at;
+    if (!pz.paused) st0.resumed_at = String(pz.at);   // the scan may not have run yet since she resumed
+  }
   writeJson(P.state, st0);
 
-  const summary = { mode, decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
+  const summary = { mode, paused: isPaused(), decisions: decisions ? Object.keys(decisions).length : 'unchanged (no decisions folder in the dump)', jobs_queued: [], sources_to_set_up: [], switches_applied: [], dismissed: [], blocked: [], unblocked: [], errors: [] };
   const doneLocal = new Set(fs.existsSync(P.done) ? fs.readdirSync(P.done).map(f => f.replace(/\.json$/, '')) : []);
   const seen = seenKeys(DATA);
   const jdByKey = new Map();
@@ -498,7 +512,10 @@ async function push(args) {
   if (!args.noRun) {
     const scanRuns = fs.existsSync(P.runs) ? fs.readFileSync(P.runs, 'utf8').trim().split('\n').slice(1).map(l => l.split('\t')).filter(r => r[0]) : [];
     const lastScan = scanRuns.at(-1);
-    if (!lastScan) problem({ what: 'The daily scan has not run yet.', fix: 'Check that the daily scan is turned on in your private copy on GitHub (the Actions tab).', since: at });
+    // While paused the scan doesn't run, and for a day after she resumes it may not have run yet: neither is a problem.
+    const quietScan = isPaused() || (st.resumed_at && Date.now() - new Date(st.resumed_at).getTime() < 30 * 3600000);
+    if (quietScan) { /* nothing to report about the scan */ }
+    else if (!lastScan) problem({ what: 'The daily scan has not run yet.', fix: 'Check that the daily scan is turned on in your private copy on GitHub (the Actions tab).', since: at });
     else if (Date.now() - new Date(lastScan[0]).getTime() > 26 * 3600000)
       problem({ what: `The daily scan last ran ${lastScan[0].slice(0, 10)}.`, fix: 'GitHub may have paused the daily scan. Copy the message for Erik.', since: lastScan[0] });
     else if (lastScan[1] !== 'completed') problem({ what: 'The last daily scan did not finish.', fix: 'It usually recovers the next day. If this is here two days in a row, copy the message for Erik.', since: lastScan[0] });
@@ -563,7 +580,7 @@ async function push(args) {
       });
       st.history = Object.keys(byDay).sort().map(d => byDay[d]);
     }
-    if (!args.quick) {
+    if (!args.quick && !isPaused()) {
       const prevDaily = st.last_daily_at || prevAt;
       const afterDaily = t => !prevDaily || String(t || '') > prevDaily;
       const scans = scanRuns.filter(r => afterDaily(r[0]));
@@ -584,6 +601,7 @@ async function push(args) {
       update: updateInfo(args.updateFile),
       task_id: typeof desk.task_id === 'string' && /^trig_[A-Za-z0-9]+$/.test(desk.task_id) ? desk.task_id : null,
       repo: typeof desk.repo === 'string' && /^[\w.-]+\/[\w.-]+$/.test(desk.repo) ? desk.repo : null, quick: !!args.quick,
+      paused: isPaused(), paused_since: isPaused() && /^\d{4}-\d{2}-\d{2}$/.test(String(desk.paused_since || '')) ? String(desk.paused_since) : null,
       scoring,
       funnel: {
         since: st.search_start,

@@ -10,6 +10,8 @@ The prompt that sends you here names two values. Use them everywhere below:
 - `normal` (the scheduled morning run): every step below.
 - `quick` (she clicked Run now on her page, or asked Claude to run it): from step 3 only the "Jobs she added" part (relink for `on_job_site` entries, gaps for `missed_by_scan` entries in `jobs_queued`; leave "Sources to set up" for the morning, they stay open), then from step 5 only `node desk/daily.mjs todo --priority-only` (it hands out only jobs she added and descriptions she pasted; when `to_score` lists any, do step 5 points 3 to 6 for them), then step 6, step 8 with `quick run: <date>` as the save message and `--quick` added to the push command, step 9 with the same message `quick run: <date>`, and step 10 (deep evaluations written, problems). Skip step 4, step 7, and the rest of steps 3 and 5: the next morning run does them.
 
+**Paused.** When the pull output has `paused: true`, she paused her job search with the switch at the bottom of her page (it may also have been the click that started this run). Whatever the mode: skip steps 3 to 7 (nothing is searched, scored or evaluated, and Gmail is not read), then do steps 8 and 9 with `paused: <date>` as both save messages, and step 10 as one line: `Paused: nothing was searched or scored.` plus any problem. Her clicks were still saved by step 2, and when she turns the switch back on the next run picks up where this left off.
+
 The page or Claude may also send one extra message after your run (for example `MODE = quick`). If this session already finished a run, reply `Already done.` and stop; the mode came from her page in step 2.
 
 ## 0. Ground rules

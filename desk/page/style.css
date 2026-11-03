@@ -521,3 +521,14 @@ a.b { color: var(--fg); text-decoration: none; }
 /* A company name that opens its website (Scan sources) */
 a.colink { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 2px; }
 a.colink:hover { text-decoration-color: currentColor; }
+/* Pause switch in the footer: a small switch with its state in words */
+.pausehost { display: inline-flex; align-items: center; gap: 4px 8px; }
+.pausehost:empty { display: none; }
+.swm { position: relative; flex: none; width: 26px; height: 15px; border-radius: var(--radius-pill); background: var(--muted); transition: background-color .12s ease; }
+.swm::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: var(--surface); transition: transform .15s ease; }
+.pausebtn[aria-checked="true"] .swm { background: var(--accent); }
+.pausebtn[aria-checked="true"] .swm::after { transform: translateX(11px); }
+.pausebtn[aria-checked="false"] { color: var(--warn-ink); font-weight: 600; }
+.pausebtn:hover { text-decoration: underline; text-underline-offset: 2px; }
+.pausebtn[disabled] { opacity: .55; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .swm, .swm::after { transition: none; } }

@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.37 (2026-11-02)
+- Taking a break: a switch at the bottom of your job page pauses your job search. While it's paused the daily scan and the morning run stop searching and scoring, and a note at the top of the page says so. Your jobs, clicks and resumes stay as they are, and one click turns it back on. You can also tell Claude "pause my job search" or "resume my job search". The daily scan's own part of this needs Erik for copies set up before this version.
+
 ## 0.13.36 (2026-11-02)
 - A check the tool runs on itself during updates used a fixed date and started failing as the calendar moved on. It now uses today's date. Nothing changes on your page.
 
