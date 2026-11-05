@@ -2,6 +2,9 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.39 (2026-11-05)
+- The optional web view that came with the original tool now uses newer versions of two packages that had known security problems. Your job page and the daily scan don't use that view, so nothing changes for you.
+
 ## 0.13.38 (2026-11-05)
 - Erik's address for questions is now erik@hehrmann.com.
 - A correction to 0.13.35 and 0.13.37: Erik can't see or change your copy, so the daily scan parts of those updates are yours to make. For 0.13.35, the email Erik sent you on November 2 walks you through it in about two minutes. For 0.13.37, write to Erik and he sends you the steps.
