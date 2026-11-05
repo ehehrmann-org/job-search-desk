@@ -2,15 +2,19 @@
 
 Newest first. "update career tool" shows the entries newer than the copy's version, in these plain words.
 
+## 0.13.38 (2026-11-05)
+- Erik's address for questions is now erik@hehrmann.com.
+- A correction to 0.13.35 and 0.13.37: Erik can't see or change your copy, so the daily scan parts of those updates are yours to make. For 0.13.35, the email Erik sent you on November 2 walks you through it in about two minutes. For 0.13.37, write to Erik and he sends you the steps.
+
 ## 0.13.37 (2026-11-02)
-- Taking a break: a switch at the bottom of your job page pauses your job search. While it's paused the daily scan and the morning run stop searching and scoring, and a note at the top of the page says so. Your jobs, clicks and resumes stay as they are, and one click turns it back on. You can also tell Claude "pause my job search" or "resume my job search". The daily scan's own part of this needs Erik for copies set up before this version.
+- Taking a break: a switch at the bottom of your job page pauses your job search. While it's paused the daily scan and the morning run stop searching and scoring, and a note at the top of the page says so. Your jobs, clicks and resumes stay as they are, and one click turns it back on. You can also tell Claude "pause my job search" or "resume my job search". Copies set up before this version need one small change for the daily scan's part, done in your own copy (see 0.13.38).
 
 ## 0.13.36 (2026-11-02)
 - A check the tool runs on itself during updates used a fixed date and started failing as the calendar moved on. It now uses today's date. Nothing changes on your page.
 
 ## 0.13.35 (2026-10-31)
 - Safer installs: the tool's add-on packages are now fixed to exact, checked versions, so an update or the daily scan never picks up a newer package nobody has looked at yet.
-- The daily scan no longer leaves its GitHub access where the add-on packages could read it; only the step that saves the scan results gets it. Erik updates this part of your copy himself.
+- The daily scan no longer leaves its GitHub access where the add-on packages could read it; only the step that saves the scan results gets it. Copies made before this version need one small change, done in your own copy (see 0.13.38).
 
 ## 0.13.34 (2026-10-21)
 - On a phone, the tabs fold into a menu that names the view you're on, the search sits next to it, and Run now moves up beside the page's name. The top of the page is three rows shorter.
